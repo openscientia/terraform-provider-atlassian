@@ -1,0 +1,132 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+*'
+
+# Releases need permissions to read and write the repository contents.
+# GitHub considers creating releases and uploading assets as writing contents.
+permissions:
+  contents: write
+
+jobs:
+  go-version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.go-version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v2
+      - id: go-version
+        run: echo "::set-output name=version::$(cat go.mod | sed -En 's/^go[[:space:]]+([[:digit:].]+)$/\1/p')"
+  release-notes:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Generate Release Notes
+        run: sed -n -e "1{/# /d;}" -e "2{/^$/d;}" -e "/# $(git describe --abbrev=0 --exclude="$(git describe --abbrev=0 --match='v*.*.*' --tags)" --match='v*.*.*' --tags | tr -d v)/q;p" CHANGELOG.md > release-notes.md
+      - uses: actions/upload-artifact@v3
+        with:
+          name: release-notes
+          path: release-notes.md
+          retention-days: 1
+  release:
+    needs: [ go-version, release-notes ]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@v3
+        with:
+          go-version: ${{ needs.go-version.outputs.version }}
+      - name: Import GPG Key
+        id: import_gpg
+        uses: openscientia/ghaction-import-gpg@v2.1.2
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+          PASSPHRASE: ${{ secrets.PASSPHRASE }}
+      - if: ${{ needs.release-notes.status }} == 'success'
+        id: release-notes-download
+        name: Release Notes Download
+        uses: actions/download-artifact@v2
+        with:
+          name: release-notes
+          path: /tmp
+      - if: ${{ needs.release-notes.status }} == 'success'
+        name: goreleaser release (with release notes)
+        uses: goreleaser/goreleaser-action@v2
+        with:
+          args: release --release-notes ${{ steps.release-notes-download.outputs.download-path }}/release-notes.md --rm-dist --timeout 3h
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}
+  highest-version-tag:
+    needs: [ release ]
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.highest-version-tag.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          # Allow tag to be fetched when ref is a commit
+          fetch-depth: 0
+      - name: Output highest version tag
+        id: highest-version-tag
+        run: |
+          HIGHEST=$(git tag | sort -V | tail -1)
+          echo ::set-output name=tag::$HIGHEST
+  changelog-newversion:
+      needs: [ release, highest-version-tag ]
+      # write new changelog header only if release tag is the $HIGHEST i.e. exists on main
+      # and not a backport release branch (e.g. release/3.x). This results in
+      # manually updating the CHANGELOG header if releasing from the non-default branch.
+      # TODO: find a more deterministic way to determine release branch from tag commit
+      if: github.ref_name == needs.highest-version-tag.outputs.tag
+      runs-on: ubuntu-latest
+      steps:
+        - uses: actions/checkout@v3
+          with:
+            fetch-depth: 0
+            ref: main
+            token: ${{ secrets.UPDATE_CHANGELOG_TOKEN }}
+        - name: Update Changelog Header
+          run: |
+            CHANGELOG_FILE_NAME="CHANGELOG.md"
+            PREVIOUS_RELEASE_TAG=${{ github.ref_name }}
+           
+            # Add Release Date
+            RELEASE_DATE=`date +%B' '%e', '%Y`
+            sed -i -e "1 s/Unreleased/$RELEASE_DATE/" $CHANGELOG_FILE_NAME           
+            
+            # Prepend next release line
+            echo Previous release is: $PREVIOUS_RELEASE_TAG
+            
+            NEW_RELEASE_LINE=$(echo $PREVIOUS_RELEASE_TAG | awk -F. '{
+                $1 = substr($1,2)
+                $2 += 1
+                printf("%s.%01d.0\n\n", $1, $2);
+            }')
+            
+            echo New minor version is: v$NEW_RELEASE_LINE
+            
+            echo -e "## $NEW_RELEASE_LINE (Unreleased)\n$(cat $CHANGELOG_FILE_NAME)" > $CHANGELOG_FILE_NAME
+        - run: |
+              git config --local user.email ${{ secrets.CHANGELOGBOT_EMAIL }}
+              git config --local user.name ${{ secrets.CHANGELOGBOT_NAME }}
+              git add CHANGELOG.md
+              git commit -m "Update CHANGELOG.md after ${{ github.ref_name }}" 
+              git push
+  upload-tag-before-post-publish:
+    needs: [ release ]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Save Release Tag
+        run: echo ${{ github.ref_name }} > release-tag.data
+      - uses: actions/upload-artifact@v2
+        with:
+          name: release-tag
+          path: release-tag.data
+          retention-days: 1
