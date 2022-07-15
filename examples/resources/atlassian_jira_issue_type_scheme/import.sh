@@ -1,0 +1,1 @@
+$ terraform import atlassian_jira_issue_type_scheme.foo 1234567890
