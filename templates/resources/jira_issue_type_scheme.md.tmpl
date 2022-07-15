@@ -1,0 +1,27 @@
+---
+page_title: "Atlassian Cloud: {{ .Name }}"
+subcategory: "Jira Cloud"
+description: |-
+  Manages {{ .Type }}.
+---
+
+# {{ .Type }}: {{ .Name }}
+
+Provides an `{{ .Name }}` resource.
+
+Learn more about [Jira Issue Types Schemes](https://support.atlassian.com/jira-cloud-administration/docs/what-are-issue-type-schemes/).
+
+See more details about the [Jira Cloud REST API for Issue Type Schemes](https://developer.atlassian.com/cloud/jira/platform/rest/v3/api-group-issue-type-schemes/#api-group-issue-type-schemes).
+
+## Example Usage
+
+{{ .Name | printf "examples/resources/%s/basic.tf" | tffile }}
+
+{{ .SchemaMarkdown | trimspace }}
+
+## Import
+
+`{{ .Name }}` can be imported using `id`, e.g.,
+
+{{ .Name | printf "examples/resources/%s/import.sh" | codefile  "sh" }}
+

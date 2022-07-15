@@ -1,0 +1,71 @@
+---
+page_title: "Provider: Atlassian Cloud"
+subcategory: ""
+description: |-
+  Use the Atlassian Cloud provider to interact with the many resources supported by Atlassian. You must configure the provider with the proper credentials before you can use it.
+---
+
+# {{ upper .ProviderShortName }} Cloud Provider
+
+Use the Atlassian Cloud provider to interact with the many resources supported by Atlassian. You must configure the provider with the proper credentials before you can use it.
+
+Use the navigation to the left to read about the available resources.
+
+~> **Important:** For production use, you should constrain the acceptable provider versions via configuration,
+to ensure that new versions with breaking changes will not be automatically installed.
+For more information, see [Versions](#versions).
+
+~> **Important:** This provider requires [Terraform >= 1.0](https://www.terraform.io/language/upgrade-guides/1-0).
+
+## Example Usage
+
+{{ tffile "examples/provider/provider.tf" }}
+
+## Authentication and Configuration
+
+Configuration for the ATLASSIAN Provider can be derived from several sources, which are applied in the following order:
+
+1. Parameters in the provider configuration
+1. Environment variables
+
+> **Hands-on:** [How to create an Atlassian REST API token](https://support.atlassian.com/atlassian-account/docs/manage-api-tokens-for-your-atlassian-account/).
+
+### Provider Configuration
+
+!> **Warning** Hard-coded credentials are not recommended in any Terraform configuration and risks secret leakage should this file ever be committed to a public version control system.
+
+Credentials can be provided by adding an `urk`, `username`, and `apitoken` to the `atlassian` provider block.
+
+Usage:
+
+{{ tffile "examples/provider/provider_block.tf" }}
+
+### Environment Variables
+
+Credentials can be provided by using the `ATLASSIAN_URL`, `ATLASSIAN_USERNAME`, and `ATLASSIAN_TOKEN` environment variables.
+
+Example:
+
+```hcl
+provider "atlassian" {}
+```
+
+```sh
+$ export ATLASSIAN_URL=https://foo-bar.atlassian.net
+$ export ATLASSIAN_USERNAME=foo@bar.com
+$ export ATLASSIAN_APITOKEN=foo&bar123
+$ terraform plan
+```
+
+## Versions
+
+For production use, you should constrain the acceptable provider versions via
+configuration, to ensure that new versions with breaking changes will not be
+automatically installed by `terraform init` in the future:
+
+{{ tffile "examples/provider/terraform_block.tf" }}
+
+As this provider is still at version zero, you should constrain the acceptable
+provider versions on the minor version.
+
+{{ .SchemaMarkdown | trimspace }}

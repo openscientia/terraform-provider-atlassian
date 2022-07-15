@@ -1,0 +1,43 @@
+---
+page_title: "Atlassian Cloud: {{ .Name }}"
+subcategory: "Jira Cloud"
+description: |-
+  Manages {{ .Name }}.
+---
+
+# {{ .Type }}: {{ .Name }}
+
+Provides an `{{ .Name }}` resource.
+
+Learn more about [Jira Issue Types](https://support.atlassian.com/jira-cloud-administration/docs/what-are-issue-types/).
+
+See more details about the [Jira Cloud REST API for Issue Types](https://developer.atlassian.com/cloud/jira/platform/rest/v3/api-group-issue-types/).
+
+## Example Usage
+
+-> **Note** Issue types are added to the default [`atlassian_issue_type_scheme`](/docs/resources/issue_type_scheme.md).
+
+### Base issue type
+
+{{ .Name | printf "examples/resources/%s/base.tf" | tffile }}
+
+### Sub-task issue type
+
+-> **Note** The parameter `type` is deprecated. Use the `hierarchy_level` argument instead.
+
+~> **Warning** The parameter `type` cannot be used with `hierarchy_level`.
+
+{{ .Name | printf "examples/resources/%s/sub-task.tf" | tffile }}
+
+### Using avatars
+
+{{ .Name | printf "examples/resources/%s/avatar.tf" | tffile }}
+
+{{ .SchemaMarkdown | trimspace }}
+
+## Import
+
+`{{ .Name }}` can be imported using `id`, e.g.,
+
+{{ .Name | printf "examples/resources/%s/import.sh" | codefile  "sh" }}
+
