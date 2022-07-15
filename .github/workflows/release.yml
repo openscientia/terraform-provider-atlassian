@@ -57,7 +57,7 @@ jobs:
           path: /tmp
       - if: ${{ needs.release-notes.status }} == 'success'
         name: goreleaser release (with release notes)
-        uses: goreleaser/goreleaser-action@v2
+        uses: goreleaser/goreleaser-action@v3
         with:
           args: release --release-notes ${{ steps.release-notes-download.outputs.download-path }}/release-notes.md --rm-dist --timeout 3h
         env:
