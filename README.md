@@ -1,0 +1,101 @@
+# Terraform Provider for Atlassian Cloud 
+The Terraform Atlassian provider is a plugin for Terraform that allows the full lifecycle management of Atlassian Cloud resources. 
+
+## Compatibility
+
+| Atlassian Provider | Terraform Registry | Terraform |     Go     |
+|:------------------:|:------------------:|:---------:|:----------:|
+|     `>= 0.1.x`     |         `6`        |  `>= 1.x` |  `>= 1.17` |
+
+| Atlassian Product  |                                             REST API                                          |
+|:------------------:|:---------------------------------------------------------------------------------------------:| 
+|     Jira Cloud     |  [Jira Cloud Platform v3](https://developer.atlassian.com/cloud/jira/platform/rest/v3/intro/) |
+
+
+## Requirements
+
+* [Terraform](https://www.terraform.io/downloads) (1.x)
+* [Go](https://go.dev/doc/install) (1.18)
+* [GNU Make](https://www.gnu.org/software/make/)
+* [golangci-lint](https://golangci-lint.run/usage/install/#local-installation) (optional)
+* [tfplugindocs](https://github.com/hashicorp/terraform-plugin-docs) (optional)
+
+## Development
+
+### Building
+
+1. `git clone` this repository and `cd` into its directory
+2. `make` will trigger the Golang build
+
+The provided `GNUmakefile` defines additional commands generally useful during development,
+like for running tests, generating documentation, code formatting and linting.
+Taking a look at it's content is recommended.
+
+### Testing
+
+In order to test the provider, you can run
+
+* `make test` to run provider tests
+* `make testacc` to run provider acceptance tests
+
+It's important to note that acceptance tests (`testacc`) will actually spawn
+`terraform` and the provider. Read more about they work on the
+[official page](https://www.terraform.io/plugin/sdkv2/testing/acceptance-tests).
+
+> **Note** : Acceptance tests typically create and destroy actual infrastructure resources, possibly incurring expenses during or after the test duration.
+
+### Generating documentation
+
+This provider uses [terraform-plugin-docs](https://github.com/hashicorp/terraform-plugin-docs/)
+to generate documentation and store it in the `docs/` directory.
+Once a release is cut, the Terraform Registry will download the documentation from `docs/`
+and associate it with the release version. Read more about how this works on the
+[official page](https://www.terraform.io/registry/providers/docs).
+
+Use `make generate` to ensure the documentation is regenerated with any changes.
+
+### Using a development build
+
+If [running tests and acceptance tests](#testing) isn't enough, it's possible to set up a local terraform configuration
+to use a development builds of the provider. This can be achieved by leveraging the Terraform CLI
+[configuration file development overrides](https://www.terraform.io/cli/config/config-file#development-overrides-for-provider-developers).
+
+First, use `make install` to place a fresh development build of the provider in your
+[`${GOBIN}`](https://pkg.go.dev/cmd/go#hdr-Compile_and_install_packages_and_dependencies)
+(defaults to `${GOPATH}/bin` or `${HOME}/go/bin` if `${GOPATH}` is not set). Repeat
+this every time you make changes to the provider locally.
+
+Then, setup your environment following [these instructions](https://www.terraform.io/plugin/debugging#terraform-cli-development-overrides)
+to make your local terraform use your local build.
+
+### Testing GitHub Actions
+
+This project uses [GitHub Actions](https://docs.github.com/en/actions/automating-builds-and-tests) to realize its CI.
+
+Sometimes it might be helpful to locally reproduce the behaviour of those actions,
+and for this we use [act](https://github.com/nektos/act). Once installed, you can _simulate_ the actions executed
+when opening a PR with:
+
+```shell
+# List of workflows for the 'pull_request' action
+$ act -l pull_request
+
+# Execute the workflows associated with the `pull_request' action 
+$ act pull_request
+```
+
+## Releasing
+
+The release process is automated via GitHub Actions, and it's defined in the Workflow
+[release.yml](./.github/workflows/release.yml).
+
+Each release is cut by pushing a [semantically versioned](https://semver.org/) tag to the default branch.
+
+## Credits
+
+*  [go-atlassian](https://github.com/ctreminiom/go-atlassian)
+
+
+## License
+
+[Mozilla Public License v2.0](./LICENSE)
