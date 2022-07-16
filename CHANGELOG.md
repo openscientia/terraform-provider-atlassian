@@ -1,4 +1,5 @@
-## 0.1.0 (Unreleased)
+## 0.2.0 (Unreleased)
+## 0.1.0 (July 16, 2022)
 
 FEATURES:
 
