@@ -26,4 +26,4 @@ jobs:
       - name: Install actionlint
         run: cd tools && go install github.com/rhysd/actionlint/cmd/actionlint
       - name: Run actionlint on workflow files
-        run: actionlint -shellcheck=
+        run: actionlint -shellcheck= -ignore '(download-path)'

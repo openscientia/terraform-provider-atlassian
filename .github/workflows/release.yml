@@ -26,7 +26,14 @@ jobs:
         with:
           fetch-depth: 0
       - name: Generate Release Notes
-        run: sed -n -e "1{/# /d;}" -e "2{/^$/d;}" -e "/# $(git describe --abbrev=0 --exclude="$(git describe --abbrev=0 --match='v*.*.*' --tags)" --match='v*.*.*' --tags | tr -d v)/q;p" CHANGELOG.md > release-notes.md
+        run: |
+          sed -n -e "1{/# /d;}" -e "2{/^$/d;}" -e "/# $(git describe --abbrev=0 --exclude="$(git describe --abbrev=0 --match='v*.*.*' --tags)" --match='v*.*.*' --tags | tr -d v)/q;p" CHANGELOG.md > release-notes.md
+          RELEASE_NOTES=$(cat release-notes.md)
+          if [ -z "$PREVIOUS_CHANGELOG" ]
+          then
+          echo "Release notes file is empty."
+            exit 1
+          fi 
       - uses: actions/upload-artifact@v3
         with:
           name: release-notes
@@ -48,15 +55,13 @@ jobs:
         env:
           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
           PASSPHRASE: ${{ secrets.PASSPHRASE }}
-      - if: ${{ needs.release-notes.status }} == 'success'
+      - name: Release Notes Download
         id: release-notes-download
-        name: Release Notes Download
         uses: actions/download-artifact@v3
         with:
           name: release-notes
           path: /tmp
-      - if: ${{ needs.release-notes.status }} == 'success'
-        name: goreleaser release (with release notes)
+      - name: goreleaser release (with release notes)
         uses: goreleaser/goreleaser-action@v3
         with:
           args: release --release-notes ${{ steps.release-notes-download.outputs.download-path }}/release-notes.md --rm-dist --timeout 3h
