@@ -1,0 +1,7 @@
+```release-note:new-resource
+atlassian_jira_issue_type_scheme
+```
+
+```release-note:new-data-source
+atlassian_jira_issue_type_scheme
+```
