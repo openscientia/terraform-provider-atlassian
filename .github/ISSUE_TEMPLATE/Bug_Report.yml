@@ -13,7 +13,7 @@ body:
     attributes: 
       label: Affected Resources
       description: What resource(s) are affected?
-      placeholder: "- atlassian_<product>_<resource-name>
+      placeholder: "- atlassian_<product>_<resource-name>"
     validations:
       required: true
   - type: textarea
