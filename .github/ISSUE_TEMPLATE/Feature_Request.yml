@@ -17,6 +17,14 @@ body:
     validations:
       required: true
   - type: textarea
+    id: new-affected-resource
+    attributes:
+      label: New or Affected Resource(s)
+      description: What new or existing resource(s) are affected?
+      placeholder: * atlassian_<product>_<new-or-existing-resource-name>
+    validation:
+      required: true
+  - type: textarea
     id: use-case
     attributes:
       label: Use Cases or Problem Statement
