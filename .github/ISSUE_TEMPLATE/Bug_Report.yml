@@ -9,6 +9,14 @@ body:
 
         If you have a configuration, workflow, or other question, please go back to the issue chooser and select one of the question links.
   - type: textarea
+    id: affected-resources
+    attributes: 
+      label: Affected Resources
+      description: What resource(s) are affected?
+      placeholder: "- atlassian_<product>_<resource-name>
+    validations:
+      required: true
+  - type: textarea
     id: versions
     attributes:
       label: Terraform CLI and Provider Versions
