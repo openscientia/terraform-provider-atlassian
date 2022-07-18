@@ -1,4 +1,9 @@
 ## 0.2.0 (Unreleased)
+
+FEATURES:
+
+* **New Resource:** `atlassian_jira_issue_screen` ([#15](https://github.com/openscientia/terraform-provider-atlassian/issues/15))
+
 ## 0.1.0 (July 16, 2022)
 
 FEATURES:
