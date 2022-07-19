@@ -5,9 +5,9 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-go/tftypes"
 
 	"github.com/openscientia/terraform-provider-atlassian/internal/provider/attribute_validation"
 
@@ -99,7 +99,7 @@ func (t jiraIssueTypeResourceType) NewResource(ctx context.Context, in tfsdk.Pro
 }
 
 func (r jiraIssueTypeResource) ImportState(ctx context.Context, req tfsdk.ImportResourceStateRequest, resp *tfsdk.ImportResourceStateResponse) {
-	tfsdk.ResourceImportStatePassthroughID(ctx, tftypes.NewAttributePath().WithAttributeName("id"), req, resp)
+	tfsdk.ResourceImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
 func (r jiraIssueTypeResource) Create(ctx context.Context, req tfsdk.CreateResourceRequest, resp *tfsdk.CreateResourceResponse) {
