@@ -1,0 +1,30 @@
+---
+page_title: "Atlassian Cloud: {{ .Name }}"
+subcategory: "Jira Cloud"
+description: |-
+  Manages {{ .Name }}.
+---
+
+# {{ .Type }}: {{ .Name }}
+
+Provides an `{{ .Name }}` resource.
+
+Learn more about [Jira Issue Screens](https://support.atlassian.com/jira-cloud-administration/docs/manage-issue-screens/).
+
+See more details about the [Jira Cloud Platform REST API for Issue Screens](https://developer.atlassian.com/cloud/jira/platform/rest/v3/api-group-screens/#api-group-screens).
+
+## Example Usage
+
+### Basic
+
+{{ .Name | printf "examples/resources/%s/basic.tf" | tffile }}
+
+{{ .SchemaMarkdown | trimspace }}
+
+## Import
+
+`{{ .Name }}` can be imported using `id`, e.g.,
+
+```sh
+$ terraform import {{ .Name | printf "%s.foo 1234567890"}}
+```
