@@ -164,6 +164,7 @@ func (p *provider) GetResources(ctx context.Context) (map[string]tfsdk.ResourceT
 
 func (p *provider) GetDataSources(ctx context.Context) (map[string]tfsdk.DataSourceType, diag.Diagnostics) {
 	return map[string]tfsdk.DataSourceType{
+		"atlassian_jira_issue_screen":      jiraIssueScreenDataSourceType{},
 		"atlassian_jira_issue_type":        jiraIssueTypeDataSourceType{},
 		"atlassian_jira_issue_type_scheme": jiraIssueTypeSchemeDataSourceType{},
 	}, nil
