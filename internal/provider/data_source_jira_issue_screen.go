@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -74,7 +75,11 @@ func (d jiraIssueScreenDataSource) Read(ctx context.Context, req tfsdk.ReadDataS
 		"issueScreen": fmt.Sprintf("%+v", newState),
 	})
 
-	issueScreenId, _ := strconv.Atoi(newState.ID.Value)
+	issueScreenId, err := strconv.Atoi(newState.ID.Value)
+	if err != nil {
+		resp.Diagnostics.AddAttributeError(path.Root("id"), "Unable to parse value of \"id\" attribute.", "Value of \"id\" attribute can only be a numeric string.")
+		return
+	}
 
 	issueScreen, res, err := d.p.jira.Screen.Gets(ctx, []int{issueScreenId}, 0, 50)
 	if err != nil {
