@@ -1,0 +1,8 @@
+resource:
+  - '(.*resource\s+"?|new-resource|[Nn]ew [Rr]esource|[Aa]dd [Nn]ew [Rr]esource)'
+
+data-source:
+  - '(.*data\s+"?|new-data-source|[Nn]ew [Dd]ata [Ss]ource|[Aa]dd [Nn]ew [Dd]ata [Ss]ource)'
+
+jira:
+  - '(((\*|-)\s*`?|(data|resource)\s+"?)atlassian_jira_|(.*atlassian_jira_))'
