@@ -13,7 +13,8 @@ body:
     attributes: 
       label: Affected Resources
       description: What resource(s) are affected?
-      placeholder: "- atlassian_<product>_<resource-name>"
+      value: |
+        - atlassian_xxx
     validations:
       required: true
   - type: textarea
@@ -61,7 +62,7 @@ body:
     id: impact
     attributes:
       label: How much impact is this issue causing?
-      description: High represents completely not able to use the provider or unexpected destruction of data/infrastructure. Medium represents unable to upgrade provider version or an issue with potential workaround. Low represents minor provider code, configuration, or documentation issues.
+      description: "- High: represents completely not able to use the provider without this.\n- Medium: represents unable to solve a specific problem or understand something.\n- Low: represents minor provider code, configuration, or documentation issues."
       options:
         - High
         - Medium
@@ -81,6 +82,9 @@ body:
     attributes:
       label: Additional Information
       description: Are there any additional details about your environment, workflow, or recent changes that might be relevant? Have you discovered a workaround? Are there links to other related issues?
+      placeholder: |
+        Relates #X
+        Closes #X
     validations:
       required: false
   - type: checkboxes
