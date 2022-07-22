@@ -1,0 +1,27 @@
+name: Pull Request Triage (All Events)
+
+on:
+  - pull_request_target
+
+env:
+  IN_MAINTAINER_LIST: ${{ contains(secrets.MAINTAINER_LIST, github.actor) }}
+
+jobs:
+  Labeler:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Apply Labels
+      uses: actions/labeler@v4
+      with:
+        configuration-path: .github/labeler-pr-labels.yml
+        repo-token: ${{ secrets.GITHUB_TOKEN }}
+  NeedsTriageLabeler:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Apply needs-triage Label
+      uses: actions/labeler@v4
+      if: github.event.action == 'opened' && env.IN_MAINTAINER_LIST == 'false'
+      with:
+        configuration-path: .github/labeler-pr-needs-triage.yml
+        repo-token: ${{ secrets.GITHUB_TOKEN }}
+  
