@@ -1,4 +1,8 @@
-# Terraform Provider for Atlassian Cloud 
+<p align="center">
+<img src=".github/provider-logo.png" alt="Terraform ATLASSIAN Provider logo" title="Terraform ATLASSIAN Provider" height="300" />
+</p>
+
+# Terraform Provider for ATLASSIAN 
 The Terraform Atlassian provider is a plugin for Terraform that allows the full lifecycle management of Atlassian Cloud resources. 
 
 ## Compatibility
