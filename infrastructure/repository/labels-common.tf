@@ -55,7 +55,7 @@ variable "common_labels" {
       description = "Introduces a new product."
     },
     "provider" = {
-      color       = "844fba",
+      color       = "7345b6", # color: https://www.terraform.io/
       description = "Pertains to the provider itself, rather than any interaction with AWS.",
     },
     "repository" = {
