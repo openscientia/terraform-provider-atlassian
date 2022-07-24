@@ -13,8 +13,12 @@ lint:
 	golangci-lint run
 
 # See https://github.com/hashicorp/terraform-plugin-docs#usage
-generate:
+docs:
 	tfplugindocs generate
+
+gen:
+	rm -f infrastructure/repository/labels-resource.tf
+	go generate ./...
 
 test:
 	go test -v -cover -timeout=120s -parallel=4 ./...
