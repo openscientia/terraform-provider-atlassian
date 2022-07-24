@@ -3,7 +3,7 @@ terraform {
     organization = "openscientia"
 
     workspaces {
-      name = "terraform-provider-aws-repository"
+      name = "terraform-provider-atlassian-repository"
     }
   }
 
