@@ -17,6 +17,7 @@ docs:
 	tfplugindocs generate
 
 gen:
+	rm -f .github/labeler-pr-labels.yml
 	rm -f infrastructure/repository/labels-resource.tf
 	go generate ./...
 
