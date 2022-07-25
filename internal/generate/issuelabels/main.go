@@ -154,7 +154,7 @@ func singularizeLabelSuffix(product, input string) Label {
 	} else {
 		str = strings.ToLower(sr4.Replace(sr3.Replace(sr2.Replace(input))))
 	}
-	l.RegExp = `((\*|-)\s*` + "`" + `?|(data|resource)\s+"?)atlassian_` + product + "_" + str
+	l.RegExp = `((\*|-)\s*` + "`" + `?|(data|resource)\s+"?)atlassian_` + product + "_" + str + `\b`
 
 	return l
 }
