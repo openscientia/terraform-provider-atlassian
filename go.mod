@@ -6,7 +6,7 @@ require (
 	github.com/ctreminiom/go-atlassian v1.4.3
 	github.com/hashicorp/terraform-plugin-framework v0.10.0
 	github.com/hashicorp/terraform-plugin-go v0.12.0
-	github.com/hashicorp/terraform-plugin-log v0.6.0
+	github.com/hashicorp/terraform-plugin-log v0.7.0
 )
 
 require (
