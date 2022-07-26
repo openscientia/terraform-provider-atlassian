@@ -1,5 +1,9 @@
 ## 0.2.0 (Unreleased)
 
+NOTES:
+
+* data-source/atlassian_jira_issue_type_scheme: Missing configuration example has been added to documentation ([#39](https://github.com/openscientia/terraform-provider-atlassian/issues/39))
+
 FEATURES:
 
 * **New Data Source:** `atlassian_jira_issue_screen` ([#20](https://github.com/openscientia/terraform-provider-atlassian/issues/20))
