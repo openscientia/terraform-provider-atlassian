@@ -15,5 +15,7 @@ See more details about the [Jira Cloud REST API for Issue Type Schemes](https://
 
 ## Example Usage
 
+{{ .Name | printf "examples/data-sources/%s/basic.tf" | tffile }}
+
 {{ .SchemaMarkdown | trimspace }}
 
