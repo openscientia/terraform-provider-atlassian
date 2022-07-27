@@ -3,9 +3,12 @@ package attribute_validation
 import (
 	"context"
 	"fmt"
+	"net/url"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
 type intValuesValidator struct {
@@ -163,3 +166,73 @@ func StringValues(values []string) stringValuesValidator {
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+type urlWithSchemeAttributeValidator struct {
+	acceptableSchemes []string
+}
+
+func UrlWithScheme(acceptableSchemes ...string) tfsdk.AttributeValidator {
+	return &urlWithSchemeAttributeValidator{acceptableSchemes}
+}
+
+var _ tfsdk.AttributeValidator = (*urlWithSchemeAttributeValidator)(nil)
+
+func (v *urlWithSchemeAttributeValidator) Description(ctx context.Context) string {
+	return v.MarkdownDescription(ctx)
+}
+
+func (v *urlWithSchemeAttributeValidator) MarkdownDescription(_ context.Context) string {
+	return fmt.Sprintf("Must be a URL and its scheme is one of: %q", v.acceptableSchemes)
+}
+
+func (v *urlWithSchemeAttributeValidator) Validate(ctx context.Context, req tfsdk.ValidateAttributeRequest, res *tfsdk.ValidateAttributeResponse) {
+	if req.AttributeConfig.IsNull() || req.AttributeConfig.IsUnknown() {
+		return
+	}
+
+	tflog.Debug(ctx, "Validating attribute value is a URL with acceptable scheme", map[string]interface{}{
+		"attribute":         req.AttributePath.String(),
+		"acceptableSchemes": strings.Join(v.acceptableSchemes, ","),
+	})
+
+	var val types.String
+	diags := tfsdk.ValueAs(ctx, req.AttributeConfig, &val)
+	if diags.HasError() {
+		res.Diagnostics.Append(diags...)
+	}
+
+	if val.IsNull() || val.IsUnknown() {
+		return
+	}
+
+	u, err := url.Parse(val.Value)
+	if err != nil {
+		res.Diagnostics.AddAttributeError(
+			req.AttributePath,
+			"Invalid URL",
+			fmt.Sprintf("Parsing URL %q failed: %v", val.Value, err),
+		)
+		return
+	}
+
+	if u.Host == "" {
+		res.Diagnostics.AddAttributeError(
+			req.AttributePath,
+			"Invalid URL",
+			fmt.Sprintf("URL %q contains no host", u.String()),
+		)
+		return
+	}
+
+	for _, s := range v.acceptableSchemes {
+		if u.Scheme == s {
+			return
+		}
+	}
+
+	res.Diagnostics.AddAttributeError(
+		req.AttributePath,
+		"Invalid URL scheme",
+		fmt.Sprintf("URL %q expected to use scheme from %q, got: %q", u.String(), v.acceptableSchemes, u.Scheme),
+	)
+}
