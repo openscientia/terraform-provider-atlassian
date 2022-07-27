@@ -8,6 +8,57 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
+type intValuesValidator struct {
+	Values []int
+}
+
+func (v intValuesValidator) Description(ctx context.Context) string {
+	return fmt.Sprintf("only valid int values are %v", v.Values)
+}
+
+func (v intValuesValidator) MarkdownDescription(ctx context.Context) string {
+	return fmt.Sprintf("only valid int values are %v", v.Values)
+}
+
+func (v intValuesValidator) Validate(ctx context.Context, req tfsdk.ValidateAttributeRequest, resp *tfsdk.ValidateAttributeResponse) {
+
+	var num types.Int64
+	diags := tfsdk.ValueAs(ctx, req.AttributeConfig, &num)
+	resp.Diagnostics.Append(diags...)
+	if diags.HasError() {
+		return
+	}
+
+	if num.Unknown || num.Null {
+		return
+	}
+
+	flag := false
+	for _, s := range v.Values {
+		if num.Value == int64(s) {
+			flag = true
+		}
+	}
+
+	if !flag {
+		resp.Diagnostics.AddAttributeError(
+			req.AttributePath,
+			"Invalid Value",
+			fmt.Sprintf("only valid int values are %v", v.Values),
+		)
+
+		return
+	}
+}
+
+func IntValues(values []int) intValuesValidator {
+	return intValuesValidator{
+		Values: values,
+	}
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 type stringLengthBetweenValidator struct {
 	Min int
 	Max int
@@ -111,53 +162,4 @@ func StringValues(values []string) stringValuesValidator {
 	}
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-type intValuesValidator struct {
-	Values []int
-}
-
-func (v intValuesValidator) Description(ctx context.Context) string {
-	return fmt.Sprintf("only valid int values are %v", v.Values)
-}
-
-func (v intValuesValidator) MarkdownDescription(ctx context.Context) string {
-	return fmt.Sprintf("only valid int values are %v", v.Values)
-}
-
-func (v intValuesValidator) Validate(ctx context.Context, req tfsdk.ValidateAttributeRequest, resp *tfsdk.ValidateAttributeResponse) {
-
-	var num types.Int64
-	diags := tfsdk.ValueAs(ctx, req.AttributeConfig, &num)
-	resp.Diagnostics.Append(diags...)
-	if diags.HasError() {
-		return
-	}
-
-	if num.Unknown || num.Null {
-		return
-	}
-
-	flag := false
-	for _, s := range v.Values {
-		if num.Value == int64(s) {
-			flag = true
-		}
-	}
-
-	if !flag {
-		resp.Diagnostics.AddAttributeError(
-			req.AttributePath,
-			"Invalid Value",
-			fmt.Sprintf("only valid int values are %v", v.Values),
-		)
-
-		return
-	}
-}
-
-func IntValues(values []int) intValuesValidator {
-	return intValuesValidator{
-		Values: values,
-	}
-}
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
