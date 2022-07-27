@@ -6,6 +6,7 @@ import (
 	"os"
 
 	jira "github.com/ctreminiom/go-atlassian/jira/v3"
+	"github.com/openscientia/terraform-provider-atlassian/internal/provider/attribute_validation"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
@@ -32,6 +33,9 @@ func (p *provider) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostic
 				Computed:            true,
 				Optional:            true,
 				Type:                types.StringType,
+				Validators: []tfsdk.AttributeValidator{
+					attribute_validation.UrlWithScheme("https"),
+				},
 			},
 			"username": {
 				MarkdownDescription: "Atlassian Username. Can also be set with the `ATLASSIAN_USERNAME` environment variable.",
