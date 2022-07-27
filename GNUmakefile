@@ -13,7 +13,7 @@ lint:
 	golangci-lint run
 
 # See https://github.com/hashicorp/terraform-plugin-docs#usage
-docs:
+tfdocs:
 	tfplugindocs generate
 
 gen:
