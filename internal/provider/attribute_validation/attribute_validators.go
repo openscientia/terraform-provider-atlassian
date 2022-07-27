@@ -3,10 +3,64 @@ package attribute_validation
 import (
 	"context"
 	"fmt"
+	"net/url"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
+
+type intValuesValidator struct {
+	Values []int
+}
+
+func (v intValuesValidator) Description(ctx context.Context) string {
+	return fmt.Sprintf("only valid int values are %v", v.Values)
+}
+
+func (v intValuesValidator) MarkdownDescription(ctx context.Context) string {
+	return fmt.Sprintf("only valid int values are %v", v.Values)
+}
+
+func (v intValuesValidator) Validate(ctx context.Context, req tfsdk.ValidateAttributeRequest, resp *tfsdk.ValidateAttributeResponse) {
+
+	var num types.Int64
+	diags := tfsdk.ValueAs(ctx, req.AttributeConfig, &num)
+	resp.Diagnostics.Append(diags...)
+	if diags.HasError() {
+		return
+	}
+
+	if num.Unknown || num.Null {
+		return
+	}
+
+	flag := false
+	for _, s := range v.Values {
+		if num.Value == int64(s) {
+			flag = true
+		}
+	}
+
+	if !flag {
+		resp.Diagnostics.AddAttributeError(
+			req.AttributePath,
+			"Invalid Value",
+			fmt.Sprintf("only valid int values are %v", v.Values),
+		)
+
+		return
+	}
+}
+
+func IntValues(values []int) intValuesValidator {
+	return intValuesValidator{
+		Values: values,
+	}
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 type stringLengthBetweenValidator struct {
 	Min int
@@ -111,53 +165,74 @@ func StringValues(values []string) stringValuesValidator {
 	}
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-type intValuesValidator struct {
-	Values []int
+type urlWithSchemeAttributeValidator struct {
+	acceptableSchemes []string
 }
 
-func (v intValuesValidator) Description(ctx context.Context) string {
-	return fmt.Sprintf("only valid int values are %v", v.Values)
+func UrlWithScheme(acceptableSchemes ...string) tfsdk.AttributeValidator {
+	return &urlWithSchemeAttributeValidator{acceptableSchemes}
 }
 
-func (v intValuesValidator) MarkdownDescription(ctx context.Context) string {
-	return fmt.Sprintf("only valid int values are %v", v.Values)
+var _ tfsdk.AttributeValidator = (*urlWithSchemeAttributeValidator)(nil)
+
+func (v *urlWithSchemeAttributeValidator) Description(ctx context.Context) string {
+	return v.MarkdownDescription(ctx)
 }
 
-func (v intValuesValidator) Validate(ctx context.Context, req tfsdk.ValidateAttributeRequest, resp *tfsdk.ValidateAttributeResponse) {
+func (v *urlWithSchemeAttributeValidator) MarkdownDescription(_ context.Context) string {
+	return fmt.Sprintf("Must be a URL and its scheme is one of: %q", v.acceptableSchemes)
+}
 
-	var num types.Int64
-	diags := tfsdk.ValueAs(ctx, req.AttributeConfig, &num)
-	resp.Diagnostics.Append(diags...)
+func (v *urlWithSchemeAttributeValidator) Validate(ctx context.Context, req tfsdk.ValidateAttributeRequest, res *tfsdk.ValidateAttributeResponse) {
+	if req.AttributeConfig.IsNull() || req.AttributeConfig.IsUnknown() {
+		return
+	}
+
+	tflog.Debug(ctx, "Validating attribute value is a URL with acceptable scheme", map[string]interface{}{
+		"attribute":         req.AttributePath.String(),
+		"acceptableSchemes": strings.Join(v.acceptableSchemes, ","),
+	})
+
+	var val types.String
+	diags := tfsdk.ValueAs(ctx, req.AttributeConfig, &val)
 	if diags.HasError() {
+		res.Diagnostics.Append(diags...)
+	}
+
+	if val.IsNull() || val.IsUnknown() {
 		return
 	}
 
-	if num.Unknown || num.Null {
+	u, err := url.Parse(val.Value)
+	if err != nil {
+		res.Diagnostics.AddAttributeError(
+			req.AttributePath,
+			"Invalid URL",
+			fmt.Sprintf("Parsing URL %q failed: %v", val.Value, err),
+		)
 		return
 	}
 
-	flag := false
-	for _, s := range v.Values {
-		if num.Value == int64(s) {
-			flag = true
+	if u.Host == "" {
+		res.Diagnostics.AddAttributeError(
+			req.AttributePath,
+			"Invalid URL",
+			fmt.Sprintf("URL %q contains no host", u.String()),
+		)
+		return
+	}
+
+	for _, s := range v.acceptableSchemes {
+		if u.Scheme == s {
+			return
 		}
 	}
 
-	if !flag {
-		resp.Diagnostics.AddAttributeError(
-			req.AttributePath,
-			"Invalid Value",
-			fmt.Sprintf("only valid int values are %v", v.Values),
-		)
-
-		return
-	}
-}
-
-func IntValues(values []int) intValuesValidator {
-	return intValuesValidator{
-		Values: values,
-	}
+	res.Diagnostics.AddAttributeError(
+		req.AttributePath,
+		"Invalid URL scheme",
+		fmt.Sprintf("URL %q expected to use scheme from %q, got: %q", u.String(), v.acceptableSchemes, u.Scheme),
+	)
 }
