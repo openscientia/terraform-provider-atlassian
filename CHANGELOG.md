@@ -9,6 +9,10 @@ FEATURES:
 * **New Data Source:** `atlassian_jira_issue_screen` ([#20](https://github.com/openscientia/terraform-provider-atlassian/issues/20))
 * **New Resource:** `atlassian_jira_issue_screen` ([#15](https://github.com/openscientia/terraform-provider-atlassian/issues/15))
 
+ENHANCEMENTS:
+
+* provider: Add `url` attribute validation. ([#42](https://github.com/openscientia/terraform-provider-atlassian/issues/42))
+
 ## 0.1.0 (July 16, 2022)
 
 FEATURES:
