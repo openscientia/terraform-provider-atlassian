@@ -8,6 +8,7 @@ FEATURES:
 
 * **New Data Source:** `atlassian_jira_issue_screen` ([#20](https://github.com/openscientia/terraform-provider-atlassian/issues/20))
 * **New Resource:** `atlassian_jira_issue_screen` ([#15](https://github.com/openscientia/terraform-provider-atlassian/issues/15))
+* **New Resource:** `atlassian_jira_screen_scheme` ([#47](https://github.com/openscientia/terraform-provider-atlassian/issues/47))
 
 ENHANCEMENTS:
 
