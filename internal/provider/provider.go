@@ -163,6 +163,7 @@ func (p *provider) GetResources(ctx context.Context) (map[string]tfsdk.ResourceT
 		"atlassian_jira_issue_screen":      jiraIssueScreenResourceType{},
 		"atlassian_jira_issue_type":        jiraIssueTypeResourceType{},
 		"atlassian_jira_issue_type_scheme": jiraIssueTypeSchemeResourceType{},
+		"atlassian_jira_screen_scheme":     &jiraScreenSchemeResourceType{},
 	}, nil
 }
 
