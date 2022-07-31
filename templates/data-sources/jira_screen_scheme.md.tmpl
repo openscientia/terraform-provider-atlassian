@@ -1,0 +1,21 @@
+---
+page_title: "Atlassian Cloud: {{ .Name }}"
+subcategory: "Jira Cloud"
+description: |-
+  Provides details about a specific {{ .Name }}.
+---
+
+# {{ .Type }}: {{ .Name }}
+
+Provides details about a specific `{{ .Name }}`.
+
+Learn more about [Jira Screen Schemes](https://support.atlassian.com/jira-cloud-administration/docs/manage-screen-schemes/).
+
+See more details about the [Jira Cloud Platform REST API for Screen Schemes](https://developer.atlassian.com/cloud/jira/platform/rest/v3/api-group-screen-schemes/#api-group-screen-schemes).
+
+## Example Usage
+
+{{ .Name | printf "examples/data-sources/%s/basic.tf" | tffile }}
+
+{{ .SchemaMarkdown | trimspace }}
+

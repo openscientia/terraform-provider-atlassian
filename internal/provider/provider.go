@@ -172,6 +172,7 @@ func (p *provider) GetDataSources(ctx context.Context) (map[string]tfsdk.DataSou
 		"atlassian_jira_issue_screen":      jiraIssueScreenDataSourceType{},
 		"atlassian_jira_issue_type":        jiraIssueTypeDataSourceType{},
 		"atlassian_jira_issue_type_scheme": jiraIssueTypeSchemeDataSourceType{},
+		"atlassian_jira_screen_scheme":     &jiraScreenSchemeDataSourceType{},
 	}, nil
 }
 
