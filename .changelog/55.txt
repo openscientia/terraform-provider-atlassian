@@ -1,0 +1,3 @@
+```resource-note:new-data-source
+atlassian_jira_issue_type_screen_scheme
+```
