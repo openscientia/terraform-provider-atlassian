@@ -39,5 +39,7 @@ See more details about the [Jira Cloud REST API for Issue Types](https://develop
 
 `{{ .Name }}` can be imported using `id`, e.g.,
 
-{{ .Name | printf "examples/resources/%s/import.sh" | codefile  "sh" }}
+```sh
+$ terraform import {{ .Name | printf "%s.foo 1234567890"}}
+```
 
