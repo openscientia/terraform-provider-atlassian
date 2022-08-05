@@ -103,8 +103,12 @@ jira/issuecustomfieldcontexts:
   - '((\*|-)\s*`?|(data|resource)\s+"?)atlassian_jira_issue_custom_field_context\b'
 jira/issuecustomfieldoptions:
   - '((\*|-)\s*`?|(data|resource)\s+"?)atlassian_jira_issue_custom_field_option\b'
+jira/issuefieldconfigurationitems:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)atlassian_jira_issue_field_configuration_item\b'
 jira/issuefieldconfigurations:
   - '((\*|-)\s*`?|(data|resource)\s+"?)atlassian_jira_issue_field_configuration\b'
+jira/issuefieldconfigurationschemes:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)atlassian_jira_issue_field_configuration_scheme\b'
 jira/issuefields:
   - '((\*|-)\s*`?|(data|resource)\s+"?)atlassian_jira_issue_field\b'
 jira/issuelinks:
