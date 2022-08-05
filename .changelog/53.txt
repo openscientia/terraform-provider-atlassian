@@ -1,0 +1,7 @@
+```release-note:note
+resource/atlassian_jira_issue_type: Updated documentation to define inline `terraform import` command using markdown template. 
+```
+
+```release-note:note
+resource/atlassian_jira_issue_type_scheme: Updated documentation to define inline `terraform import` command using markdown template.
+```
