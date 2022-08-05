@@ -42,6 +42,9 @@ func main() {
 		lbs = append(lbs, getResources(v)...)
 	}
 
+	// Add custom labels
+	lbs = append(lbs, getJiraCustomResources()...)
+
 	td := templateData{}
 	td.Resources = append(td.Resources, lbs...)
 
@@ -94,7 +97,23 @@ func getResources(url string) []Resource {
 		rsc.Name = productName + "/" + strings.ToLower(replacer.Replace(rawLabel.(string)))
 		resources = append(resources, rsc)
 	}
+
 	return resources
+}
+
+func getJiraCustomResources() []Resource {
+	var customResources []Resource
+	resources := []string{
+		"issuefieldconfigurationitems",
+		"issuefieldconfigurationschemes",
+	}
+	for _, r := range resources {
+		customResources = append(customResources, Resource{
+			Name: fmt.Sprintf("jira/%s", r),
+		})
+	}
+
+	return customResources
 }
 
 func writeTemplate(body string, templateName string, td templateData) {
