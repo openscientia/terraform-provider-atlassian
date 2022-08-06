@@ -1,0 +1,34 @@
+---
+page_title: "Atlassian Cloud: {{ .Name }}"
+subcategory: "Jira Cloud"
+description: |-
+  Manages {{ .Name }}.
+---
+
+# {{ .Type }}: {{ .Name }}
+
+Provides an `{{ .Name }}` resource.
+
+Learn more about [Jira Issue Field Configurations](https://support.atlassian.com/jira-cloud-administration/docs/manage-issue-field-configurations/).
+
+See more details about the [Jira Cloud Platform REST API for Issue Field Configurations](https://developer.atlassian.com/cloud/jira/platform/rest/v3/api-group-issue-field-configurations/#api-group-issue-field-configurations).
+
+-> **Note** `{{ .Name }}` resources are created with the same field properties as the [default field configuration](https://support.atlassian.com/jira-cloud-administration/docs/specify-field-behavior/#About-the-Default-Field-Configuration), with all the fields being [optional](https://support.atlassian.com/jira-cloud-administration/docs/specify-field-behavior/#Make-a-field-required-or-optional).
+
+-> **Note** `{{ .Name }}` resources are only for use in [company-managed (classic) projects](https://support.atlassian.com/jira-software-cloud/docs/what-are-team-managed-and-company-managed-projects/).
+
+## Example Usage
+
+### Basic
+
+{{ .Name | printf "examples/resources/%s/basic.tf" | tffile }}
+
+{{ .SchemaMarkdown | trimspace }}
+
+## Import
+
+`{{ .Name }}` can be imported using `id`, e.g.,
+
+```sh
+$ terraform import {{ .Name | printf "%s.foo 1234567890"}}
+```
