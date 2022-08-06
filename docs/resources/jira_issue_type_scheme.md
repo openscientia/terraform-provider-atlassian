@@ -2,7 +2,7 @@
 page_title: "Atlassian Cloud: atlassian_jira_issue_type_scheme"
 subcategory: "Jira Cloud"
 description: |-
-  Manages Resource.
+  Manages atlassian_jira_issue_type_scheme.
 ---
 
 # Resource: atlassian_jira_issue_type_scheme
