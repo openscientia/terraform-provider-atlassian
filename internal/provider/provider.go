@@ -171,11 +171,12 @@ func (p *provider) GetResources(ctx context.Context) (map[string]tfsdk.ResourceT
 
 func (p *provider) GetDataSources(ctx context.Context) (map[string]tfsdk.DataSourceType, diag.Diagnostics) {
 	return map[string]tfsdk.DataSourceType{
-		"atlassian_jira_issue_screen":             jiraIssueScreenDataSourceType{},
-		"atlassian_jira_issue_type":               jiraIssueTypeDataSourceType{},
-		"atlassian_jira_issue_type_scheme":        jiraIssueTypeSchemeDataSourceType{},
-		"atlassian_jira_issue_type_screen_scheme": &jiraIssueTypeScreenSchemeDataSourceType{},
-		"atlassian_jira_screen_scheme":            &jiraScreenSchemeDataSourceType{},
+		"atlassian_jira_issue_field_configuration": &jiraIssueFieldConfigurationDataSourceType{},
+		"atlassian_jira_issue_screen":              jiraIssueScreenDataSourceType{},
+		"atlassian_jira_issue_type":                jiraIssueTypeDataSourceType{},
+		"atlassian_jira_issue_type_scheme":         jiraIssueTypeSchemeDataSourceType{},
+		"atlassian_jira_issue_type_screen_scheme":  &jiraIssueTypeScreenSchemeDataSourceType{},
+		"atlassian_jira_screen_scheme":             &jiraScreenSchemeDataSourceType{},
 	}, nil
 }
 
