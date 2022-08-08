@@ -159,7 +159,7 @@ func (r *jiraIssueFieldConfigurationItemResource) Create(ctx context.Context, re
 	if !plan.Item.Renderer.IsNull() && !plan.Item.Renderer.IsUnknown() {
 		err := r.checkIssueFieldConfigurationItemRenderable(ctx, &plan)
 		if err != nil {
-			resp.Diagnostics.AddError("Client Error", err.Error())
+			resp.Diagnostics.Append(err)
 			return
 		}
 	}
@@ -345,7 +345,7 @@ func createIssueFieldConfigurationItemID(issueFieldConfiguration, item string) s
 	return strings.Join([]string{issueFieldConfiguration, item}, "-")
 }
 
-func (r *jiraIssueFieldConfigurationItemResource) checkIssueFieldConfigurationItemRenderable(ctx context.Context, p *jiraIssueFieldConfigurationItemResourceModel) error {
+func (r *jiraIssueFieldConfigurationItemResource) checkIssueFieldConfigurationItemRenderable(ctx context.Context, p *jiraIssueFieldConfigurationItemResourceModel) diag.Diagnostic {
 	var isRenderable bool
 	searchPayload := models.FieldSearchOptionsScheme{
 		IDs:    []string{p.Item.ID.Value},
@@ -358,23 +358,23 @@ func (r *jiraIssueFieldConfigurationItemResource) checkIssueFieldConfigurationIt
 		if res != nil {
 			resBody = res.Bytes.String()
 		}
-		return fmt.Errorf(" Unable to find issue field configuration item, got error: %s\n%s", err, resBody)
+		return diag.NewAttributeErrorDiagnostic(path.Root("item").AtName("id"), "User Error", fmt.Sprintf(" Unable to find issue field configuration item, got error: %s\n%s", err, resBody))
 	}
 	tflog.Debug(ctx, "Found issue field configuration item details", map[string]interface{}{
 		"issueFieldConfigurationItem": fmt.Sprintf("%+v, %+v", itemDetails.Values[0], itemDetails.Values[0].Schema),
 	})
 
 	if itemDetails.Values[0].ID != p.Item.ID.Value {
-		return fmt.Errorf(" Search result does not match issue field configuration item with ID: [%s]", p.Item.ID.Value)
+		return diag.NewAttributeErrorDiagnostic(path.Root("item").AtName("id"), "User Error", fmt.Sprintf(" Search result does not match issue field configuration item with ID: [%s]", p.Item.ID.Value))
 	}
 
 	if itemDetails.Values[0].IsLocked {
-		return fmt.Errorf(" Tried to set a renderer for the locked item with ID: [%s]", p.Item.ID.Value)
+		return diag.NewAttributeErrorDiagnostic(path.Root("item").AtName("id"), "User Error", fmt.Sprintf(" Tried to set a renderer for the locked item with ID: [%s]", p.Item.ID.Value))
 	}
 
 	isRenderable = strings.Contains(strings.Join(renderableItemTypes, ","), itemDetails.Values[0].Schema.Type)
 	if !isRenderable {
-		return fmt.Errorf(" Tried to set a renderer for the non-renderable item with ID: [%s]", p.Item.ID.Value)
+		return diag.NewAttributeErrorDiagnostic(path.Root("item").AtName("id"), "User Error", fmt.Sprintf(" Tried to set a renderer for the non-renderable item with ID: [%s]", p.Item.ID.Value))
 	}
 
 	return nil
