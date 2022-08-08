@@ -1,0 +1,56 @@
+---
+page_title: "Atlassian Cloud: {{ .Name }}"
+subcategory: "Jira Cloud"
+description: |-
+  Manages {{ .Name }}.
+---
+
+# {{ .Type }}: {{ .Name }}
+
+Provides an `{{ .Name }}` resource.
+
+Learn more about [Jira Issue Field Configuration Items](https://support.atlassian.com/jira-cloud-administration/docs/change-a-field-configuration/).
+
+See more details about the [Jira Cloud Platform REST API for Issue Field Configuration Items](https://developer.atlassian.com/cloud/jira/platform/rest/v3/api-group-issue-field-configurations/#api-rest-api-3-fieldconfiguration-id-fields-get).
+
+~> **Note** `terraform destroy` does not delete `{{ .Name }}` but does remove the resource from Terraform state.
+
+-> **Note** `{{ .Name }}` can only reference [`atlassian_jira_issue_field_configuration`](https://registry.terraform.io/providers/openscientia/atlassian/latest/docs/resources/jira_issue_field_configuration) used in [company-managed (classic) projects](https://support.atlassian.com/jira-software-cloud/docs/what-are-team-managed-and-company-managed-projects/).
+
+## Example Usage
+
+### Basic
+
+{{ .Name | printf "examples/resources/%s/basic.tf" | tffile }}
+
+### Hide or Show fields
+
+-> **Note** `item.is_hidden` can be set to `true` to ensure that the field does not appear on any `atlassian_jira_issue_screen` (i.e. issue operation screens, workflow transition screens) where a specific `atlassian_jira_issue_field_configuration` applies. See more [details](https://support.atlassian.com/jira-cloud-administration/docs/specify-field-behavior/#Hide-or-show-a-field).
+
+~> **Note** Hiding a field in the `{{ .Name }}` resource is distinct from not adding a field to a `atlassian_jira_issue_screen`. Fields hidden through the `{{ .Name }}` resource will be hidden in all applicable screens, regardless of whether or not they have been added to any `atlassian_jira_issue_screen`.
+
+{{ .Name | printf "examples/resources/%s/ishidden.tf" | tffile }}
+
+### Required or Optional fields
+
+-> **Note** `item.is_required` can be set to `true` to ensures that Jira validates the field has been given a value whenever an issue is edited. Alternatively, set to `false` to make a field optional if no value is required. See more [details](https://support.atlassian.com/jira-cloud-administration/docs/specify-field-behavior/#Make-a-field-required-or-optional).
+
+~> **Note** If you make a field required, ensure that the field is present on all Create Issue `atlassian_jira_issue_screen` resources associated to different `atlassian_jira_issue_type` or projects.
+
+{{ .Name | printf "examples/resources/%s/isrequired.tf" | tffile }}
+
+### Renderers
+
+-> **Note** `item.renderer` can be set for text fields to the default text renderer ([`text-renderer`](https://support.atlassian.com/jira-cloud-administration/docs/configure-renderers/#Default-text-renderer)) or wiki style renderer ([`wiki-renderer`](https://support.atlassian.com/jira-cloud-administration/docs/configure-renderers/#Wiki-style-renderer)). However, `item.renderer` cannot be set for multi-select fields using the [autocomplete renderer](https://support.atlassian.com/jira-cloud-administration/docs/configure-renderers/#Autocomplete-and-select-list-renderers) or [select list renderer](https://support.atlassian.com/jira-cloud-administration/docs/configure-renderers/#Autocomplete-and-select-list-renderers). See more [details](https://support.atlassian.com/jira-cloud-administration/docs/configure-renderers/).
+
+{{ .Name | printf "examples/resources/%s/renderers.tf" | tffile }}
+
+{{ .SchemaMarkdown | trimspace }}
+
+## Import
+
+`{{ .Name }}` can be imported using the `issue_field_configuration` and `item.id` separated by a comma (`,`) e.g.,
+
+```sh
+$ terraform import {{ .Name | printf "%s.foo 10000,customfield_10000"}}
+```
