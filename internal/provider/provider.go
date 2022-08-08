@@ -160,12 +160,13 @@ func (p *provider) Configure(ctx context.Context, req tfsdk.ConfigureProviderReq
 
 func (p *provider) GetResources(ctx context.Context) (map[string]tfsdk.ResourceType, diag.Diagnostics) {
 	return map[string]tfsdk.ResourceType{
-		"atlassian_jira_issue_field_configuration": &jiraIssueFieldConfigurationResourceType{},
-		"atlassian_jira_issue_screen":              jiraIssueScreenResourceType{},
-		"atlassian_jira_issue_type":                jiraIssueTypeResourceType{},
-		"atlassian_jira_issue_type_scheme":         jiraIssueTypeSchemeResourceType{},
-		"atlassian_jira_issue_type_screen_scheme":  &jiraIssueTypeScreenSchemeResourceType{},
-		"atlassian_jira_screen_scheme":             &jiraScreenSchemeResourceType{},
+		"atlassian_jira_issue_field_configuration_item": &jiraIssueFieldConfigurationItemResourceType{},
+		"atlassian_jira_issue_field_configuration":      &jiraIssueFieldConfigurationResourceType{},
+		"atlassian_jira_issue_screen":                   jiraIssueScreenResourceType{},
+		"atlassian_jira_issue_type":                     jiraIssueTypeResourceType{},
+		"atlassian_jira_issue_type_scheme":              jiraIssueTypeSchemeResourceType{},
+		"atlassian_jira_issue_type_screen_scheme":       &jiraIssueTypeScreenSchemeResourceType{},
+		"atlassian_jira_screen_scheme":                  &jiraScreenSchemeResourceType{},
 	}, nil
 }
 
