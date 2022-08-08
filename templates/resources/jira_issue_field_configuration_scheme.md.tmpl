@@ -1,0 +1,32 @@
+---
+page_title: "Atlassian Cloud: {{ .Name }}"
+subcategory: "Jira Cloud"
+description: |-
+  Manages {{ .Name }}.
+---
+
+# {{ .Type }}: {{ .Name }}
+
+Provides an `{{ .Name }}` resource.
+
+Learn more about [Jira Issue Field Configuration Schemes](https://support.atlassian.com/jira-cloud-administration/docs/what-are-issue-field-configuration-schemes/).
+
+See more details about the [Jira Cloud Platform REST API for Issue Field Configuration Schemes](https://developer.atlassian.com/cloud/jira/platform/rest/v3/api-group-issue-field-configurations/#api-rest-api-3-fieldconfigurationscheme-post).
+
+-> **Note** `{{ .Name }}` resources are only for use in [company-managed (classic) projects](https://support.atlassian.com/jira-software-cloud/docs/what-are-team-managed-and-company-managed-projects/).
+
+## Example Usage
+
+### Basic
+
+{{ .Name | printf "examples/resources/%s/basic.tf" | tffile }}
+
+{{ .SchemaMarkdown | trimspace }}
+
+## Import
+
+`{{ .Name }}` can be imported using `id`, e.g.,
+
+```sh
+$ terraform import {{ .Name | printf "%s.foo 1234567890"}}
+```
