@@ -15,7 +15,7 @@ See more details about the [Jira Cloud REST API for Issue Types](https://develop
 
 ## Example Usage
 
--> **Note** Issue types are added to the default [`atlassian_issue_type_scheme`](/docs/resources/issue_type_scheme.md).
+-> **Note** Issue types are added to the default [`atlassian_jira_issue_type_scheme`](https://registry.terraform.io/providers/openscientia/atlassian/latest/docs/resources/jira_issue_type_scheme).
 
 ### Base issue type
 
