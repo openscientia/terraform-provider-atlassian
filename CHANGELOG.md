@@ -4,6 +4,7 @@ NOTES:
 
 * data-source/atlassian_jira_issue_type_scheme: Missing configuration example has been added to documentation ([#39](https://github.com/openscientia/terraform-provider-atlassian/issues/39))
 * resource/atlassian_jira_issue_type: Updated documentation to define inline `terraform import` command using markdown template. ([#53](https://github.com/openscientia/terraform-provider-atlassian/issues/53))
+* resource/atlassian_jira_issue_type: Updated documentation to fix invalid link in [`Example Usage`](https://registry.terraform.io/providers/openscientia/atlassian/latest/docs/resources/jira_issue_type#example-usage) section ([#74](https://github.com/openscientia/terraform-provider-atlassian/issues/74))
 * resource/atlassian_jira_issue_type_scheme: Updated documentation to define inline `terraform import` command using markdown template. ([#53](https://github.com/openscientia/terraform-provider-atlassian/issues/53))
 
 FEATURES:
