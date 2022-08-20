@@ -10,6 +10,7 @@ NOTES:
 FEATURES:
 
 * **New Data Source:** `atlassian_jira_issue_field_configuration` ([#63](https://github.com/openscientia/terraform-provider-atlassian/issues/63))
+* **New Data Source:** `atlassian_jira_issue_field_configuration_scheme` ([#86](https://github.com/openscientia/terraform-provider-atlassian/issues/86))
 * **New Data Source:** `atlassian_jira_issue_screen` ([#20](https://github.com/openscientia/terraform-provider-atlassian/issues/20))
 * **New Data Source:** `atlassian_jira_issue_type_screen_scheme` ([#55](https://github.com/openscientia/terraform-provider-atlassian/issues/55))
 * **New Data Source:** `atlassian_jira_screen_scheme` ([#51](https://github.com/openscientia/terraform-provider-atlassian/issues/51))
