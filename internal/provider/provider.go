@@ -173,12 +173,13 @@ func (p *atlassianProvider) GetResources(ctx context.Context) (map[string]provid
 
 func (p *atlassianProvider) GetDataSources(ctx context.Context) (map[string]provider.DataSourceType, diag.Diagnostics) {
 	return map[string]provider.DataSourceType{
-		"atlassian_jira_issue_field_configuration": &jiraIssueFieldConfigurationDataSourceType{},
-		"atlassian_jira_issue_screen":              jiraIssueScreenDataSourceType{},
-		"atlassian_jira_issue_type":                jiraIssueTypeDataSourceType{},
-		"atlassian_jira_issue_type_scheme":         jiraIssueTypeSchemeDataSourceType{},
-		"atlassian_jira_issue_type_screen_scheme":  &jiraIssueTypeScreenSchemeDataSourceType{},
-		"atlassian_jira_screen_scheme":             &jiraScreenSchemeDataSourceType{},
+		"atlassian_jira_issue_field_configuration":        &jiraIssueFieldConfigurationDataSourceType{},
+		"atlassian_jira_issue_field_configuration_scheme": &jiraIssueFieldConfigurationSchemeDataSourceType{},
+		"atlassian_jira_issue_screen":                     jiraIssueScreenDataSourceType{},
+		"atlassian_jira_issue_type":                       jiraIssueTypeDataSourceType{},
+		"atlassian_jira_issue_type_scheme":                jiraIssueTypeSchemeDataSourceType{},
+		"atlassian_jira_issue_type_screen_scheme":         &jiraIssueTypeScreenSchemeDataSourceType{},
+		"atlassian_jira_screen_scheme":                    &jiraScreenSchemeDataSourceType{},
 	}, nil
 }
 
