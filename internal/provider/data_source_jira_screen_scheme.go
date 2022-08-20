@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -14,7 +16,7 @@ import (
 
 type (
 	jiraScreenSchemeDataSource struct {
-		p provider
+		p atlassianProvider
 	}
 
 	jiraScreenSchemeDataSourceType struct{}
@@ -28,8 +30,8 @@ type (
 )
 
 var (
-	_ tfsdk.DataSource     = (*jiraScreenSchemeDataSource)(nil)
-	_ tfsdk.DataSourceType = (*jiraScreenSchemeDataSourceType)(nil)
+	_ datasource.DataSource   = (*jiraScreenSchemeDataSource)(nil)
+	_ provider.DataSourceType = (*jiraScreenSchemeDataSourceType)(nil)
 )
 
 func (d *jiraScreenSchemeDataSourceType) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
@@ -88,7 +90,7 @@ func (d *jiraScreenSchemeDataSourceType) GetSchema(_ context.Context) (tfsdk.Sch
 	}, nil
 }
 
-func (d *jiraScreenSchemeDataSourceType) NewDataSource(_ context.Context, in tfsdk.Provider) (tfsdk.DataSource, diag.Diagnostics) {
+func (d *jiraScreenSchemeDataSourceType) NewDataSource(_ context.Context, in provider.Provider) (datasource.DataSource, diag.Diagnostics) {
 	provider, diags := convertProviderType(in)
 
 	return &jiraScreenSchemeDataSource{
@@ -96,7 +98,7 @@ func (d *jiraScreenSchemeDataSourceType) NewDataSource(_ context.Context, in tfs
 	}, diags
 }
 
-func (d *jiraScreenSchemeDataSource) Read(ctx context.Context, req tfsdk.ReadDataSourceRequest, resp *tfsdk.ReadDataSourceResponse) {
+func (d *jiraScreenSchemeDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	tflog.Debug(ctx, "Reading screen scheme")
 
 	var newState jiraScreenSchemeDataSourceModel

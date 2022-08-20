@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -14,7 +16,7 @@ import (
 
 type (
 	jiraIssueTypeScreenSchemeDataSource struct {
-		p provider
+		p atlassianProvider
 	}
 
 	jiraIssueTypeScreenSchemeDataSourceType struct{}
@@ -28,8 +30,8 @@ type (
 )
 
 var (
-	_ tfsdk.DataSource     = (*jiraIssueTypeScreenSchemeDataSource)(nil)
-	_ tfsdk.DataSourceType = (*jiraIssueTypeScreenSchemeDataSourceType)(nil)
+	_ datasource.DataSource   = (*jiraIssueTypeScreenSchemeDataSource)(nil)
+	_ provider.DataSourceType = (*jiraIssueTypeScreenSchemeDataSourceType)(nil)
 )
 
 func (d *jiraIssueTypeScreenSchemeDataSourceType) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
@@ -81,7 +83,7 @@ func (d *jiraIssueTypeScreenSchemeDataSourceType) GetSchema(_ context.Context) (
 	}, nil
 }
 
-func (d *jiraIssueTypeScreenSchemeDataSourceType) NewDataSource(_ context.Context, in tfsdk.Provider) (tfsdk.DataSource, diag.Diagnostics) {
+func (d *jiraIssueTypeScreenSchemeDataSourceType) NewDataSource(_ context.Context, in provider.Provider) (datasource.DataSource, diag.Diagnostics) {
 	provider, diags := convertProviderType(in)
 
 	return &jiraIssueTypeScreenSchemeDataSource{
@@ -89,7 +91,7 @@ func (d *jiraIssueTypeScreenSchemeDataSourceType) NewDataSource(_ context.Contex
 	}, diags
 }
 
-func (d *jiraIssueTypeScreenSchemeDataSource) Read(ctx context.Context, req tfsdk.ReadDataSourceRequest, resp *tfsdk.ReadDataSourceResponse) {
+func (d *jiraIssueTypeScreenSchemeDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	tflog.Debug(ctx, "Reading issue type screen scheme")
 
 	var newState jiraIssueTypeScreenSchemeDataSourceModel

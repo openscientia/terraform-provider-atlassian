@@ -5,20 +5,21 @@ import (
 	"fmt"
 	"strconv"
 
-	models "github.com/ctreminiom/go-atlassian/pkg/infra/models"
+	"github.com/ctreminiom/go-atlassian/pkg/infra/models"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/provider"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-
-	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/openscientia/terraform-provider-atlassian/internal/provider/attribute_plan_modification"
 )
 
 type (
 	jiraScreenSchemeResource struct {
-		p provider
+		p atlassianProvider
 	}
 
 	jiraScreenSchemeResourceType struct{}
@@ -38,9 +39,9 @@ type (
 )
 
 var (
-	_ tfsdk.Resource                = (*jiraScreenSchemeResource)(nil)
-	_ tfsdk.ResourceType            = (*jiraScreenSchemeResourceType)(nil)
-	_ tfsdk.ResourceWithImportState = (*jiraScreenSchemeResource)(nil)
+	_ resource.Resource                = (*jiraScreenSchemeResource)(nil)
+	_ provider.ResourceType            = (*jiraScreenSchemeResourceType)(nil)
+	_ resource.ResourceWithImportState = (*jiraScreenSchemeResource)(nil)
 )
 
 func (*jiraScreenSchemeResourceType) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
@@ -118,7 +119,7 @@ func (*jiraScreenSchemeResourceType) GetSchema(_ context.Context) (tfsdk.Schema,
 	}, nil
 }
 
-func (r *jiraScreenSchemeResourceType) NewResource(ctx context.Context, in tfsdk.Provider) (tfsdk.Resource, diag.Diagnostics) {
+func (r *jiraScreenSchemeResourceType) NewResource(ctx context.Context, in provider.Provider) (resource.Resource, diag.Diagnostics) {
 	provider, diags := convertProviderType(in)
 
 	return &jiraScreenSchemeResource{
@@ -126,14 +127,14 @@ func (r *jiraScreenSchemeResourceType) NewResource(ctx context.Context, in tfsdk
 	}, diags
 }
 
-func (r *jiraScreenSchemeResource) ImportState(ctx context.Context, req tfsdk.ImportResourceStateRequest, resp *tfsdk.ImportResourceStateResponse) {
-	tfsdk.ResourceImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+func (r *jiraScreenSchemeResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 	// Must initialise "singleNestedAttributes" to avoid "unhandled null values" error when calling (tfsdk.Plan).Get
 	screens := jiraScreenSchemeTypesModel{}
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("screens"), screens)...)
 }
 
-func (r *jiraScreenSchemeResource) Create(ctx context.Context, req tfsdk.CreateResourceRequest, resp *tfsdk.CreateResourceResponse) {
+func (r *jiraScreenSchemeResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	tflog.Debug(ctx, "Creating screen scheme resource")
 
 	if !r.p.configured {
@@ -188,7 +189,7 @@ func (r *jiraScreenSchemeResource) Create(ctx context.Context, req tfsdk.CreateR
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *jiraScreenSchemeResource) Read(ctx context.Context, req tfsdk.ReadResourceRequest, resp *tfsdk.ReadResourceResponse) {
+func (r *jiraScreenSchemeResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	tflog.Debug(ctx, "Reading screen scheme resource")
 
 	var state jiraScreenSchemeResourceModel
@@ -224,7 +225,7 @@ func (r *jiraScreenSchemeResource) Read(ctx context.Context, req tfsdk.ReadResou
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *jiraScreenSchemeResource) Update(ctx context.Context, req tfsdk.UpdateResourceRequest, resp *tfsdk.UpdateResourceResponse) {
+func (r *jiraScreenSchemeResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	tflog.Debug(ctx, "Updating screen scheme")
 
 	var plan jiraScreenSchemeResourceModel
@@ -276,7 +277,7 @@ func (r *jiraScreenSchemeResource) Update(ctx context.Context, req tfsdk.UpdateR
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *jiraScreenSchemeResource) Delete(ctx context.Context, req tfsdk.DeleteResourceRequest, resp *tfsdk.DeleteResourceResponse) {
+func (r *jiraScreenSchemeResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	tflog.Debug(ctx, "Deleting screen scheme resource")
 
 	var state jiraScreenSchemeResourceModel

@@ -7,6 +7,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/provider"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -15,7 +17,7 @@ import (
 
 type (
 	jiraIssueScreenResource struct {
-		p provider
+		p atlassianProvider
 	}
 
 	jiraIssueScreenResourceType struct{}
@@ -28,9 +30,9 @@ type (
 )
 
 var (
-	_ tfsdk.Resource                = jiraIssueScreenResource{}
-	_ tfsdk.ResourceType            = jiraIssueScreenResourceType{}
-	_ tfsdk.ResourceWithImportState = jiraIssueScreenResource{}
+	_ resource.Resource                = jiraIssueScreenResource{}
+	_ provider.ResourceType            = jiraIssueScreenResourceType{}
+	_ resource.ResourceWithImportState = jiraIssueScreenResource{}
 )
 
 func (jiraIssueScreenResourceType) GetSchema(context.Context) (tfsdk.Schema, diag.Diagnostics) {
@@ -67,7 +69,7 @@ func (jiraIssueScreenResourceType) GetSchema(context.Context) (tfsdk.Schema, dia
 	}, nil
 }
 
-func (jiraIssueScreenResourceType) NewResource(ctx context.Context, in tfsdk.Provider) (tfsdk.Resource, diag.Diagnostics) {
+func (jiraIssueScreenResourceType) NewResource(ctx context.Context, in provider.Provider) (resource.Resource, diag.Diagnostics) {
 	provider, diags := convertProviderType(in)
 
 	return jiraIssueScreenResource{
@@ -76,11 +78,11 @@ func (jiraIssueScreenResourceType) NewResource(ctx context.Context, in tfsdk.Pro
 
 }
 
-func (jiraIssueScreenResource) ImportState(ctx context.Context, req tfsdk.ImportResourceStateRequest, resp *tfsdk.ImportResourceStateResponse) {
-	tfsdk.ResourceImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+func (jiraIssueScreenResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
-func (r jiraIssueScreenResource) Create(ctx context.Context, req tfsdk.CreateResourceRequest, resp *tfsdk.CreateResourceResponse) {
+func (r jiraIssueScreenResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	tflog.Debug(ctx, "Creating issue screen resource")
 
 	if !r.p.configured {
@@ -123,7 +125,7 @@ func (r jiraIssueScreenResource) Create(ctx context.Context, req tfsdk.CreateRes
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r jiraIssueScreenResource) Read(ctx context.Context, req tfsdk.ReadResourceRequest, resp *tfsdk.ReadResourceResponse) {
+func (r jiraIssueScreenResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	tflog.Debug(ctx, "Reading issue screen resource")
 
 	var state jiraIssueScreenResourceModel
@@ -156,7 +158,7 @@ func (r jiraIssueScreenResource) Read(ctx context.Context, req tfsdk.ReadResourc
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r jiraIssueScreenResource) Update(ctx context.Context, req tfsdk.UpdateResourceRequest, resp *tfsdk.UpdateResourceResponse) {
+func (r jiraIssueScreenResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	tflog.Debug(ctx, "Updating issue screen")
 
 	var plan jiraIssueScreenResourceModel
@@ -201,7 +203,7 @@ func (r jiraIssueScreenResource) Update(ctx context.Context, req tfsdk.UpdateRes
 	resp.Diagnostics.Append(resp.State.Set(ctx, &updatedState)...)
 }
 
-func (r jiraIssueScreenResource) Delete(ctx context.Context, req tfsdk.DeleteResourceRequest, resp *tfsdk.DeleteResourceResponse) {
+func (r jiraIssueScreenResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	tflog.Debug(ctx, "Deleting issue screen resource")
 
 	var state jiraIssueScreenResourceModel

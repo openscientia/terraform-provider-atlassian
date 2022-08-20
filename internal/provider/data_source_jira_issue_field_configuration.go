@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -14,7 +16,7 @@ import (
 
 type (
 	jiraIssueFieldConfigurationDataSource struct {
-		p provider
+		p atlassianProvider
 	}
 
 	jiraIssueFieldConfigurationDataSourceType struct{}
@@ -27,8 +29,8 @@ type (
 )
 
 var (
-	_ tfsdk.DataSource     = (*jiraIssueFieldConfigurationDataSource)(nil)
-	_ tfsdk.DataSourceType = (*jiraIssueFieldConfigurationDataSourceType)(nil)
+	_ datasource.DataSource   = (*jiraIssueFieldConfigurationDataSource)(nil)
+	_ provider.DataSourceType = (*jiraIssueFieldConfigurationDataSourceType)(nil)
 )
 
 func (d *jiraIssueFieldConfigurationDataSourceType) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
@@ -55,7 +57,7 @@ func (d *jiraIssueFieldConfigurationDataSourceType) GetSchema(_ context.Context)
 	}, nil
 }
 
-func (d *jiraIssueFieldConfigurationDataSourceType) NewDataSource(_ context.Context, in tfsdk.Provider) (tfsdk.DataSource, diag.Diagnostics) {
+func (d *jiraIssueFieldConfigurationDataSourceType) NewDataSource(_ context.Context, in provider.Provider) (datasource.DataSource, diag.Diagnostics) {
 	provider, diags := convertProviderType(in)
 
 	return &jiraIssueFieldConfigurationDataSource{
@@ -64,7 +66,7 @@ func (d *jiraIssueFieldConfigurationDataSourceType) NewDataSource(_ context.Cont
 
 }
 
-func (d *jiraIssueFieldConfigurationDataSource) Read(ctx context.Context, req tfsdk.ReadDataSourceRequest, resp *tfsdk.ReadDataSourceResponse) {
+func (d *jiraIssueFieldConfigurationDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	tflog.Debug(ctx, "Reading issue field configuration")
 
 	var newState jiraIssueFieldConfigurationDataSourceModel

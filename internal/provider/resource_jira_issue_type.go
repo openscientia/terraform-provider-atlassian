@@ -4,24 +4,24 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/ctreminiom/go-atlassian/pkg/infra/models"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/provider"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-
 	"github.com/openscientia/terraform-provider-atlassian/internal/provider/attribute_validation"
-
-	models "github.com/ctreminiom/go-atlassian/pkg/infra/models"
 )
 
-var _ tfsdk.Resource = jiraIssueTypeResource{}
-var _ tfsdk.ResourceType = jiraIssueTypeResourceType{}
-var _ tfsdk.ResourceWithImportState = jiraIssueTypeResource{}
+var _ resource.Resource = jiraIssueTypeResource{}
+var _ provider.ResourceType = jiraIssueTypeResourceType{}
+var _ resource.ResourceWithImportState = jiraIssueTypeResource{}
 
 type jiraIssueTypeResourceType struct{}
 
 type jiraIssueTypeResource struct {
-	p provider
+	p atlassianProvider
 }
 
 type jiraIssueTypeResourceData struct {
@@ -46,7 +46,7 @@ func (t jiraIssueTypeResourceType) GetSchema(ctx context.Context) (tfsdk.Schema,
 			"name": {
 				MarkdownDescription: "The name of the issue type. The maximum length is 60 characters.",
 				PlanModifiers: tfsdk.AttributePlanModifiers{
-					tfsdk.UseStateForUnknown(),
+					resource.UseStateForUnknown(),
 				},
 				Required: true,
 				Type:     types.StringType,
@@ -90,7 +90,7 @@ func (t jiraIssueTypeResourceType) GetSchema(ctx context.Context) (tfsdk.Schema,
 	}, nil
 }
 
-func (t jiraIssueTypeResourceType) NewResource(ctx context.Context, in tfsdk.Provider) (tfsdk.Resource, diag.Diagnostics) {
+func (t jiraIssueTypeResourceType) NewResource(ctx context.Context, in provider.Provider) (resource.Resource, diag.Diagnostics) {
 	provider, diags := convertProviderType(in)
 
 	return jiraIssueTypeResource{
@@ -98,11 +98,11 @@ func (t jiraIssueTypeResourceType) NewResource(ctx context.Context, in tfsdk.Pro
 	}, diags
 }
 
-func (r jiraIssueTypeResource) ImportState(ctx context.Context, req tfsdk.ImportResourceStateRequest, resp *tfsdk.ImportResourceStateResponse) {
-	tfsdk.ResourceImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+func (r jiraIssueTypeResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
-func (r jiraIssueTypeResource) Create(ctx context.Context, req tfsdk.CreateResourceRequest, resp *tfsdk.CreateResourceResponse) {
+func (r jiraIssueTypeResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	if !r.p.configured {
 		resp.Diagnostics.AddError(
 			"Provider not configured",
@@ -184,7 +184,7 @@ func (r jiraIssueTypeResource) Create(ctx context.Context, req tfsdk.CreateResou
 	}
 }
 
-func (r jiraIssueTypeResource) Read(ctx context.Context, req tfsdk.ReadResourceRequest, resp *tfsdk.ReadResourceResponse) {
+func (r jiraIssueTypeResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	var state jiraIssueTypeResourceData
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
@@ -217,7 +217,7 @@ func (r jiraIssueTypeResource) Read(ctx context.Context, req tfsdk.ReadResourceR
 	}
 }
 
-func (r jiraIssueTypeResource) Update(ctx context.Context, req tfsdk.UpdateResourceRequest, resp *tfsdk.UpdateResourceResponse) {
+func (r jiraIssueTypeResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var plan jiraIssueTypeResourceData
 	diags := req.Plan.Get(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
@@ -260,7 +260,7 @@ func (r jiraIssueTypeResource) Update(ctx context.Context, req tfsdk.UpdateResou
 	}
 }
 
-func (r jiraIssueTypeResource) Delete(ctx context.Context, req tfsdk.DeleteResourceRequest, resp *tfsdk.DeleteResourceResponse) {
+func (r jiraIssueTypeResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	var state jiraIssueTypeResourceData
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)

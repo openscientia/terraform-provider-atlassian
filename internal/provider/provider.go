@@ -6,16 +6,16 @@ import (
 	"os"
 
 	jira "github.com/ctreminiom/go-atlassian/jira/v3"
-	"github.com/openscientia/terraform-provider-atlassian/internal/provider/attribute_validation"
-
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/openscientia/terraform-provider-atlassian/internal/provider/attribute_validation"
 )
 
-var _ tfsdk.Provider = &provider{}
+var _ provider.Provider = &atlassianProvider{}
 
-type provider struct {
+type atlassianProvider struct {
 	jira *jira.Client
 
 	configured bool
@@ -23,7 +23,7 @@ type provider struct {
 	version string
 }
 
-func (p *provider) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostics) {
+func (p *atlassianProvider) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostics) {
 	return tfsdk.Schema{
 		MarkdownDescription: "Atlassian",
 
@@ -62,7 +62,7 @@ type providerData struct {
 	ApiToken types.String `tfsdk:"apitoken"`
 }
 
-func (p *provider) Configure(ctx context.Context, req tfsdk.ConfigureProviderRequest, resp *tfsdk.ConfigureProviderResponse) {
+func (p *atlassianProvider) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
 	var data providerData
 	diags := req.Config.Get(ctx, &data)
 	resp.Diagnostics.Append(diags...)
@@ -158,8 +158,8 @@ func (p *provider) Configure(ctx context.Context, req tfsdk.ConfigureProviderReq
 	p.configured = true
 }
 
-func (p *provider) GetResources(ctx context.Context) (map[string]tfsdk.ResourceType, diag.Diagnostics) {
-	return map[string]tfsdk.ResourceType{
+func (p *atlassianProvider) GetResources(ctx context.Context) (map[string]provider.ResourceType, diag.Diagnostics) {
+	return map[string]provider.ResourceType{
 		"atlassian_jira_issue_field_configuration_item":   &jiraIssueFieldConfigurationItemResourceType{},
 		"atlassian_jira_issue_field_configuration":        &jiraIssueFieldConfigurationResourceType{},
 		"atlassian_jira_issue_field_configuration_scheme": &jiraIssueFieldConfigurationSchemeResourceType{},
@@ -171,8 +171,8 @@ func (p *provider) GetResources(ctx context.Context) (map[string]tfsdk.ResourceT
 	}, nil
 }
 
-func (p *provider) GetDataSources(ctx context.Context) (map[string]tfsdk.DataSourceType, diag.Diagnostics) {
-	return map[string]tfsdk.DataSourceType{
+func (p *atlassianProvider) GetDataSources(ctx context.Context) (map[string]provider.DataSourceType, diag.Diagnostics) {
+	return map[string]provider.DataSourceType{
 		"atlassian_jira_issue_field_configuration": &jiraIssueFieldConfigurationDataSourceType{},
 		"atlassian_jira_issue_screen":              jiraIssueScreenDataSourceType{},
 		"atlassian_jira_issue_type":                jiraIssueTypeDataSourceType{},
@@ -182,9 +182,9 @@ func (p *provider) GetDataSources(ctx context.Context) (map[string]tfsdk.DataSou
 	}, nil
 }
 
-func New(version string) func() tfsdk.Provider {
-	return func() tfsdk.Provider {
-		return &provider{
+func New(version string) func() provider.Provider {
+	return func() provider.Provider {
+		return &atlassianProvider{
 			version: version,
 		}
 	}
@@ -195,17 +195,17 @@ func New(version string) func() tfsdk.Provider {
 // this helper can be skipped and the provider type can be directly type
 // asserted (e.g. provider: in.(*provider)), however using this can prevent
 // potential panics.
-func convertProviderType(in tfsdk.Provider) (provider, diag.Diagnostics) {
+func convertProviderType(in provider.Provider) (atlassianProvider, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
-	p, ok := in.(*provider)
+	p, ok := in.(*atlassianProvider)
 
 	if !ok {
 		diags.AddError(
 			"Unexpected Provider Instance Type",
 			fmt.Sprintf("While creating the data source or resource, an unexpected provider type (%T) was received. This is always a bug in the provider code and should be reported to the provider developers.", p),
 		)
-		return provider{}, diags
+		return atlassianProvider{}, diags
 	}
 
 	if p == nil {
@@ -213,7 +213,7 @@ func convertProviderType(in tfsdk.Provider) (provider, diag.Diagnostics) {
 			"Unexpected Provider Instance Type",
 			"While creating the data source or resource, an unexpected empty provider instance was received. This is always a bug in the provider code and should be reported to the provider developers.",
 		)
-		return provider{}, diags
+		return atlassianProvider{}, diags
 	}
 
 	return *p, diags

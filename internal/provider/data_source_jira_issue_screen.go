@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -15,7 +17,7 @@ import (
 type (
 	jiraIssueScreenDataSourceType struct{}
 	jiraIssueScreenDataSource     struct {
-		p provider
+		p atlassianProvider
 	}
 	jiraIssueScreenDataSourceModel struct {
 		ID          types.String `tfsdk:"id"`
@@ -25,8 +27,8 @@ type (
 )
 
 var (
-	_ tfsdk.DataSourceType = jiraIssueScreenDataSourceType{}
-	_ tfsdk.DataSource     = jiraIssueScreenDataSource{}
+	_ provider.DataSourceType = jiraIssueScreenDataSourceType{}
+	_ datasource.DataSource   = jiraIssueScreenDataSource{}
 )
 
 func (jiraIssueScreenDataSourceType) GetSchema(context.Context) (tfsdk.Schema, diag.Diagnostics) {
@@ -56,7 +58,7 @@ func (jiraIssueScreenDataSourceType) GetSchema(context.Context) (tfsdk.Schema, d
 	}, nil
 }
 
-func (d jiraIssueScreenDataSourceType) NewDataSource(ctx context.Context, in tfsdk.Provider) (tfsdk.DataSource, diag.Diagnostics) {
+func (d jiraIssueScreenDataSourceType) NewDataSource(ctx context.Context, in provider.Provider) (datasource.DataSource, diag.Diagnostics) {
 	provider, diags := convertProviderType(in)
 
 	return jiraIssueScreenDataSource{
@@ -64,7 +66,7 @@ func (d jiraIssueScreenDataSourceType) NewDataSource(ctx context.Context, in tfs
 	}, diags
 }
 
-func (d jiraIssueScreenDataSource) Read(ctx context.Context, req tfsdk.ReadDataSourceRequest, resp *tfsdk.ReadDataSourceResponse) {
+func (d jiraIssueScreenDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	tflog.Debug(ctx, "Reading issue screen")
 	var newState jiraIssueScreenDataSourceModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &newState)...)
