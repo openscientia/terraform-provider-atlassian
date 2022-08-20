@@ -5,13 +5,15 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-var _ tfsdk.DataSourceType = jiraIssueTypeSchemeDataSourceType{}
-var _ tfsdk.DataSource = jiraIssueTypeSchemeDataSource{}
+var _ provider.DataSourceType = jiraIssueTypeSchemeDataSourceType{}
+var _ datasource.DataSource = jiraIssueTypeSchemeDataSource{}
 
 type jiraIssueTypeSchemeDataSourceType struct{}
 
@@ -24,7 +26,7 @@ type jiraIssueTypeSchemeDataSourceData struct {
 }
 
 type jiraIssueTypeSchemeDataSource struct {
-	p provider
+	p atlassianProvider
 }
 
 func (t jiraIssueTypeSchemeDataSourceType) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostics) {
@@ -64,7 +66,7 @@ func (t jiraIssueTypeSchemeDataSourceType) GetSchema(ctx context.Context) (tfsdk
 	}, nil
 }
 
-func (t jiraIssueTypeSchemeDataSourceType) NewDataSource(ctx context.Context, in tfsdk.Provider) (tfsdk.DataSource, diag.Diagnostics) {
+func (t jiraIssueTypeSchemeDataSourceType) NewDataSource(ctx context.Context, in provider.Provider) (datasource.DataSource, diag.Diagnostics) {
 	provider, diags := convertProviderType(in)
 
 	return jiraIssueTypeSchemeDataSource{
@@ -72,7 +74,7 @@ func (t jiraIssueTypeSchemeDataSourceType) NewDataSource(ctx context.Context, in
 	}, diags
 }
 
-func (d jiraIssueTypeSchemeDataSource) Read(ctx context.Context, req tfsdk.ReadDataSourceRequest, resp *tfsdk.ReadDataSourceResponse) {
+func (d jiraIssueTypeSchemeDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var data jiraIssueTypeSchemeDataSourceData
 
 	diags := req.Config.Get(ctx, &data)

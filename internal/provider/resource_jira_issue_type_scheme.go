@@ -5,23 +5,23 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/ctreminiom/go-atlassian/pkg/infra/models"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/provider"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-
 	"github.com/openscientia/terraform-provider-atlassian/internal/provider/attribute_validation"
-
-	models "github.com/ctreminiom/go-atlassian/pkg/infra/models"
 )
 
-var _ tfsdk.Resource = jiraIssueTypeSchemeResource{}
-var _ tfsdk.ResourceWithImportState = jiraIssueTypeSchemeResource{}
-var _ tfsdk.ResourceType = jiraIssueTypeSchemeResourceType{}
+var _ resource.Resource = jiraIssueTypeSchemeResource{}
+var _ resource.ResourceWithImportState = jiraIssueTypeSchemeResource{}
+var _ provider.ResourceType = jiraIssueTypeSchemeResourceType{}
 
 type jiraIssueTypeSchemeResource struct {
-	p provider
+	p atlassianProvider
 }
 type jiraIssueTypeSchemeResourceType struct{}
 type jiraIssueTypeSchemeResourceData struct {
@@ -76,7 +76,7 @@ func (t jiraIssueTypeSchemeResourceType) GetSchema(ctx context.Context) (tfsdk.S
 	}, nil
 }
 
-func (t jiraIssueTypeSchemeResourceType) NewResource(ctx context.Context, in tfsdk.Provider) (tfsdk.Resource, diag.Diagnostics) {
+func (t jiraIssueTypeSchemeResourceType) NewResource(ctx context.Context, in provider.Provider) (resource.Resource, diag.Diagnostics) {
 	provider, diags := convertProviderType(in)
 
 	return jiraIssueTypeSchemeResource{
@@ -84,11 +84,11 @@ func (t jiraIssueTypeSchemeResourceType) NewResource(ctx context.Context, in tfs
 	}, diags
 }
 
-func (r jiraIssueTypeSchemeResource) ImportState(ctx context.Context, req tfsdk.ImportResourceStateRequest, resp *tfsdk.ImportResourceStateResponse) {
-	tfsdk.ResourceImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+func (r jiraIssueTypeSchemeResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
-func (r jiraIssueTypeSchemeResource) Create(ctx context.Context, req tfsdk.CreateResourceRequest, resp *tfsdk.CreateResourceResponse) {
+func (r jiraIssueTypeSchemeResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	if !r.p.configured {
 		resp.Diagnostics.AddError(
 			"Provider not configured",
@@ -155,7 +155,7 @@ func (r jiraIssueTypeSchemeResource) Create(ctx context.Context, req tfsdk.Creat
 	}
 }
 
-func (r jiraIssueTypeSchemeResource) Read(ctx context.Context, req tfsdk.ReadResourceRequest, resp *tfsdk.ReadResourceResponse) {
+func (r jiraIssueTypeSchemeResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	var state jiraIssueTypeSchemeResourceData
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
@@ -202,7 +202,7 @@ func (r jiraIssueTypeSchemeResource) Read(ctx context.Context, req tfsdk.ReadRes
 	}
 }
 
-func (r jiraIssueTypeSchemeResource) Update(ctx context.Context, req tfsdk.UpdateResourceRequest, resp *tfsdk.UpdateResourceResponse) {
+func (r jiraIssueTypeSchemeResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var plan jiraIssueTypeSchemeResourceData
 	diags := req.Plan.Get(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
@@ -282,7 +282,7 @@ func (r jiraIssueTypeSchemeResource) Update(ctx context.Context, req tfsdk.Updat
 	}
 }
 
-func (r jiraIssueTypeSchemeResource) Delete(ctx context.Context, req tfsdk.DeleteResourceRequest, resp *tfsdk.DeleteResourceResponse) {
+func (r jiraIssueTypeSchemeResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	var state jiraIssueTypeSchemeResourceData
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)

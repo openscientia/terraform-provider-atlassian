@@ -9,6 +9,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/provider"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -17,7 +19,7 @@ import (
 
 type (
 	jiraIssueTypeScreenSchemeResource struct {
-		p provider
+		p atlassianProvider
 	}
 
 	jiraIssueTypeScreenSchemeResourceType struct{}
@@ -36,9 +38,9 @@ type (
 )
 
 var (
-	_ tfsdk.Resource                = (*jiraIssueTypeSchemeResource)(nil)
-	_ tfsdk.ResourceType            = (*jiraScreenSchemeResourceType)(nil)
-	_ tfsdk.ResourceWithImportState = (*jiraIssueTypeScreenSchemeResource)(nil)
+	_ resource.Resource                = (*jiraIssueTypeSchemeResource)(nil)
+	_ provider.ResourceType            = (*jiraScreenSchemeResourceType)(nil)
+	_ resource.ResourceWithImportState = (*jiraIssueTypeScreenSchemeResource)(nil)
 )
 
 func (*jiraIssueTypeScreenSchemeResourceType) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
@@ -100,7 +102,7 @@ func (*jiraIssueTypeScreenSchemeResourceType) GetSchema(_ context.Context) (tfsd
 	}, nil
 }
 
-func (r *jiraIssueTypeScreenSchemeResourceType) NewResource(ctx context.Context, in tfsdk.Provider) (tfsdk.Resource, diag.Diagnostics) {
+func (r *jiraIssueTypeScreenSchemeResourceType) NewResource(ctx context.Context, in provider.Provider) (resource.Resource, diag.Diagnostics) {
 	provider, diags := convertProviderType(in)
 
 	return &jiraIssueTypeScreenSchemeResource{
@@ -108,11 +110,11 @@ func (r *jiraIssueTypeScreenSchemeResourceType) NewResource(ctx context.Context,
 	}, diags
 }
 
-func (r *jiraIssueTypeScreenSchemeResource) ImportState(ctx context.Context, req tfsdk.ImportResourceStateRequest, resp *tfsdk.ImportResourceStateResponse) {
-	tfsdk.ResourceImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+func (r *jiraIssueTypeScreenSchemeResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
-func (r *jiraIssueTypeScreenSchemeResource) Create(ctx context.Context, req tfsdk.CreateResourceRequest, resp *tfsdk.CreateResourceResponse) {
+func (r *jiraIssueTypeScreenSchemeResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	tflog.Debug(ctx, "Creating issue type screen scheme")
 
 	if !r.p.configured {
@@ -178,7 +180,7 @@ func (r *jiraIssueTypeScreenSchemeResource) Create(ctx context.Context, req tfsd
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *jiraIssueTypeScreenSchemeResource) Read(ctx context.Context, req tfsdk.ReadResourceRequest, resp *tfsdk.ReadResourceResponse) {
+func (r *jiraIssueTypeScreenSchemeResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	tflog.Debug(ctx, "Reading issue type screen scheme")
 
 	var state jiraIssueTypeScreenSchemeResourceModel
@@ -229,7 +231,7 @@ func (r *jiraIssueTypeScreenSchemeResource) Read(ctx context.Context, req tfsdk.
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *jiraIssueTypeScreenSchemeResource) Update(ctx context.Context, req tfsdk.UpdateResourceRequest, resp *tfsdk.UpdateResourceResponse) {
+func (r *jiraIssueTypeScreenSchemeResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	tflog.Debug(ctx, "Updating issue type screen scheme")
 
 	var plan jiraIssueTypeScreenSchemeResourceModel
@@ -282,7 +284,7 @@ func (r *jiraIssueTypeScreenSchemeResource) Update(ctx context.Context, req tfsd
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *jiraIssueTypeScreenSchemeResource) Delete(ctx context.Context, req tfsdk.DeleteResourceRequest, resp *tfsdk.DeleteResourceResponse) {
+func (r *jiraIssueTypeScreenSchemeResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	tflog.Debug(ctx, "Deleting issue type screen scheme")
 
 	var state jiraIssueTypeScreenSchemeResourceModel

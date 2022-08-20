@@ -8,6 +8,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/provider"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -16,7 +18,7 @@ import (
 
 type (
 	jiraIssueFieldConfigurationResource struct {
-		p provider
+		p atlassianProvider
 	}
 
 	jiraIssueFieldConfigurationResourceType struct{}
@@ -29,9 +31,9 @@ type (
 )
 
 var (
-	_ tfsdk.Resource                = (*jiraIssueFieldConfigurationResource)(nil)
-	_ tfsdk.ResourceType            = (*jiraIssueFieldConfigurationResourceType)(nil)
-	_ tfsdk.ResourceWithImportState = (*jiraIssueFieldConfigurationResource)(nil)
+	_ resource.Resource                = (*jiraIssueFieldConfigurationResource)(nil)
+	_ provider.ResourceType            = (*jiraIssueFieldConfigurationResourceType)(nil)
+	_ resource.ResourceWithImportState = (*jiraIssueFieldConfigurationResource)(nil)
 )
 
 func (*jiraIssueFieldConfigurationResourceType) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
@@ -71,7 +73,7 @@ func (*jiraIssueFieldConfigurationResourceType) GetSchema(_ context.Context) (tf
 	}, nil
 }
 
-func (r *jiraIssueFieldConfigurationResourceType) NewResource(ctx context.Context, in tfsdk.Provider) (tfsdk.Resource, diag.Diagnostics) {
+func (r *jiraIssueFieldConfigurationResourceType) NewResource(ctx context.Context, in provider.Provider) (resource.Resource, diag.Diagnostics) {
 	provider, diags := convertProviderType(in)
 
 	return &jiraIssueFieldConfigurationResource{
@@ -80,11 +82,11 @@ func (r *jiraIssueFieldConfigurationResourceType) NewResource(ctx context.Contex
 
 }
 
-func (r *jiraIssueFieldConfigurationResource) ImportState(ctx context.Context, req tfsdk.ImportResourceStateRequest, resp *tfsdk.ImportResourceStateResponse) {
-	tfsdk.ResourceImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+func (r *jiraIssueFieldConfigurationResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
-func (r *jiraIssueFieldConfigurationResource) Create(ctx context.Context, req tfsdk.CreateResourceRequest, resp *tfsdk.CreateResourceResponse) {
+func (r *jiraIssueFieldConfigurationResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	tflog.Debug(ctx, "Creating issue field configuration")
 
 	if !r.p.configured {
@@ -122,7 +124,7 @@ func (r *jiraIssueFieldConfigurationResource) Create(ctx context.Context, req tf
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *jiraIssueFieldConfigurationResource) Read(ctx context.Context, req tfsdk.ReadResourceRequest, resp *tfsdk.ReadResourceResponse) {
+func (r *jiraIssueFieldConfigurationResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	tflog.Debug(ctx, "Reading issue field configuration")
 
 	var state jiraIssueFieldConfigurationResourceModel
@@ -155,7 +157,7 @@ func (r *jiraIssueFieldConfigurationResource) Read(ctx context.Context, req tfsd
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *jiraIssueFieldConfigurationResource) Update(ctx context.Context, req tfsdk.UpdateResourceRequest, resp *tfsdk.UpdateResourceResponse) {
+func (r *jiraIssueFieldConfigurationResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	tflog.Debug(ctx, "Updating issue field configuration")
 
 	var plan jiraIssueFieldConfigurationResourceModel
@@ -194,7 +196,7 @@ func (r *jiraIssueFieldConfigurationResource) Update(ctx context.Context, req tf
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *jiraIssueFieldConfigurationResource) Delete(ctx context.Context, req tfsdk.DeleteResourceRequest, resp *tfsdk.DeleteResourceResponse) {
+func (r *jiraIssueFieldConfigurationResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	tflog.Debug(ctx, "Deleting issue field configuration")
 
 	var state jiraIssueFieldConfigurationResourceModel
