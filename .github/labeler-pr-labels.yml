@@ -178,6 +178,9 @@ jira/issuefieldconfigurationitems:
 jira/issuefieldconfigurations:
   - 'internal/provider/*jira_issue_field_configuration.go'
   - 'internal/provider/*jira_issue_field_configuration_test.go'
+jira/issuefieldconfigurationschememappings:
+  - 'internal/provider/*jira_issue_field_configuration_scheme_mapping.go'
+  - 'internal/provider/*jira_issue_field_configuration_scheme_mapping_test.go'
 jira/issuefieldconfigurationschemes:
   - 'internal/provider/*jira_issue_field_configuration_scheme.go'
   - 'internal/provider/*jira_issue_field_configuration_scheme_test.go'

@@ -52,6 +52,7 @@ variable "resource_labels" {
     "jira/issuecustomfieldoptions",
     "jira/issuefieldconfigurationitems",
     "jira/issuefieldconfigurations",
+    "jira/issuefieldconfigurationschememappings",
     "jira/issuefieldconfigurationschemes",
     "jira/issuefields",
     "jira/issuelinks",
