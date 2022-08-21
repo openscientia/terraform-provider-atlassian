@@ -107,6 +107,8 @@ jira/issuefieldconfigurationitems:
   - '((\*|-)\s*`?|(data|resource)\s+"?)atlassian_jira_issue_field_configuration_item\b'
 jira/issuefieldconfigurations:
   - '((\*|-)\s*`?|(data|resource)\s+"?)atlassian_jira_issue_field_configuration\b'
+jira/issuefieldconfigurationschememappings:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)atlassian_jira_issue_field_configuration_scheme_mapping\b'
 jira/issuefieldconfigurationschemes:
   - '((\*|-)\s*`?|(data|resource)\s+"?)atlassian_jira_issue_field_configuration_scheme\b'
 jira/issuefields:
