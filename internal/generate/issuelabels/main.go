@@ -107,6 +107,7 @@ func getJiraCustomLabels() []Label {
 	names := []string{
 		"issue-field-configuration-items",
 		"issue-field-configuration-schemes",
+		"issue-field-configuration-scheme-mappings",
 	}
 
 	for _, n := range names {
