@@ -1,0 +1,7 @@
+```release-note:note
+resource/atlassian_jira_issue_type: Added [randomly generated names](https://github.com/hashicorp/terraform-plugin-sdk/blob/main/helper/acctest/random.go) to execute acceptance tests in [parallel](https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2@v2.21.0/helper/resource#ParallelTest)
+```
+
+```release-note:note
+resource/atlassian_jira_issue_type_scheme: Added [randomly generated names](https://github.com/hashicorp/terraform-plugin-sdk/blob/main/helper/acctest/random.go) to execute acceptance tests in [parallel](https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2@v2.21.0/helper/resource#ParallelTest)
+```

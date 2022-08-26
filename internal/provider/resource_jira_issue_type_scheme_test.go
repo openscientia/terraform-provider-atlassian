@@ -4,23 +4,23 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 func TestAccJiraIssueTypeSchemeResource(t *testing.T) {
+	randomName := acctest.RandomWithPrefix("tf-test-issue-type-scheme")
 	resourceName := "atlassian_jira_issue_type_scheme.test"
-	testAttributeNames := []string{"Test Issue Type Scheme 1", "Test Jira Issue Type Scheme 2"}
-
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config: testAccJiraIssueTypeSchemeResourceConfig(testAttributeNames[0]),
+				Config: testAccJiraIssueTypeSchemeResourceConfig(randomName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "name", testAttributeNames[0]),
+					resource.TestCheckResourceAttr(resourceName, "name", randomName),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "issue_type_ids.#", "1"),
 				),
@@ -33,9 +33,9 @@ func TestAccJiraIssueTypeSchemeResource(t *testing.T) {
 			},
 			// Update and Read testing
 			{
-				Config: testAccJiraIssueTypeSchemeResourceConfig(testAttributeNames[1]),
+				Config: testAccJiraIssueTypeSchemeResourceConfig(randomName + "B"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", testAttributeNames[1]),
+					resource.TestCheckResourceAttr(resourceName, "name", randomName+"B"),
 				),
 			},
 			// Delete testing automatically occurs in TestCase
