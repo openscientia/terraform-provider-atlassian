@@ -1,0 +1,7 @@
+```release-note:note
+resource/atlassian_jira_issue_type: Replace attribute validators with [`terraform-plugin-framework-validators`](https://github.com/hashicorp/terraform-plugin-framework-validators)
+```
+
+```release-note:note
+resource/atlassian_jira_issue_type_scheme: Replace attribute validators with [`terraform-plugin-framework-validators`](https://github.com/hashicorp/terraform-plugin-framework-validators)
+```
