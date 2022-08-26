@@ -160,14 +160,15 @@ func (p *atlassianProvider) Configure(ctx context.Context, req provider.Configur
 
 func (p *atlassianProvider) GetResources(ctx context.Context) (map[string]provider.ResourceType, diag.Diagnostics) {
 	return map[string]provider.ResourceType{
-		"atlassian_jira_issue_field_configuration_item":   &jiraIssueFieldConfigurationItemResourceType{},
-		"atlassian_jira_issue_field_configuration":        &jiraIssueFieldConfigurationResourceType{},
-		"atlassian_jira_issue_field_configuration_scheme": &jiraIssueFieldConfigurationSchemeResourceType{},
-		"atlassian_jira_issue_screen":                     jiraIssueScreenResourceType{},
-		"atlassian_jira_issue_type":                       jiraIssueTypeResourceType{},
-		"atlassian_jira_issue_type_scheme":                jiraIssueTypeSchemeResourceType{},
-		"atlassian_jira_issue_type_screen_scheme":         &jiraIssueTypeScreenSchemeResourceType{},
-		"atlassian_jira_screen_scheme":                    &jiraScreenSchemeResourceType{},
+		"atlassian_jira_issue_field_configuration_item":           &jiraIssueFieldConfigurationItemResourceType{},
+		"atlassian_jira_issue_field_configuration":                &jiraIssueFieldConfigurationResourceType{},
+		"atlassian_jira_issue_field_configuration_scheme_mapping": &jiraIssueFieldConfigurationSchemeMappingResourceType{},
+		"atlassian_jira_issue_field_configuration_scheme":         &jiraIssueFieldConfigurationSchemeResourceType{},
+		"atlassian_jira_issue_screen":                             jiraIssueScreenResourceType{},
+		"atlassian_jira_issue_type":                               jiraIssueTypeResourceType{},
+		"atlassian_jira_issue_type_scheme":                        jiraIssueTypeSchemeResourceType{},
+		"atlassian_jira_issue_type_screen_scheme":                 &jiraIssueTypeScreenSchemeResourceType{},
+		"atlassian_jira_screen_scheme":                            &jiraScreenSchemeResourceType{},
 	}, nil
 }
 
