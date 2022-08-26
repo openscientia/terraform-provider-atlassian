@@ -5,13 +5,14 @@ import (
 	"fmt"
 
 	"github.com/ctreminiom/go-atlassian/pkg/infra/models"
+	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/openscientia/terraform-provider-atlassian/internal/provider/attribute_validation"
 )
 
 var _ resource.Resource = jiraIssueTypeResource{}
@@ -48,7 +49,7 @@ func (t jiraIssueTypeResourceType) GetSchema(ctx context.Context) (tfsdk.Schema,
 				Required:            true,
 				Type:                types.StringType,
 				Validators: []tfsdk.AttributeValidator{
-					attribute_validation.StringLengthBetween(0, 60),
+					stringvalidator.LengthAtMost(60),
 				},
 			},
 			"description": {
@@ -64,7 +65,7 @@ func (t jiraIssueTypeResourceType) GetSchema(ctx context.Context) (tfsdk.Schema,
 				Computed:            true,
 				Type:                types.StringType,
 				Validators: []tfsdk.AttributeValidator{
-					attribute_validation.StringValues([]string{"standard", "sub-task"}),
+					stringvalidator.OneOf("standard", "sub-task"),
 				},
 			},
 			"hierarchy_level": {
@@ -73,7 +74,7 @@ func (t jiraIssueTypeResourceType) GetSchema(ctx context.Context) (tfsdk.Schema,
 				Computed:            true,
 				Type:                types.Int64Type,
 				Validators: []tfsdk.AttributeValidator{
-					attribute_validation.IntValues([]int{0, -1}),
+					int64validator.OneOf(0, -1),
 				},
 			},
 			"avatar_id": {
