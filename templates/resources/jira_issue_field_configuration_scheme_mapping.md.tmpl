@@ -1,0 +1,42 @@
+---
+page_title: "Atlassian Cloud: {{ .Name }}"
+subcategory: "Jira Cloud"
+description: |-
+  Manages {{ .Name }}.
+---
+
+# {{ .Type }}: {{ .Name }}
+
+Provides an `{{ .Name }}` resource.
+
+Learn more about [Jira Issue Field Configuration Scheme Mappings](https://support.atlassian.com/jira-cloud-administration/docs/configure-a-field-configuration-scheme/).
+
+See more details about the [Jira Cloud Platform REST API for Issue Field Configuration Scheme Mappings](https://developer.atlassian.com/cloud/jira/platform/rest/v3/api-group-issue-field-configurations/#api-rest-api-3-fieldconfigurationscheme-id-mapping-put).
+
+-> **Note** `{{ .Name }}` resources can only reference [field configuration schemes](https://support.atlassian.com/jira-cloud-administration/docs/what-are-issue-field-configuration-schemes/) used in [company-managed (classic) projects](https://support.atlassian.com/jira-software-cloud/docs/what-are-team-managed-and-company-managed-projects/).
+
+-> **Note** An [issue type](https://support.atlassian.com/jira-cloud-administration/docs/what-are-issue-types/) can only be associated with one [field configuration](https://support.atlassian.com/jira-cloud-administration/docs/manage-issue-field-configurations/) within a [field configuration scheme](https://support.atlassian.com/jira-cloud-administration/docs/what-are-issue-field-configuration-schemes/).
+
+## Example Usage
+
+### Basic
+
+{{ .Name | printf "examples/resources/%s/basic.tf" | tffile }}
+
+### Default Mapping
+
+-> **Note** All unmapped issue types are associated to the `default` mapping which is added when an [`atlassian_jira_issue_field_configuration_scheme`](https://registry.terraform.io/providers/openscientia/atlassian/latest/docs/resources/jira_issue_field_configuration_scheme) is first created.
+
+-> **Note** You cannot delete the `default` mapping in a field configuration scheme.
+
+{{ .Name | printf "examples/resources/%s/default.tf" | tffile }}
+
+{{ .SchemaMarkdown | trimspace }}
+
+## Import
+
+`{{ .Name }}` can be imported using the `field_configuration_scheme_id`, `field_configuration_id` and `issue_type_id` separated by a comma (`,`) e.g.,
+
+```sh
+$ terraform import {{ .Name | printf "%s.foo 10000,10001,10100"}}
+```
