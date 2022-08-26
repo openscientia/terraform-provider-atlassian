@@ -1,0 +1,3 @@
+```release-note:new-resource
+atlassian_jira_issue_field_configuration_scheme_mapping
+```
