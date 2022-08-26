@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"github.com/ctreminiom/go-atlassian/pkg/infra/models"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
@@ -13,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/openscientia/terraform-provider-atlassian/internal/provider/attribute_validation"
 )
 
 var _ resource.Resource = jiraIssueTypeSchemeResource{}
@@ -46,7 +46,7 @@ func (t jiraIssueTypeSchemeResourceType) GetSchema(ctx context.Context) (tfsdk.S
 				Required:            true,
 				Type:                types.StringType,
 				Validators: []tfsdk.AttributeValidator{
-					attribute_validation.StringLengthBetween(0, 255),
+					stringvalidator.LengthAtMost(255),
 				},
 			},
 			"description": {
@@ -55,7 +55,7 @@ func (t jiraIssueTypeSchemeResourceType) GetSchema(ctx context.Context) (tfsdk.S
 				Computed:            true,
 				Type:                types.StringType,
 				Validators: []tfsdk.AttributeValidator{
-					attribute_validation.StringLengthBetween(0, 4000),
+					stringvalidator.LengthAtMost(4000),
 				},
 			},
 			"default_issue_type_id": {
