@@ -45,11 +45,8 @@ func (t jiraIssueTypeResourceType) GetSchema(ctx context.Context) (tfsdk.Schema,
 			},
 			"name": {
 				MarkdownDescription: "The name of the issue type. The maximum length is 60 characters.",
-				PlanModifiers: tfsdk.AttributePlanModifiers{
-					resource.UseStateForUnknown(),
-				},
-				Required: true,
-				Type:     types.StringType,
+				Required:            true,
+				Type:                types.StringType,
 				Validators: []tfsdk.AttributeValidator{
 					attribute_validation.StringLengthBetween(0, 60),
 				},
