@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
 var _ resource.Resource = jiraIssueTypeResource{}
@@ -101,6 +102,8 @@ func (r jiraIssueTypeResource) ImportState(ctx context.Context, req resource.Imp
 }
 
 func (r jiraIssueTypeResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	tflog.Debug(ctx, "Creating issue type resource")
+
 	if !r.p.configured {
 		resp.Diagnostics.AddError(
 			"Provider not configured",
@@ -110,11 +113,13 @@ func (r jiraIssueTypeResource) Create(ctx context.Context, req resource.CreateRe
 	}
 
 	var plan jiraIssueTypeResourceData
-	diags := req.Plan.Get(ctx, &plan)
-	resp.Diagnostics.Append(diags...)
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	tflog.Debug(ctx, "Loaded issue type plan", map[string]interface{}{
+		"createPlan": fmt.Sprintf("%+v", plan),
+	})
 
 	if !plan.Type.Unknown && !plan.HierarchyLevel.Unknown {
 		resp.Diagnostics.AddError("User Error", "Cannot use attributes `type` and `hierarchy_level` together.")
@@ -147,17 +152,19 @@ func (r jiraIssueTypeResource) Create(ctx context.Context, req resource.CreateRe
 	issueTypePayload.Description = plan.Description.Value
 	issueTypePayload.HierarchyLevel = int(plan.HierarchyLevel.Value)
 
-	// Create new issue type
 	returnedIssueType, res, err := r.p.jira.Issue.Type.Create(ctx, issueTypePayload)
 	if err != nil {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create issue type, got error: %s\n%s", err.Error(), res.Bytes.String()))
+		var resBody string
+		if res != nil {
+			resBody = res.Bytes.String()
+		}
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create issue type, got error: %s\n%s", err, resBody))
 		return
 	}
+	tflog.Debug(ctx, "Created issue type")
 
-	// Store new issue type ID in state
 	plan.ID = types.String{Value: returnedIssueType.ID}
 
-	// Apply chosen avatar image for new issue type
 	if !plan.AvatarId.Unknown {
 		issueTypePayload := new(models.IssueTypePayloadScheme)
 		issueTypePayload.Name = plan.Name.Value
@@ -166,29 +173,35 @@ func (r jiraIssueTypeResource) Create(ctx context.Context, req resource.CreateRe
 
 		returnedIssueType, res, err := r.p.jira.Issue.Type.Update(ctx, returnedIssueType.ID, issueTypePayload)
 		if err != nil {
-			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update issue type, got error: %s\n%s", err.Error(), res.Bytes.String()))
+			var resBody string
+			if res != nil {
+				resBody = res.Bytes.String()
+			}
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update issue type, got error: %s\n%s", err, resBody))
 			return
 		}
 		plan.AvatarId = types.Int64{Value: int64(returnedIssueType.AvatarID)}
-
 	} else {
 		plan.AvatarId = types.Int64{Value: int64(returnedIssueType.AvatarID)}
 	}
 
-	diags = resp.State.Set(ctx, &plan)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	tflog.Debug(ctx, "Storing issue type into the state", map[string]interface{}{
+		"createNewState": fmt.Sprintf("%+v", plan),
+	})
+	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
 func (r jiraIssueTypeResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	tflog.Debug(ctx, "Reading issue type resource")
+
 	var state jiraIssueTypeResourceData
-	diags := req.State.Get(ctx, &state)
-	resp.Diagnostics.Append(diags...)
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	tflog.Debug(ctx, "Loaded issue type from state", map[string]interface{}{
+		"readState": fmt.Sprintf("%+v", state),
+	})
 
 	issueTypeID := state.ID.Value
 
@@ -197,6 +210,7 @@ func (r jiraIssueTypeResource) Read(ctx context.Context, req resource.ReadReques
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read issue type, got error: %s\n%s", err.Error(), res.Bytes.String()))
 		return
 	}
+	tflog.Debug(ctx, "Retrieved issue type from API state")
 
 	state.Name = types.String{Value: returnedIssueType.Name}
 	state.Description = types.String{Value: returnedIssueType.Description}
@@ -208,27 +222,33 @@ func (r jiraIssueTypeResource) Read(ctx context.Context, req resource.ReadReques
 	state.HierarchyLevel = types.Int64{Value: int64(returnedIssueType.HierarchyLevel)}
 	state.AvatarId = types.Int64{Value: int64(returnedIssueType.AvatarID)}
 
-	diags = resp.State.Set(ctx, &state)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	tflog.Debug(ctx, "Storing issue type into the state", map[string]interface{}{
+		"readNewState": fmt.Sprintf("%+v", state),
+	})
+	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
 func (r jiraIssueTypeResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	tflog.Debug(ctx, "Updating issue type resource")
+
 	var plan jiraIssueTypeResourceData
-	diags := req.Plan.Get(ctx, &plan)
-	resp.Diagnostics.Append(diags...)
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	tflog.Debug(ctx, "Loaded issue type plan", map[string]interface{}{
+		"updatePlan": fmt.Sprintf("%+v", plan),
+	})
 
 	var state jiraIssueTypeResourceData
-	diags = req.State.Get(ctx, &state)
-	resp.Diagnostics.Append(diags...)
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	tflog.Debug(ctx, "Loaded issue type from state", map[string]interface{}{
+		"updateState": fmt.Sprintf("%+v", state),
+	})
+
 	issueTypeID := state.ID.Value
 
 	issueTypePayload := new(models.IssueTypePayloadScheme)
@@ -241,6 +261,7 @@ func (r jiraIssueTypeResource) Update(ctx context.Context, req resource.UpdateRe
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update issue type, got error: %s\n%s", err.Error(), res.Bytes.String()))
 		return
 	}
+	tflog.Debug(ctx, "Updated issue type in API state")
 
 	var result = jiraIssueTypeResourceData{
 		ID:             types.String{Value: returnedIssueType.ID},
@@ -251,29 +272,28 @@ func (r jiraIssueTypeResource) Update(ctx context.Context, req resource.UpdateRe
 		HierarchyLevel: types.Int64{Value: int64(returnedIssueType.HierarchyLevel)},
 	}
 
-	diags = resp.State.Set(ctx, &result)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	tflog.Debug(ctx, "Storing issue type into the state", map[string]interface{}{
+		"updateNewState": fmt.Sprintf("%+v", result),
+	})
+	resp.Diagnostics.Append(resp.State.Set(ctx, &result)...)
 }
 
 func (r jiraIssueTypeResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	tflog.Debug(ctx, "Deleting issue type resource")
+
 	var state jiraIssueTypeResourceData
-	diags := req.State.Get(ctx, &state)
-	resp.Diagnostics.Append(diags...)
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	tflog.Debug(ctx, "Loaded issue type from state")
 
-	issueTypeID := state.ID.Value
-
-	res, err := r.p.jira.Issue.Type.Delete(ctx, issueTypeID)
+	res, err := r.p.jira.Issue.Type.Delete(ctx, state.ID.Value)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete issue type, got error: %s\n%s", err, res.Bytes.String()))
 		return
 	}
+	tflog.Debug(ctx, "Deleted issue type from API state")
 
-	// Remove resource from state
-	resp.State.RemoveResource(ctx)
+	// If a Resource type Delete method is completed without error, the framework will automatically remove the resource.
 }
