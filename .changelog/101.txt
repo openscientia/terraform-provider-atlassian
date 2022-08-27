@@ -1,0 +1,7 @@
+```release-note:note
+resource/atlassian_jira_issue_type: Enhance logging ouput to improve provider debugging
+```
+
+```release-note:note
+resource/atlassian_jira_issue_type_scheme: Enhance logging output to improve provider debugging
+```
