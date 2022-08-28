@@ -110,20 +110,21 @@ func testAccJiraIssueTypeSchemeConfig_description(resourceName, name, descriptio
 	`, splits[0], splits[1], name, description)
 }
 
-func testAccJiraIssueTypeSchemeConfig_issuetypeids(resourceName, name string) string {
-	splits := strings.Split(resourceName, ".")
-	return fmt.Sprintf(`
-	resource "atlassian_jira_issue_type" "test" {
-		name = %[3]q
-	}
+//TODO: https://github.com/openscientia/terraform-provider-atlassian/issues/102
+// func testAccJiraIssueTypeSchemeConfig_issuetypeids(resourceName, name string) string {
+// 	splits := strings.Split(resourceName, ".")
+// 	return fmt.Sprintf(`
+// 	resource "atlassian_jira_issue_type" "test" {
+// 		name = %[3]q
+// 	}
 
-	resource "atlassian_jira_issue_type" "testb" {
-		name = "%[3]s2"
-	}
+// 	resource "atlassian_jira_issue_type" "testb" {
+// 		name = "%[3]s2"
+// 	}
 
-	resource %[1]q %[2]q {
-		name = %[3]q
-		issue_type_ids = [resource.atlassian_jira_issue_type.test.id, resource.atlassian_jira_issue_type.testb.id]
-	}
-	`, splits[0], splits[1], name)
-}
+// 	resource %[1]q %[2]q {
+// 		name = %[3]q
+// 		issue_type_ids = [resource.atlassian_jira_issue_type.test.id, resource.atlassian_jira_issue_type.testb.id]
+// 	}
+// 	`, splits[0], splits[1], name)
+// }
