@@ -1,0 +1,8 @@
+```release-note:note
+resource/atlassian_jira_issue_type: Enhance acceptance tests to validate configuration changes on all attributes
+```
+
+```release-note:note
+resource/atlassian_jira_issue_type_scheme: Enhance acceptance tests to validate configuration changes on all attributes
+```
+
