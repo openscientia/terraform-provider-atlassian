@@ -70,12 +70,13 @@ func TestAccJiraIssueTypeScheme_IssueTypeIds(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "issue_type_ids.#", "1"),
 				),
 			},
-			{
-				Config: testAccJiraIssueTypeSchemeConfig_issuetypeids(resourceName, randomName),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "issue_type_ids.#", "2"),
-				),
-			},
+			//TODO: https://github.com/openscientia/terraform-provider-atlassian/issues/102
+			// {
+			// 	Config: testAccJiraIssueTypeSchemeConfig_issuetypeids(resourceName, randomName),
+			// 	Check: resource.ComposeTestCheckFunc(
+			// 		resource.TestCheckResourceAttr(resourceName, "issue_type_ids.#", "2"),
+			// 	),
+			// },
 		},
 	})
 }
