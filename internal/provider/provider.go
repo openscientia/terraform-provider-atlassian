@@ -181,6 +181,7 @@ func (p *atlassianProvider) GetDataSources(ctx context.Context) (map[string]prov
 		"atlassian_jira_issue_type":                       jiraIssueTypeDataSourceType{},
 		"atlassian_jira_issue_type_scheme":                jiraIssueTypeSchemeDataSourceType{},
 		"atlassian_jira_issue_type_screen_scheme":         &jiraIssueTypeScreenSchemeDataSourceType{},
+		"atlassian_jira_project_category":                 &jiraProjectCategoryDataSourceType{},
 		"atlassian_jira_screen_scheme":                    &jiraScreenSchemeDataSourceType{},
 	}, nil
 }
