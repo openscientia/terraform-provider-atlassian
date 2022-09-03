@@ -29,6 +29,7 @@ FEATURES:
 * **New Resource:** `atlassian_jira_issue_field_configuration_scheme_mapping` ([#90](https://github.com/openscientia/terraform-provider-atlassian/issues/90))
 * **New Resource:** `atlassian_jira_issue_screen` ([#15](https://github.com/openscientia/terraform-provider-atlassian/issues/15))
 * **New Resource:** `atlassian_jira_issue_type_screen_scheme` ([#54](https://github.com/openscientia/terraform-provider-atlassian/issues/54))
+* **New Resource:** `atlassian_jira_project_category` ([#115](https://github.com/openscientia/terraform-provider-atlassian/issues/115))
 * **New Resource:** `atlassian_jira_screen_scheme` ([#47](https://github.com/openscientia/terraform-provider-atlassian/issues/47))
 
 ENHANCEMENTS:
