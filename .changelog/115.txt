@@ -1,0 +1,3 @@
+```release-note:new-resource
+atlassian_jira_project_category
+```
