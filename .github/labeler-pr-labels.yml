@@ -262,6 +262,9 @@ jira/labels:
 jira/myself:
   - 'internal/provider/*jira_myself.go'
   - 'internal/provider/*jira_myself_test.go'
+jira/permissiongrants:
+  - 'internal/provider/*jira_permission_grant.go'
+  - 'internal/provider/*jira_permission_grant_test.go'
 jira/permissions:
   - 'internal/provider/*jira_permission.go'
   - 'internal/provider/*jira_permission_test.go'

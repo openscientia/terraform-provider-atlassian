@@ -80,6 +80,7 @@ variable "resource_labels" {
     "jira/jql",
     "jira/labels",
     "jira/myself",
+    "jira/permissiongrants",
     "jira/permissions",
     "jira/permissionschemes",
     "jira/projectavatars",

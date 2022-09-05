@@ -163,6 +163,8 @@ jira/labels:
   - '((\*|-)\s*`?|(data|resource)\s+"?)atlassian_jira_label\b'
 jira/myself:
   - '((\*|-)\s*`?|(data|resource)\s+"?)atlassian_jira_myself\b'
+jira/permissiongrants:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)atlassian_jira_permission_grant\b'
 jira/permissions:
   - '((\*|-)\s*`?|(data|resource)\s+"?)atlassian_jira_permission\b'
 jira/permissionschemes:
