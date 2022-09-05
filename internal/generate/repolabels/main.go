@@ -107,6 +107,7 @@ func getJiraCustomResources() []Resource {
 		"issuefieldconfigurationitems",
 		"issuefieldconfigurationschemes",
 		"issuefieldconfigurationschememappings",
+		"permissiongrants",
 	}
 	for _, r := range resources {
 		customResources = append(customResources, Resource{
