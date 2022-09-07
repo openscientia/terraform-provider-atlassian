@@ -1,0 +1,287 @@
+package atlassian
+
+import (
+	"context"
+	"fmt"
+	"strconv"
+	"strings"
+
+	"github.com/ctreminiom/go-atlassian/pkg/infra/models"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/provider"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/openscientia/terraform-provider-atlassian/internal/provider/attribute_plan_modification"
+)
+
+type (
+	jiraPermissionGrantResource struct {
+		p atlassianProvider
+	}
+
+	jiraPermissionGrantResourceType struct{}
+
+	jiraPermissionGrantResourceModel struct {
+		ID                 types.String                    `tfsdk:"id"`
+		PermissionSchemeID types.String                    `tfsdk:"permission_scheme_id"`
+		Holder             *jiraPermissionGrantHolderModel `tfsdk:"holder"`
+		Permission         types.String                    `tfsdk:"permission"`
+	}
+
+	jiraPermissionGrantHolderModel struct {
+		Type      types.String `tfsdk:"type"`
+		Parameter types.String `tfsdk:"parameter"`
+	}
+)
+
+var (
+	_            resource.Resource                = (*jiraPermissionGrantResource)(nil)
+	_            provider.ResourceType            = (*jiraPermissionGrantResourceType)(nil)
+	_            resource.ResourceWithImportState = (*jiraPermissionGrantResource)(nil)
+	holder_types []string                         = []string{
+		"anyone", "applicationRole", "assignee", "group", "groupCustomField", "projectLead",
+		"projectRole", "reporter", "sd.customer.portal.only", "user", "userCustomField",
+	}
+	built_in_permissions []string = []string{
+		// Project permissions
+		"ADMINISTER_PROJECTS",
+		"BROWSE_PROJECTS",
+		"MANAGE_SPRINTS_PERMISSION", // (Jira Software only)
+		"SERVICEDESK_AGENT",         // (Jira Service Desk only)
+		"VIEW_DEV_TOOLS",            // (Jira Software only)
+		"VIEW_READONLY_WORKFLOW",
+		// Issue permissions
+		"ASSIGNABLE_USER", "ASSIGN_ISSUES", "CLOSE_ISSUES", "CREATE_ISSUES", "DELETE_ISSUES", "EDIT_ISSUES", "LINK_ISSUES",
+		"MODIFY_REPORTER", "MOVE_ISSUES", "RESOLVE_ISSUES", "SCHEDULE_ISSUES", "SET_ISSUE_SECURITY", "TRANSITION_ISSUES",
+		// Voters and watchers permissions
+		"MANAGE_WATCHERS", "VIEW_VOTERS_AND_WATCHERS",
+		// Comments permissions
+		"ADD_COMMENTS", "DELETE_ALL_COMMENTS", "DELETE_OWN_COMMENTS", "EDIT_ALL_COMMENTS", "EDIT_OWN_COMMENTS",
+		// Attachments permissions
+		"CREATE_ATTACHMENTS", "DELETE_ALL_ATTACHMENTS", "DELETE_OWN_ATTACHMENTS",
+		// Time tracking permissions
+		"DELETE_ALL_WORKLOGS", "DELETE_OWN_WORKLOGS", "EDIT_ALL_WORKLOGS", "EDIT_OWN_WORKLOGS", "WORK_ON_ISSUES",
+	}
+)
+
+func (*jiraPermissionGrantResourceType) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
+	return tfsdk.Schema{
+		Version:             1,
+		MarkdownDescription: "Jira Permission Grant Resource",
+		Attributes: map[string]tfsdk.Attribute{
+			"id": {
+				MarkdownDescription: "(Forces new) The ID of the permission grant.",
+				Computed:            true,
+				Type:                types.StringType,
+				PlanModifiers: tfsdk.AttributePlanModifiers{
+					resource.UseStateForUnknown(),
+				},
+			},
+			"permission_scheme_id": {
+				MarkdownDescription: "(Forces new) The ID of the permission scheme in which to create a new permission grant.",
+				Required:            true,
+				Type:                types.StringType,
+				PlanModifiers: tfsdk.AttributePlanModifiers{
+					resource.UseStateForUnknown(),
+					resource.RequiresReplace(),
+				},
+			},
+			"holder": {
+				MarkdownDescription: "(Forces new) The user, group, field or role being granted the permission.",
+				Required:            true,
+				Attributes: tfsdk.SingleNestedAttributes(
+					map[string]tfsdk.Attribute{
+						"type": {
+							MarkdownDescription: "The type of permission holder. " +
+								"Can be one of: `anyone`, `applicationRole`, `assignee`, `group`, `groupCustomField`, " +
+								"`projectLead`, `projectRole`, `reporter`, `user` or `userCustomField`.",
+							Required: true,
+							Type:     types.StringType,
+							Validators: []tfsdk.AttributeValidator{
+								stringvalidator.OneOf(holder_types...),
+							},
+						},
+						"parameter": {
+							MarkdownDescription: "The identifier associated with the `type` value that defines the holder of the permission.",
+							Optional:            true,
+							Computed:            true,
+							Type:                types.StringType,
+							PlanModifiers: tfsdk.AttributePlanModifiers{
+								attribute_plan_modification.DefaultValue(types.String{Value: ""}),
+							},
+						},
+					},
+				),
+				PlanModifiers: tfsdk.AttributePlanModifiers{
+					resource.RequiresReplace(),
+				},
+			},
+			"permission": {
+				MarkdownDescription: "(Forces new) The permission to grant. Can be one of the built-in permissions or a custom permission added by an app.",
+				Required:            true,
+				Type:                types.StringType,
+				PlanModifiers: tfsdk.AttributePlanModifiers{
+					resource.RequiresReplace(),
+				},
+				Validators: []tfsdk.AttributeValidator{
+					stringvalidator.OneOf(built_in_permissions...),
+				},
+			},
+		},
+	}, nil
+}
+
+func (r *jiraPermissionGrantResourceType) NewResource(ctx context.Context, in provider.Provider) (resource.Resource, diag.Diagnostics) {
+	provider, diags := convertProviderType(in)
+
+	return &jiraPermissionGrantResource{
+		p: provider,
+	}, diags
+}
+
+func (r *jiraPermissionGrantResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	idParts := strings.Split(req.ID, ",")
+	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
+		resp.Diagnostics.AddError("Unexpected Import Identifier",
+			fmt.Sprintf("Expected import identifier with format: ID, permission_scheme_id. Got: %q", req.ID))
+		return
+	}
+	tflog.Debug(ctx, fmt.Sprintf("Importing permission grant with import identifier: %+v", idParts))
+
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), idParts[0])...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("permission_scheme_id"), idParts[1])...)
+}
+
+func (r *jiraPermissionGrantResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	tflog.Debug(ctx, "Creating permission grant resource")
+
+	if !r.p.configured {
+		resp.Diagnostics.AddError(
+			"Provider not configured",
+			"The provider hasn't been configured before apply, likely because it depends on an unknown value from another resource. This leads to weird stuff happening, so we'd prefer if you didn't do that. Thanks!",
+		)
+	}
+
+	var plan jiraPermissionGrantResourceModel
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	tflog.Debug(ctx, "Loaded permission grant plan", map[string]interface{}{
+		"createPlan": fmt.Sprintf("%+v, Holder:%+v", plan, plan.Holder),
+	})
+
+	specialTypes := []string{"group", "projectRole", "user", "userCustomField"}
+	for _, st := range specialTypes {
+		if plan.Holder.Type.Value == st {
+			if plan.Holder.Parameter.Value == "" {
+				resp.Diagnostics.AddAttributeError(path.Root("holder").AtMapKey("parameter"),
+					"Failed to provide a value for \"holder.parameter\" attribute",
+					fmt.Sprintf("Value must be provided if \"holder.type\" is: %s", st),
+				)
+				return
+			}
+		}
+	}
+
+	schemeId, _ := strconv.Atoi(plan.PermissionSchemeID.Value)
+	createPayload := &models.PermissionGrantPayloadScheme{
+		Holder: &models.PermissionGrantHolderScheme{
+			Type:      plan.Holder.Type.Value,
+			Parameter: plan.Holder.Parameter.Value,
+		},
+		Permission: plan.Permission.Value,
+	}
+
+	permissionGrant, res, err := r.p.jira.Permission.Scheme.Grant.Create(ctx, schemeId, createPayload)
+	if err != nil {
+		var resBody string
+		if res != nil {
+			resBody = res.Bytes.String()
+		}
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create permission grant, got error: %s\n%s", err, resBody))
+		return
+	}
+	tflog.Debug(ctx, "Created permission grant")
+
+	plan.ID = types.String{Value: strconv.Itoa(permissionGrant.ID)}
+
+	tflog.Debug(ctx, "Storing permission grant into the state", map[string]interface{}{
+		"createNewState": fmt.Sprintf("%+v, Holder:%+v", plan, plan.Holder),
+	})
+	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+}
+
+func (r *jiraPermissionGrantResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	tflog.Debug(ctx, "Reading permission grant resource")
+
+	var state jiraPermissionGrantResourceModel
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	tflog.Debug(ctx, "Loaded permission grant from state", map[string]interface{}{
+		"readState": fmt.Sprintf("%+v, Holder:%+v", state, state.Holder),
+	})
+
+	grantId, _ := strconv.Atoi(state.ID.Value)
+	schemeId, _ := strconv.Atoi(state.PermissionSchemeID.Value)
+
+	permissionGrant, res, err := r.p.jira.Permission.Scheme.Grant.Get(ctx, schemeId, grantId, []string{"all"})
+	if err != nil {
+		var resBody string
+		if res != nil {
+			resBody = res.Bytes.String()
+		}
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to get permission grant, got error: %s\n%s", err, resBody))
+		return
+	}
+	tflog.Debug(ctx, "Retrieved permission grant from API state")
+
+	state.Holder = &jiraPermissionGrantHolderModel{
+		Type:      types.String{Value: permissionGrant.Holder.Type},
+		Parameter: types.String{Value: permissionGrant.Holder.Parameter},
+	}
+	state.Permission = types.String{Value: permissionGrant.Permission}
+
+	tflog.Debug(ctx, "Storing permission grant into the state", map[string]interface{}{
+		"readNewState": fmt.Sprintf("%+v, Holder:%+v", state, state.Holder),
+	})
+	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+}
+
+func (r *jiraPermissionGrantResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	// The RequiresReplace plan modifier will trigger Terraform to destroy and recreate the resource
+	// if any of the required attributes changes, i.e. permission_scheme_id, holder or permission
+	tflog.Debug(ctx, "If the value of any required attribute changes, Terraform will destroy and recreate the resource")
+}
+
+func (r *jiraPermissionGrantResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	tflog.Debug(ctx, "Deleting permission grant resource")
+
+	var state jiraPermissionGrantResourceModel
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	grantId, _ := strconv.Atoi(state.ID.Value)
+	schemeId, _ := strconv.Atoi(state.PermissionSchemeID.Value)
+
+	res, err := r.p.jira.Permission.Scheme.Grant.Delete(ctx, schemeId, grantId)
+	if err != nil {
+		var resBody string
+		if res != nil {
+			resBody = res.Bytes.String()
+		}
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete permission grant, got error: %s\n%s", err, resBody))
+		return
+	}
+	tflog.Debug(ctx, "Deleted permission grant from API state")
+
+	// If a Resource type Delete method is completed without error, the framework will automatically remove the resource.
+}

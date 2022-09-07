@@ -1,0 +1,60 @@
+---
+page_title: "Atlassian Cloud: {{ .Name }}"
+subcategory: "Jira Cloud"
+description: |-
+  Manages {{ .Name }}.
+---
+
+# {{ .Type }}: {{ .Name }}
+
+Provides an `{{ .Name }}` resource.
+
+Learn more about [Jira Permission Grants](https://support.atlassian.com/jira-cloud-administration/docs/manage-global-permissions/).
+
+See more details about the [Jira Cloud Platform REST API for Permission Grants](https://developer.atlassian.com/cloud/jira/platform/rest/v3/api-group-permission-schemes/#api-rest-api-3-permissionscheme-schemeid-permission-get).
+
+-> **Note** `{{ .Name }}` resources are only for use in [company-managed (classic) projects](https://support.atlassian.com/jira-software-cloud/docs/what-are-team-managed-and-company-managed-projects/).
+
+-> **Note** See [Built-in permissions](https://developer.atlassian.com/cloud/jira/platform/rest/v3/api-group-permission-schemes/#built-in-permissions) for more information about the built-in permissions. Apps can also define custom permissions. See the [project permission](https://developer.atlassian.com/cloud/jira/platform/modules/project-permission/) and [global permission](https://developer.atlassian.com/cloud/jira/platform/modules/global-permission/) module documentation for more information.
+
+-> **Note** See [Holder object](https://developer.atlassian.com/cloud/jira/platform/rest/v3/api-group-permission-schemes/#about-permission-schemes-and-grants) for more information about permission grants.
+
+## Example Usage
+
+### Basic
+
+{{ .Name | printf "examples/resources/%s/basic.tf" | tffile }}
+
+### Group Permission Holder
+
+-> **Note** If the `holder.type` is `group`, you must provide the group name via `parameter`.
+
+{{ .Name | printf "examples/resources/%s/group.tf" | tffile }}
+
+### Project Role Permission Holder
+
+-> **Note** If the `holder.type` is `projectRole`, you must provide the project role id via `parameter`.
+
+{{ .Name | printf "examples/resources/%s/project-role.tf" | tffile }}
+
+### User Permission Holder
+
+-> **Note** If the `holder.type` is `user`, you must provide the user account id via `parameter`.
+
+{{ .Name | printf "examples/resources/%s/user.tf" | tffile }}
+
+### User Custom Field Permission Holder
+
+-> **Note** If the `holder.type` is `userCustomField`, you must provide the custom field id via `parameter`.
+
+{{ .Name | printf "examples/resources/%s/user-custom-field.tf" | tffile }}
+
+{{ .SchemaMarkdown | trimspace }}
+
+## Import
+
+`{{ .Name }}` can be imported using `id` and `permission_scheme_id` separated by a comma (`,`) e.g.,
+
+```sh
+$ terraform import {{ .Name | printf "%s.foo 10000,10101"}}
+```
