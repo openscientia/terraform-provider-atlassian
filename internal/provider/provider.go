@@ -169,6 +169,7 @@ func (p *atlassianProvider) GetResources(ctx context.Context) (map[string]provid
 		"atlassian_jira_issue_type_scheme":                        jiraIssueTypeSchemeResourceType{},
 		"atlassian_jira_issue_type_screen_scheme":                 &jiraIssueTypeScreenSchemeResourceType{},
 		"atlassian_jira_permission_grant":                         &jiraPermissionGrantResourceType{},
+		"atlassian_jira_permission_scheme":                        &jiraPermissionSchemeResourceType{},
 		"atlassian_jira_project_category":                         &jiraProjectCategoryResourceType{},
 		"atlassian_jira_screen_scheme":                            &jiraScreenSchemeResourceType{},
 	}, nil
