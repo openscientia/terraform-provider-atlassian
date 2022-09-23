@@ -4,41 +4,50 @@ import (
 	"context"
 	"fmt"
 
+	jira "github.com/ctreminiom/go-atlassian/jira/v3"
 	"github.com/ctreminiom/go-atlassian/pkg/infra/models"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
-	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
-var _ resource.Resource = jiraIssueTypeResource{}
-var _ provider.ResourceType = jiraIssueTypeResourceType{}
-var _ resource.ResourceWithImportState = jiraIssueTypeResource{}
+type (
+	jiraIssueTypeResource struct {
+		p atlassianProvider
+	}
 
-type jiraIssueTypeResourceType struct{}
+	jiraIssueTypeResourceModel struct {
+		ID             types.String `tfsdk:"id"`
+		Name           types.String `tfsdk:"name"`
+		Description    types.String `tfsdk:"description"`
+		Type           types.String `tfsdk:"type"`
+		HierarchyLevel types.Int64  `tfsdk:"hierarchy_level"`
+		AvatarId       types.Int64  `tfsdk:"avatar_id"`
+	}
+)
 
-type jiraIssueTypeResource struct {
-	p atlassianProvider
+var (
+	_ resource.Resource                = (*jiraIssueTypeResource)(nil)
+	_ resource.ResourceWithImportState = (*jiraIssueTypeResource)(nil)
+)
+
+func NewJiraIssueTypeResource() resource.Resource {
+	return &jiraIssueTypeResource{}
 }
 
-type jiraIssueTypeResourceData struct {
-	ID             types.String `tfsdk:"id"`
-	Name           types.String `tfsdk:"name"`
-	Description    types.String `tfsdk:"description"`
-	Type           types.String `tfsdk:"type"`
-	HierarchyLevel types.Int64  `tfsdk:"hierarchy_level"`
-	AvatarId       types.Int64  `tfsdk:"avatar_id"`
+func (*jiraIssueTypeResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_jira_issue_type"
 }
 
-func (t jiraIssueTypeResourceType) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostics) {
+func (*jiraIssueTypeResource) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostics) {
 	return tfsdk.Schema{
+		Version:             1,
 		MarkdownDescription: "Jira Issue Type Resource",
-
 		Attributes: map[string]tfsdk.Attribute{
 			"id": {
 				MarkdownDescription: "The ID of the issue type.",
@@ -85,34 +94,36 @@ func (t jiraIssueTypeResourceType) GetSchema(ctx context.Context) (tfsdk.Schema,
 				Type:                types.Int64Type,
 			},
 		},
-		Version: 1,
 	}, nil
 }
 
-func (t jiraIssueTypeResourceType) NewResource(ctx context.Context, in provider.Provider) (resource.Resource, diag.Diagnostics) {
-	provider, diags := convertProviderType(in)
-
-	return jiraIssueTypeResource{
-		p: provider,
-	}, diags
-}
-
-func (r jiraIssueTypeResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
-}
-
-func (r jiraIssueTypeResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	tflog.Debug(ctx, "Creating issue type resource")
-
-	if !r.p.configured {
-		resp.Diagnostics.AddError(
-			"Provider not configured",
-			"The provider hasn't been configured before apply, likely because it depends on an unknown value from another resource. This leads to weird stuff happening, so we'd prefer if you didn't do that. Thanks!",
-		)
+func (r *jiraIssueTypeResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+	// Prevent panic if the provider has not been configured
+	if req.ProviderData == nil {
 		return
 	}
 
-	var plan jiraIssueTypeResourceData
+	client, ok := req.ProviderData.(*jira.Client)
+	if !ok {
+		resp.Diagnostics.AddError(
+			"Unexpected Resource Configure Type",
+			fmt.Sprintf("Expected *jira.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+		)
+
+		return
+	}
+
+	r.p.jira = client
+}
+
+func (*jiraIssueTypeResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+}
+
+func (r *jiraIssueTypeResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	tflog.Debug(ctx, "Creating issue type resource")
+
+	var plan jiraIssueTypeResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -191,10 +202,10 @@ func (r jiraIssueTypeResource) Create(ctx context.Context, req resource.CreateRe
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r jiraIssueTypeResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *jiraIssueTypeResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	tflog.Debug(ctx, "Reading issue type resource")
 
-	var state jiraIssueTypeResourceData
+	var state jiraIssueTypeResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -228,10 +239,10 @@ func (r jiraIssueTypeResource) Read(ctx context.Context, req resource.ReadReques
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r jiraIssueTypeResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *jiraIssueTypeResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	tflog.Debug(ctx, "Updating issue type resource")
 
-	var plan jiraIssueTypeResourceData
+	var plan jiraIssueTypeResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -240,7 +251,7 @@ func (r jiraIssueTypeResource) Update(ctx context.Context, req resource.UpdateRe
 		"updatePlan": fmt.Sprintf("%+v", plan),
 	})
 
-	var state jiraIssueTypeResourceData
+	var state jiraIssueTypeResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -263,7 +274,7 @@ func (r jiraIssueTypeResource) Update(ctx context.Context, req resource.UpdateRe
 	}
 	tflog.Debug(ctx, "Updated issue type in API state")
 
-	var result = jiraIssueTypeResourceData{
+	var result = jiraIssueTypeResourceModel{
 		ID:             types.String{Value: returnedIssueType.ID},
 		Description:    types.String{Value: returnedIssueType.Description},
 		Name:           types.String{Value: returnedIssueType.Name},
@@ -278,10 +289,10 @@ func (r jiraIssueTypeResource) Update(ctx context.Context, req resource.UpdateRe
 	resp.Diagnostics.Append(resp.State.Set(ctx, &result)...)
 }
 
-func (r jiraIssueTypeResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *jiraIssueTypeResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	tflog.Debug(ctx, "Deleting issue type resource")
 
-	var state jiraIssueTypeResourceData
+	var state jiraIssueTypeResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return

@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"strconv"
 
+	jira "github.com/ctreminiom/go-atlassian/jira/v3"
 	"github.com/ctreminiom/go-atlassian/pkg/infra/models"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
-	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -22,8 +22,6 @@ type (
 		p atlassianProvider
 	}
 
-	jiraProjectCategoryResourceType struct{}
-
 	jiraProjectCategoryResourceModel struct {
 		ID          types.String `tfsdk:"id"`
 		Name        types.String `tfsdk:"name"`
@@ -34,11 +32,18 @@ type (
 
 var (
 	_ resource.Resource                = (*jiraProjectCategoryResource)(nil)
-	_ provider.ResourceType            = (*jiraProjectCategoryResourceType)(nil)
 	_ resource.ResourceWithImportState = (*jiraProjectCategoryResource)(nil)
 )
 
-func (*jiraProjectCategoryResourceType) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
+func NewJiraProjectCategoryResource() resource.Resource {
+	return &jiraProjectCategoryResource{}
+}
+
+func (*jiraProjectCategoryResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_jira_project_category"
+}
+
+func (*jiraProjectCategoryResource) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
 	return tfsdk.Schema{
 		Version:             1,
 		MarkdownDescription: "Jira Project Category Resource",
@@ -86,27 +91,31 @@ func (*jiraProjectCategoryResourceType) GetSchema(_ context.Context) (tfsdk.Sche
 	}, nil
 }
 
-func (r *jiraProjectCategoryResourceType) NewResource(ctx context.Context, in provider.Provider) (resource.Resource, diag.Diagnostics) {
-	provider, diags := convertProviderType(in)
+func (r *jiraProjectCategoryResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+	// Prevent panic if the provider has not been configured
+	if req.ProviderData == nil {
+		return
+	}
 
-	return &jiraProjectCategoryResource{
-		p: provider,
-	}, diags
+	client, ok := req.ProviderData.(*jira.Client)
+	if !ok {
+		resp.Diagnostics.AddError(
+			"Unexpected Resource Configure Type",
+			fmt.Sprintf("Expected *jira.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+		)
+
+		return
+	}
+
+	r.p.jira = client
 }
 
-func (r *jiraProjectCategoryResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (*jiraProjectCategoryResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
 func (r *jiraProjectCategoryResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	tflog.Debug(ctx, "Creating project category resource")
-
-	if !r.p.configured {
-		resp.Diagnostics.AddError(
-			"Provider not configured",
-			"The provider hasn't been configured before apply, likely because it depends on an unknown value from another resource. This leads to weird stuff happening, so we'd prefer if you didn't do that. Thanks!",
-		)
-	}
 
 	var plan jiraProjectCategoryResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)

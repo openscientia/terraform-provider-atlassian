@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"strconv"
 
+	jira "github.com/ctreminiom/go-atlassian/jira/v3"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -18,8 +18,6 @@ type (
 		p atlassianProvider
 	}
 
-	jiraPermissionGrantDataSourceType struct{}
-
 	jiraPermissionGrantDataSourceModel struct {
 		ID                 types.String                    `tfsdk:"id"`
 		PermissionSchemeID types.String                    `tfsdk:"permission_scheme_id"`
@@ -29,11 +27,18 @@ type (
 )
 
 var (
-	_ datasource.DataSource   = (*jiraPermissionGrantDataSource)(nil)
-	_ provider.DataSourceType = (*jiraPermissionGrantDataSourceType)(nil)
+	_ datasource.DataSource = (*jiraPermissionGrantDataSource)(nil)
 )
 
-func (d *jiraPermissionGrantDataSourceType) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
+func NewJiraPermissionGrantDataSource() datasource.DataSource {
+	return &jiraPermissionGrantDataSource{}
+}
+
+func (*jiraPermissionGrantDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_jira_permission_grant"
+}
+
+func (*jiraPermissionGrantDataSource) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
 	return tfsdk.Schema{
 		Version:             1,
 		MarkdownDescription: "Jira Permission Grant Data Source",
@@ -75,12 +80,24 @@ func (d *jiraPermissionGrantDataSourceType) GetSchema(_ context.Context) (tfsdk.
 	}, nil
 }
 
-func (d *jiraPermissionGrantDataSourceType) NewDataSource(_ context.Context, in provider.Provider) (datasource.DataSource, diag.Diagnostics) {
-	provider, diags := convertProviderType(in)
+func (d *jiraPermissionGrantDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+	// Prevent panic if the provider has not been configured.
+	if req.ProviderData == nil {
+		return
+	}
 
-	return &jiraPermissionGrantDataSource{
-		p: provider,
-	}, diags
+	client, ok := req.ProviderData.(*jira.Client)
+
+	if !ok {
+		resp.Diagnostics.AddError(
+			"Unexpected Data Source Configure Type",
+			fmt.Sprintf("Expected *jira.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+		)
+
+		return
+	}
+
+	d.p.jira = client
 }
 
 func (d *jiraPermissionGrantDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {

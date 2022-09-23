@@ -5,18 +5,17 @@ import (
 	"fmt"
 	"strconv"
 
+	jira "github.com/ctreminiom/go-atlassian/jira/v3"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
-	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
 type (
-	jiraIssueScreenDataSourceType struct{}
-	jiraIssueScreenDataSource     struct {
+	jiraIssueScreenDataSource struct {
 		p atlassianProvider
 	}
 	jiraIssueScreenDataSourceModel struct {
@@ -27,11 +26,18 @@ type (
 )
 
 var (
-	_ provider.DataSourceType = jiraIssueScreenDataSourceType{}
-	_ datasource.DataSource   = jiraIssueScreenDataSource{}
+	_ datasource.DataSource = (*jiraIssueScreenDataSource)(nil)
 )
 
-func (jiraIssueScreenDataSourceType) GetSchema(context.Context) (tfsdk.Schema, diag.Diagnostics) {
+func NewJiraIssueScreenDataSource() datasource.DataSource {
+	return &jiraIssueScreenDataSource{}
+}
+
+func (*jiraIssueScreenDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_jira_issue_screen"
+}
+
+func (*jiraIssueScreenDataSource) GetSchema(context.Context) (tfsdk.Schema, diag.Diagnostics) {
 	return tfsdk.Schema{
 		Version:             1,
 		MarkdownDescription: "Jira Issue Screen Data Source",
@@ -58,15 +64,27 @@ func (jiraIssueScreenDataSourceType) GetSchema(context.Context) (tfsdk.Schema, d
 	}, nil
 }
 
-func (d jiraIssueScreenDataSourceType) NewDataSource(ctx context.Context, in provider.Provider) (datasource.DataSource, diag.Diagnostics) {
-	provider, diags := convertProviderType(in)
+func (d *jiraIssueScreenDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+	// Prevent panic if the provider has not been configured.
+	if req.ProviderData == nil {
+		return
+	}
 
-	return jiraIssueScreenDataSource{
-		p: provider,
-	}, diags
+	client, ok := req.ProviderData.(*jira.Client)
+
+	if !ok {
+		resp.Diagnostics.AddError(
+			"Unexpected Data Source Configure Type",
+			fmt.Sprintf("Expected *jira.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+		)
+
+		return
+	}
+
+	d.p.jira = client
 }
 
-func (d jiraIssueScreenDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *jiraIssueScreenDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	tflog.Debug(ctx, "Reading issue screen")
 	var newState jiraIssueScreenDataSourceModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &newState)...)

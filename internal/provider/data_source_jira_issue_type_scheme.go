@@ -5,34 +5,43 @@ import (
 	"fmt"
 	"strconv"
 
+	jira "github.com/ctreminiom/go-atlassian/jira/v3"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-var _ provider.DataSourceType = jiraIssueTypeSchemeDataSourceType{}
-var _ datasource.DataSource = jiraIssueTypeSchemeDataSource{}
+type (
+	jiraIssueTypeSchemeDataSource struct {
+		p atlassianProvider
+	}
 
-type jiraIssueTypeSchemeDataSourceType struct{}
+	jiraIssueTypeSchemeDataSourceModel struct {
+		ID                 types.String `tfsdk:"id"`
+		Name               types.String `tfsdk:"name"`
+		Description        types.String `tfsdk:"description"`
+		DefaultIssueTypeId types.String `tfsdk:"default_issue_type_id"`
+		IssueTypeIds       types.List   `tfsdk:"issue_type_ids"`
+	}
+)
 
-type jiraIssueTypeSchemeDataSourceData struct {
-	ID                 types.String `tfsdk:"id"`
-	Name               types.String `tfsdk:"name"`
-	Description        types.String `tfsdk:"description"`
-	DefaultIssueTypeId types.String `tfsdk:"default_issue_type_id"`
-	IssueTypeIds       types.List   `tfsdk:"issue_type_ids"`
+var (
+	_ datasource.DataSource = (*jiraIssueTypeSchemeDataSource)(nil)
+)
+
+func NewJiraIssueTypeSchemeDataSource() datasource.DataSource {
+	return &jiraIssueTypeSchemeDataSource{}
 }
 
-type jiraIssueTypeSchemeDataSource struct {
-	p atlassianProvider
+func (*jiraIssueTypeSchemeDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_jira_issue_type_scheme"
 }
 
-func (t jiraIssueTypeSchemeDataSourceType) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostics) {
+func (*jiraIssueTypeSchemeDataSource) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostics) {
 	return tfsdk.Schema{
+		Version:             1,
 		MarkdownDescription: "Jira Issue Type Scheme Data Source",
-
 		Attributes: map[string]tfsdk.Attribute{
 			"id": {
 				MarkdownDescription: "The ID of the issue type scheme.",
@@ -62,20 +71,31 @@ func (t jiraIssueTypeSchemeDataSourceType) GetSchema(ctx context.Context) (tfsdk
 				Computed: true,
 			},
 		},
-		Version: 1,
 	}, nil
 }
 
-func (t jiraIssueTypeSchemeDataSourceType) NewDataSource(ctx context.Context, in provider.Provider) (datasource.DataSource, diag.Diagnostics) {
-	provider, diags := convertProviderType(in)
+func (d *jiraIssueTypeSchemeDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+	// Prevent panic if the provider has not been configured.
+	if req.ProviderData == nil {
+		return
+	}
 
-	return jiraIssueTypeSchemeDataSource{
-		p: provider,
-	}, diags
+	client, ok := req.ProviderData.(*jira.Client)
+
+	if !ok {
+		resp.Diagnostics.AddError(
+			"Unexpected Data Source Configure Type",
+			fmt.Sprintf("Expected *jira.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+		)
+
+		return
+	}
+
+	d.p.jira = client
 }
 
-func (d jiraIssueTypeSchemeDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data jiraIssueTypeSchemeDataSourceData
+func (d *jiraIssueTypeSchemeDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	var data jiraIssueTypeSchemeDataSourceModel
 
 	diags := req.Config.Get(ctx, &data)
 	resp.Diagnostics.Append(diags...)
