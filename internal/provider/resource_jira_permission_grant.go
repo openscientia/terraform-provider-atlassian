@@ -6,11 +6,11 @@ import (
 	"strconv"
 	"strings"
 
+	jira "github.com/ctreminiom/go-atlassian/jira/v3"
 	"github.com/ctreminiom/go-atlassian/pkg/infra/models"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
-	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -22,8 +22,6 @@ type (
 	jiraPermissionGrantResource struct {
 		p atlassianProvider
 	}
-
-	jiraPermissionGrantResourceType struct{}
 
 	jiraPermissionGrantResourceModel struct {
 		ID                 types.String                    `tfsdk:"id"`
@@ -40,7 +38,6 @@ type (
 
 var (
 	_            resource.Resource                = (*jiraPermissionGrantResource)(nil)
-	_            provider.ResourceType            = (*jiraPermissionGrantResourceType)(nil)
 	_            resource.ResourceWithImportState = (*jiraPermissionGrantResource)(nil)
 	holder_types []string                         = []string{
 		"anyone", "applicationRole", "assignee", "group", "groupCustomField", "projectLead",
@@ -68,7 +65,15 @@ var (
 	}
 )
 
-func (*jiraPermissionGrantResourceType) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
+func NewJiraPermissionGrantResource() resource.Resource {
+	return &jiraPermissionGrantResource{}
+}
+
+func (*jiraPermissionGrantResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_jira_permission_grant"
+}
+
+func (*jiraPermissionGrantResource) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
 	return tfsdk.Schema{
 		Version:             1,
 		MarkdownDescription: "Jira Permission Grant Resource",
@@ -135,15 +140,26 @@ func (*jiraPermissionGrantResourceType) GetSchema(_ context.Context) (tfsdk.Sche
 	}, nil
 }
 
-func (r *jiraPermissionGrantResourceType) NewResource(ctx context.Context, in provider.Provider) (resource.Resource, diag.Diagnostics) {
-	provider, diags := convertProviderType(in)
+func (r *jiraPermissionGrantResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+	// Prevent panic if the provider has not been configured
+	if req.ProviderData == nil {
+		return
+	}
 
-	return &jiraPermissionGrantResource{
-		p: provider,
-	}, diags
+	client, ok := req.ProviderData.(*jira.Client)
+	if !ok {
+		resp.Diagnostics.AddError(
+			"Unexpected Resource Configure Type",
+			fmt.Sprintf("Expected *jira.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+		)
+
+		return
+	}
+
+	r.p.jira = client
 }
 
-func (r *jiraPermissionGrantResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (*jiraPermissionGrantResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	idParts := strings.Split(req.ID, ",")
 	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
 		resp.Diagnostics.AddError("Unexpected Import Identifier",
@@ -158,13 +174,6 @@ func (r *jiraPermissionGrantResource) ImportState(ctx context.Context, req resou
 
 func (r *jiraPermissionGrantResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	tflog.Debug(ctx, "Creating permission grant resource")
-
-	if !r.p.configured {
-		resp.Diagnostics.AddError(
-			"Provider not configured",
-			"The provider hasn't been configured before apply, likely because it depends on an unknown value from another resource. This leads to weird stuff happening, so we'd prefer if you didn't do that. Thanks!",
-		)
-	}
 
 	var plan jiraPermissionGrantResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)

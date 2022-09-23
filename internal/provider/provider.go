@@ -2,31 +2,53 @@ package atlassian
 
 import (
 	"context"
-	"fmt"
 	"os"
 
 	jira "github.com/ctreminiom/go-atlassian/jira/v3"
+	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/openscientia/terraform-provider-atlassian/internal/provider/attribute_validation"
 )
 
-var _ provider.Provider = &atlassianProvider{}
+type (
+	atlassianProvider struct {
+		jira *jira.Client
 
-type atlassianProvider struct {
-	jira *jira.Client
+		version string
+	}
 
-	configured bool
+	atlassianProviderModel struct {
+		Url      types.String `tfsdk:"url"`
+		Username types.String `tfsdk:"username"`
+		ApiToken types.String `tfsdk:"apitoken"`
+	}
+)
 
-	version string
+var (
+	_ provider.Provider             = (*atlassianProvider)(nil)
+	_ provider.ProviderWithMetadata = (*atlassianProvider)(nil)
+)
+
+func New(version string) func() provider.Provider {
+	return func() provider.Provider {
+		return &atlassianProvider{
+			version: version,
+		}
+	}
 }
 
-func (p *atlassianProvider) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostics) {
-	return tfsdk.Schema{
-		MarkdownDescription: "Atlassian",
+func (p *atlassianProvider) Metadata(_ context.Context, req provider.MetadataRequest, resp *provider.MetadataResponse) {
+	resp.TypeName = "atlassian"
+}
 
+func (*atlassianProvider) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostics) {
+	return tfsdk.Schema{
+		Version:             1,
+		MarkdownDescription: "Atlassian Provider",
 		Attributes: map[string]tfsdk.Attribute{
 			"url": {
 				MarkdownDescription: "Atlassian Host URL. Can also be set with the `ATLASSIAN_URL` environment variable.",
@@ -51,22 +73,13 @@ func (p *atlassianProvider) GetSchema(ctx context.Context) (tfsdk.Schema, diag.D
 				Type:                types.StringType,
 			},
 		},
-
-		Version: 1,
 	}, nil
 }
 
-type providerData struct {
-	Url      types.String `tfsdk:"url"`
-	Username types.String `tfsdk:"username"`
-	ApiToken types.String `tfsdk:"apitoken"`
-}
-
 func (p *atlassianProvider) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
-	var data providerData
-	diags := req.Config.Get(ctx, &data)
-	resp.Diagnostics.Append(diags...)
+	var data atlassianProviderModel
 
+	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -155,74 +168,39 @@ func (p *atlassianProvider) Configure(ctx context.Context, req provider.Configur
 	c.Auth.SetBasicAuth(username, apitoken)
 
 	p.jira = c
-	p.configured = true
+
+	resp.DataSourceData = p.jira
+	resp.ResourceData = p.jira
 }
 
-func (p *atlassianProvider) GetResources(ctx context.Context) (map[string]provider.ResourceType, diag.Diagnostics) {
-	return map[string]provider.ResourceType{
-		"atlassian_jira_issue_field_configuration_item":           &jiraIssueFieldConfigurationItemResourceType{},
-		"atlassian_jira_issue_field_configuration":                &jiraIssueFieldConfigurationResourceType{},
-		"atlassian_jira_issue_field_configuration_scheme_mapping": &jiraIssueFieldConfigurationSchemeMappingResourceType{},
-		"atlassian_jira_issue_field_configuration_scheme":         &jiraIssueFieldConfigurationSchemeResourceType{},
-		"atlassian_jira_issue_screen":                             jiraIssueScreenResourceType{},
-		"atlassian_jira_issue_type":                               jiraIssueTypeResourceType{},
-		"atlassian_jira_issue_type_scheme":                        jiraIssueTypeSchemeResourceType{},
-		"atlassian_jira_issue_type_screen_scheme":                 &jiraIssueTypeScreenSchemeResourceType{},
-		"atlassian_jira_permission_grant":                         &jiraPermissionGrantResourceType{},
-		"atlassian_jira_permission_scheme":                        &jiraPermissionSchemeResourceType{},
-		"atlassian_jira_project_category":                         &jiraProjectCategoryResourceType{},
-		"atlassian_jira_screen_scheme":                            &jiraScreenSchemeResourceType{},
-	}, nil
-}
-
-func (p *atlassianProvider) GetDataSources(ctx context.Context) (map[string]provider.DataSourceType, diag.Diagnostics) {
-	return map[string]provider.DataSourceType{
-		"atlassian_jira_issue_field_configuration":        &jiraIssueFieldConfigurationDataSourceType{},
-		"atlassian_jira_issue_field_configuration_scheme": &jiraIssueFieldConfigurationSchemeDataSourceType{},
-		"atlassian_jira_issue_screen":                     jiraIssueScreenDataSourceType{},
-		"atlassian_jira_issue_type":                       jiraIssueTypeDataSourceType{},
-		"atlassian_jira_issue_type_scheme":                jiraIssueTypeSchemeDataSourceType{},
-		"atlassian_jira_issue_type_screen_scheme":         &jiraIssueTypeScreenSchemeDataSourceType{},
-		"atlassian_jira_permission_grant":                 &jiraPermissionGrantDataSourceType{},
-		"atlassian_jira_permission_scheme":                &jiraPermissionSchemeDataSourceType{},
-		"atlassian_jira_project_category":                 &jiraProjectCategoryDataSourceType{},
-		"atlassian_jira_screen_scheme":                    &jiraScreenSchemeDataSourceType{},
-	}, nil
-}
-
-func New(version string) func() provider.Provider {
-	return func() provider.Provider {
-		return &atlassianProvider{
-			version: version,
-		}
+func (*atlassianProvider) Resources(ctx context.Context) []func() resource.Resource {
+	return []func() resource.Resource{
+		NewJiraIssueFieldConfigurationItemResource,
+		NewJiraIssueFieldConfigurationResource,
+		NewJiraIssueFieldConfigurationSchemeMappingResource,
+		NewJiraIssueFieldConfigurationSchemeResource,
+		NewJiraIssueScreenResource,
+		NewJiraIssueTypeResource,
+		NewJiraIssueTypeSchemeResource,
+		NewJiraIssueTypeScreenSchemeResource,
+		NewJiraPermissionGrantResource,
+		NewJiraPermissionSchemeResource,
+		NewJiraProjectCategoryResource,
+		NewJiraScreenSchemeResource,
 	}
 }
 
-// convertProviderType is a helper function for NewResource and NewDataSource
-// implementations to associate the concrete provider type. Alternatively,
-// this helper can be skipped and the provider type can be directly type
-// asserted (e.g. provider: in.(*provider)), however using this can prevent
-// potential panics.
-func convertProviderType(in provider.Provider) (atlassianProvider, diag.Diagnostics) {
-	var diags diag.Diagnostics
-
-	p, ok := in.(*atlassianProvider)
-
-	if !ok {
-		diags.AddError(
-			"Unexpected Provider Instance Type",
-			fmt.Sprintf("While creating the data source or resource, an unexpected provider type (%T) was received. This is always a bug in the provider code and should be reported to the provider developers.", p),
-		)
-		return atlassianProvider{}, diags
+func (*atlassianProvider) DataSources(ctx context.Context) []func() datasource.DataSource {
+	return []func() datasource.DataSource{
+		NewJiraIssueFieldConfigurationDataSource,
+		NewJiraIssueFieldConfigurationSchemeDataSource,
+		NewJiraIssueScreenDataSource,
+		NewJiraIssueTypeDataSource,
+		NewJiraIssueTypeSchemeDataSource,
+		NewJiraIssueTypeScreenSchemeDataSource,
+		NewJiraPermissionGrantDataSource,
+		NewJiraPermissionSchemeDataSource,
+		NewJiraProjectCategoryDataSource,
+		NewJiraScreenSchemeDataSource,
 	}
-
-	if p == nil {
-		diags.AddError(
-			"Unexpected Provider Instance Type",
-			"While creating the data source or resource, an unexpected empty provider instance was received. This is always a bug in the provider code and should be reported to the provider developers.",
-		)
-		return atlassianProvider{}, diags
-	}
-
-	return *p, diags
 }

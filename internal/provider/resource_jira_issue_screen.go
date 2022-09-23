@@ -7,7 +7,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
-	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -20,8 +19,6 @@ type (
 		p atlassianProvider
 	}
 
-	jiraIssueScreenResourceType struct{}
-
 	jiraIssueScreenResourceModel struct {
 		ID          types.String `tfsdk:"id"`
 		Name        types.String `tfsdk:"name"`
@@ -30,12 +27,19 @@ type (
 )
 
 var (
-	_ resource.Resource                = jiraIssueScreenResource{}
-	_ provider.ResourceType            = jiraIssueScreenResourceType{}
-	_ resource.ResourceWithImportState = jiraIssueScreenResource{}
+	_ resource.Resource                = (*jiraIssueScreenResource)(nil)
+	_ resource.ResourceWithImportState = (*jiraIssueScreenResource)(nil)
 )
 
-func (jiraIssueScreenResourceType) GetSchema(context.Context) (tfsdk.Schema, diag.Diagnostics) {
+func NewJiraIssueScreenResource() resource.Resource {
+	return &jiraIssueScreenResource{}
+}
+
+func (*jiraIssueScreenResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_jira_issue_screen"
+}
+
+func (*jiraIssueScreenResource) GetSchema(context.Context) (tfsdk.Schema, diag.Diagnostics) {
 	return tfsdk.Schema{
 		Version:             1,
 		MarkdownDescription: "Jira Issue Screen Resource",
@@ -69,29 +73,12 @@ func (jiraIssueScreenResourceType) GetSchema(context.Context) (tfsdk.Schema, dia
 	}, nil
 }
 
-func (jiraIssueScreenResourceType) NewResource(ctx context.Context, in provider.Provider) (resource.Resource, diag.Diagnostics) {
-	provider, diags := convertProviderType(in)
-
-	return jiraIssueScreenResource{
-		p: provider,
-	}, diags
-
-}
-
-func (jiraIssueScreenResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (*jiraIssueScreenResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
-func (r jiraIssueScreenResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *jiraIssueScreenResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	tflog.Debug(ctx, "Creating issue screen resource")
-
-	if !r.p.configured {
-		resp.Diagnostics.AddError(
-			"Provider not configured",
-			"The provider hasn't been configured before apply, likely because it depends on an unknown value from another resource. This leads to weird stuff happening, so we'd prefer if you didn't do that. Thanks!",
-		)
-		return
-	}
 
 	var plan jiraIssueScreenResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
@@ -125,7 +112,7 @@ func (r jiraIssueScreenResource) Create(ctx context.Context, req resource.Create
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r jiraIssueScreenResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *jiraIssueScreenResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	tflog.Debug(ctx, "Reading issue screen resource")
 
 	var state jiraIssueScreenResourceModel
@@ -158,7 +145,7 @@ func (r jiraIssueScreenResource) Read(ctx context.Context, req resource.ReadRequ
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r jiraIssueScreenResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *jiraIssueScreenResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	tflog.Debug(ctx, "Updating issue screen")
 
 	var plan jiraIssueScreenResourceModel
@@ -203,7 +190,7 @@ func (r jiraIssueScreenResource) Update(ctx context.Context, req resource.Update
 	resp.Diagnostics.Append(resp.State.Set(ctx, &updatedState)...)
 }
 
-func (r jiraIssueScreenResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *jiraIssueScreenResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	tflog.Debug(ctx, "Deleting issue screen resource")
 
 	var state jiraIssueScreenResourceModel

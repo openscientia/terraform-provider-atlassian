@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"strconv"
 
+	jira "github.com/ctreminiom/go-atlassian/jira/v3"
 	"github.com/ctreminiom/go-atlassian/pkg/infra/models"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
-	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -21,8 +21,6 @@ type (
 	jiraIssueTypeScreenSchemeResource struct {
 		p atlassianProvider
 	}
-
-	jiraIssueTypeScreenSchemeResourceType struct{}
 
 	jiraIssueTypeScreenSchemeResourceModel struct {
 		ID                types.String                       `tfsdk:"id"`
@@ -38,15 +36,22 @@ type (
 )
 
 var (
-	_ resource.Resource                = (*jiraIssueTypeSchemeResource)(nil)
-	_ provider.ResourceType            = (*jiraScreenSchemeResourceType)(nil)
+	_ resource.Resource                = (*jiraIssueTypeScreenSchemeResource)(nil)
 	_ resource.ResourceWithImportState = (*jiraIssueTypeScreenSchemeResource)(nil)
 )
 
-func (*jiraIssueTypeScreenSchemeResourceType) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
+func NewJiraIssueTypeScreenSchemeResource() resource.Resource {
+	return &jiraIssueTypeScreenSchemeResource{}
+}
+
+func (*jiraIssueTypeScreenSchemeResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_jira_issue_type_screen_scheme"
+}
+
+func (*jiraIssueTypeScreenSchemeResource) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
 	return tfsdk.Schema{
 		Version:             1,
-		MarkdownDescription: "Jira Issue Type Screen Scheme",
+		MarkdownDescription: "Jira Issue Type Screen Scheme Resource",
 		Attributes: map[string]tfsdk.Attribute{
 			"id": {
 				MarkdownDescription: "The ID of the issue type screen scheme.",
@@ -102,27 +107,31 @@ func (*jiraIssueTypeScreenSchemeResourceType) GetSchema(_ context.Context) (tfsd
 	}, nil
 }
 
-func (r *jiraIssueTypeScreenSchemeResourceType) NewResource(ctx context.Context, in provider.Provider) (resource.Resource, diag.Diagnostics) {
-	provider, diags := convertProviderType(in)
+func (r *jiraIssueTypeScreenSchemeResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+	// Prevent panic if the provider has not been configured
+	if req.ProviderData == nil {
+		return
+	}
 
-	return &jiraIssueTypeScreenSchemeResource{
-		p: provider,
-	}, diags
+	client, ok := req.ProviderData.(*jira.Client)
+	if !ok {
+		resp.Diagnostics.AddError(
+			"Unexpected Resource Configure Type",
+			fmt.Sprintf("Expected *jira.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+		)
+
+		return
+	}
+
+	r.p.jira = client
 }
 
-func (r *jiraIssueTypeScreenSchemeResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (*jiraIssueTypeScreenSchemeResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
 func (r *jiraIssueTypeScreenSchemeResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	tflog.Debug(ctx, "Creating issue type screen scheme")
-
-	if !r.p.configured {
-		resp.Diagnostics.AddError(
-			"Provider not configured",
-			"The provider hasn't been configured before apply, likely because it depends on an unknown value from another resource. This leads to weird stuff happening, so we'd prefer if you didn't do that. Thanks!",
-		)
-	}
 
 	var plan jiraIssueTypeScreenSchemeResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)

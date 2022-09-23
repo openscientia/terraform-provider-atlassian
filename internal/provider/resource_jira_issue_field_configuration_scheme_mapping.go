@@ -6,10 +6,10 @@ import (
 	"strconv"
 	"strings"
 
+	jira "github.com/ctreminiom/go-atlassian/jira/v3"
 	"github.com/ctreminiom/go-atlassian/pkg/infra/models"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
-	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -20,7 +20,6 @@ type (
 	jiraIssueFieldConfigurationSchemeMappingResource struct {
 		p atlassianProvider
 	}
-	jiraIssueFieldConfigurationSchemeMappingResourceType struct{}
 
 	jiraIssueFieldConfigurationSchemeMappingResourceModel struct {
 		ID                         types.String `tfsdk:"id"`
@@ -32,11 +31,18 @@ type (
 
 var (
 	_ resource.Resource                = (*jiraIssueFieldConfigurationSchemeMappingResource)(nil)
-	_ provider.ResourceType            = (*jiraIssueFieldConfigurationSchemeMappingResourceType)(nil)
 	_ resource.ResourceWithImportState = (*jiraIssueFieldConfigurationSchemeMappingResource)(nil)
 )
 
-func (*jiraIssueFieldConfigurationSchemeMappingResourceType) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
+func NewJiraIssueFieldConfigurationSchemeMappingResource() resource.Resource {
+	return &jiraIssueFieldConfigurationSchemeMappingResource{}
+}
+
+func (*jiraIssueFieldConfigurationSchemeMappingResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_jira_issue_field_configuration_scheme_mapping"
+}
+
+func (*jiraIssueFieldConfigurationSchemeMappingResource) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
 	return tfsdk.Schema{
 		Version:             1,
 		MarkdownDescription: "Jira Issue Field Configuration Scheme Mapping Resource",
@@ -76,15 +82,26 @@ func (*jiraIssueFieldConfigurationSchemeMappingResourceType) GetSchema(_ context
 	}, nil
 }
 
-func (r *jiraIssueFieldConfigurationSchemeMappingResourceType) NewResource(ctx context.Context, in provider.Provider) (resource.Resource, diag.Diagnostics) {
-	provider, diags := convertProviderType(in)
+func (r *jiraIssueFieldConfigurationSchemeMappingResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+	// Prevent panic if the provider has not been configured
+	if req.ProviderData == nil {
+		return
+	}
 
-	return &jiraIssueFieldConfigurationSchemeMappingResource{
-		p: provider,
-	}, diags
+	client, ok := req.ProviderData.(*jira.Client)
+	if !ok {
+		resp.Diagnostics.AddError(
+			"Unexpected Resource Configure Type",
+			fmt.Sprintf("Expected *jira.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+		)
+
+		return
+	}
+
+	r.p.jira = client
 }
 
-func (r *jiraIssueFieldConfigurationSchemeMappingResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (*jiraIssueFieldConfigurationSchemeMappingResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	idParts := strings.Split(req.ID, ",")
 	if len(idParts) != 3 || idParts[0] == "" || idParts[1] == "" || idParts[2] == "" {
 		resp.Diagnostics.AddError("Unexpected Import Identifier",
@@ -100,13 +117,6 @@ func (r *jiraIssueFieldConfigurationSchemeMappingResource) ImportState(ctx conte
 
 func (r *jiraIssueFieldConfigurationSchemeMappingResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	tflog.Debug(ctx, "Creating issue field configuration scheme mapping resource")
-
-	if !r.p.configured {
-		resp.Diagnostics.AddError(
-			"Provider not configured",
-			"The provider hasn't been configured before apply, likely because it depends on an unknown value from another resource. This leads to weird stuff happening, so we'd prefer if you didn't do that. Thanks!",
-		)
-	}
 
 	var plan jiraIssueFieldConfigurationSchemeMappingResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
