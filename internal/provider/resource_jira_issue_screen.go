@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strconv"
 
+	jira "github.com/ctreminiom/go-atlassian/jira/v3"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -71,6 +72,25 @@ func (*jiraIssueScreenResource) GetSchema(context.Context) (tfsdk.Schema, diag.D
 			},
 		},
 	}, nil
+}
+
+func (r *jiraIssueScreenResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+	// Prevent panic if the provider has not been configured
+	if req.ProviderData == nil {
+		return
+	}
+
+	client, ok := req.ProviderData.(*jira.Client)
+	if !ok {
+		resp.Diagnostics.AddError(
+			"Unexpected Resource Configure Type",
+			fmt.Sprintf("Expected *jira.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+		)
+
+		return
+	}
+
+	r.p.jira = client
 }
 
 func (*jiraIssueScreenResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
