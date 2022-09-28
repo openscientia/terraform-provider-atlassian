@@ -172,6 +172,9 @@ jira/issuecustomfieldcontexts:
 jira/issuecustomfieldoptions:
   - 'internal/provider/*jira_issue_custom_field_option.go'
   - 'internal/provider/*jira_issue_custom_field_option_test.go'
+jira/issuecustomfields:
+  - 'internal/provider/*jira_issue_custom_field.go'
+  - 'internal/provider/*jira_issue_custom_field_test.go'
 jira/issuefieldconfigurationitems:
   - 'internal/provider/*jira_issue_field_configuration_item.go'
   - 'internal/provider/*jira_issue_field_configuration_item_test.go'
