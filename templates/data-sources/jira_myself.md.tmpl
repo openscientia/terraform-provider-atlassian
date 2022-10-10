@@ -1,0 +1,22 @@
+---
+page_title: "Atlassian Cloud: {{ .Name }}"
+subcategory: "Jira Cloud"
+description: |-
+  Provides details about a specific {{ .Name }}.
+---
+
+# {{ .Type }}: {{ .Name }}
+
+Provides details about a specific `{{ .Name }}`.
+
+Learn more about [Jira User Details](https://support.atlassian.com/jira-software-cloud/docs/manage-your-user-profile/).
+
+See more details about the [Jira Cloud REST API for Myself](https://developer.atlassian.com/cloud/jira/platform/rest/v3/api-group-myself/#api-rest-api-3-myself-get).
+
+-> **Note** The `{{ .Name }}` data source provides information about the current user whose credentials are set in environment variables `ATLASSIAN_USERNAME` and `ATLASSIAN_TOKEN` to configure the ATLASSIAN provider.
+
+## Example Usage
+
+{{ .Name | printf "examples/data-sources/%s/basic.tf" | tffile }}
+
+{{ .SchemaMarkdown | trimspace }}
