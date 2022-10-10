@@ -6,7 +6,7 @@ require (
 	github.com/client9/misspell v0.3.4
 	github.com/hashicorp/go-changelog v0.0.0-20220419201213-5edfc0d651d8
 	github.com/hashicorp/terraform-plugin-docs v0.13.0
-	github.com/rhysd/actionlint v1.6.20
+	github.com/rhysd/actionlint v1.6.21
 )
 
 require (
