@@ -198,6 +198,7 @@ func (*atlassianProvider) DataSources(ctx context.Context) []func() datasource.D
 		NewJiraIssueTypeDataSource,
 		NewJiraIssueTypeSchemeDataSource,
 		NewJiraIssueTypeScreenSchemeDataSource,
+		NewJiraMyselfDataSource,
 		NewJiraPermissionGrantDataSource,
 		NewJiraPermissionSchemeDataSource,
 		NewJiraProjectCategoryDataSource,
