@@ -1,0 +1,20 @@
+---
+page_title: "Atlassian Cloud: {{ .Name }}"
+subcategory: "Jira Cloud"
+description: |-
+  Provides details about a specific {{ .Name }}.
+---
+
+# {{ .Type }}: {{ .Name }}
+
+Provides details about a specific `{{ .Name }}`.
+
+Learn more about [Jira Server Info](https://support.atlassian.com/jira-cloud-administration/docs/system-administration/).
+
+See more details about the [Jira Cloud REST API for Server Info](https://developer.atlassian.com/cloud/jira/platform/rest/v3/api-group-server-info/#api-group-server-info).
+
+## Example Usage
+
+{{ .Name | printf "examples/data-sources/%s/basic.tf" | tffile }}
+
+{{ .SchemaMarkdown | trimspace }}
