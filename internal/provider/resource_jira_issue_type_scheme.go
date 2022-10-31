@@ -122,17 +122,17 @@ func (r *jiraIssueTypeSchemeResource) Create(ctx context.Context, req resource.C
 		"createPlan": fmt.Sprintf("%+v", plan),
 	})
 
-	if plan.Description.Unknown {
+	if plan.Description.IsUnknown() {
 		plan.Description = types.String{Value: ""}
 	}
 
-	if plan.DefaultIssueTypeId.Unknown {
+	if plan.DefaultIssueTypeId.IsUnknown() {
 		plan.DefaultIssueTypeId = types.String{Value: ""}
 	}
 
-	if plan.DefaultIssueTypeId.Value != "" {
+	if plan.DefaultIssueTypeId.ValueString() != "" {
 		flag := false
-		for _, v := range plan.IssueTypeIds.Elems {
+		for _, v := range plan.IssueTypeIds.Elements() {
 			if v == plan.DefaultIssueTypeId {
 				flag = true
 			}
@@ -144,9 +144,9 @@ func (r *jiraIssueTypeSchemeResource) Create(ctx context.Context, req resource.C
 	}
 
 	issueTypeSchemePayload := new(models.IssueTypeSchemePayloadScheme)
-	issueTypeSchemePayload.Name = plan.Name.Value
-	issueTypeSchemePayload.Description = plan.Description.Value
-	issueTypeSchemePayload.DefaultIssueTypeID = plan.DefaultIssueTypeId.Value
+	issueTypeSchemePayload.Name = plan.Name.ValueString()
+	issueTypeSchemePayload.Description = plan.Description.ValueString()
+	issueTypeSchemePayload.DefaultIssueTypeID = plan.DefaultIssueTypeId.ValueString()
 	resp.Diagnostics.Append(plan.IssueTypeIds.ElementsAs(ctx, &issueTypeSchemePayload.IssueTypeIds, false)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -183,9 +183,9 @@ func (r *jiraIssueTypeSchemeResource) Read(ctx context.Context, req resource.Rea
 		"readState": fmt.Sprintf("%+v", state),
 	})
 
-	issueTypeSchemeID, _ := strconv.Atoi(state.ID.Value)
+	issueTypeSchemeID, _ := strconv.Atoi(state.ID.ValueString())
 
-	returnedIssueTypeScheme, res, err := r.p.jira.Issue.Type.Scheme.Gets(ctx, []int{issueTypeSchemeID}, 0, 50)
+	issueTypeScheme, res, err := r.p.jira.Issue.Type.Scheme.Gets(ctx, []int{issueTypeSchemeID}, 0, 1)
 	if err != nil {
 		var resBody string
 		if res != nil {
@@ -195,23 +195,25 @@ func (r *jiraIssueTypeSchemeResource) Read(ctx context.Context, req resource.Rea
 		return
 	}
 
-	returnedIssueTypeSchemeItems, res, err := r.p.jira.Issue.Type.Scheme.Items(ctx, []int{issueTypeSchemeID}, 0, 50)
+	issueTypeSchemeItems, res, err := r.p.jira.Issue.Type.Scheme.Items(ctx, []int{issueTypeSchemeID}, 0, 50)
 	if err != nil {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to get issue type scheme items, got error: %s\n%s", err.Error(), res.Bytes.String()))
+		var resBody string
+		if res != nil {
+			resBody = res.Bytes.String()
+		}
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to get issue type scheme items, got error: %s\n%s", err, resBody))
 		return
 	}
-	ids := types.List{
-		ElemType: types.StringType,
-	}
-	for _, elem := range returnedIssueTypeSchemeItems.Values {
-		av := types.String{Value: elem.IssueTypeID}
-		ids.Elems = append(ids.Elems, av)
+	ids := types.ListNull(types.StringType)
+	for _, item := range issueTypeSchemeItems.Values {
+		id := types.StringValue(item.IssueTypeID)
+		ids, _ = types.ListValue(types.StringType, append(ids.Elements(), id))
 	}
 	tflog.Debug(ctx, "Retrieved issue type scheme from API state")
 
-	state.Name = types.String{Value: returnedIssueTypeScheme.Values[0].Name}
-	state.Description = types.String{Value: returnedIssueTypeScheme.Values[0].Description}
-	state.DefaultIssueTypeId = types.String{Value: returnedIssueTypeScheme.Values[0].DefaultIssueTypeID}
+	state.Name = types.String{Value: issueTypeScheme.Values[0].Name}
+	state.Description = types.String{Value: issueTypeScheme.Values[0].Description}
+	state.DefaultIssueTypeId = types.String{Value: issueTypeScheme.Values[0].DefaultIssueTypeID}
 	state.IssueTypeIds = ids
 
 	tflog.Debug(ctx, "Storing issue type scheme into the state", map[string]interface{}{
@@ -241,11 +243,11 @@ func (r *jiraIssueTypeSchemeResource) Update(ctx context.Context, req resource.U
 		"updateState": fmt.Sprintf("%+v", state),
 	})
 
-	issueTypeSchemeID, _ := strconv.Atoi(state.ID.Value)
+	issueTypeSchemeID, _ := strconv.Atoi(state.ID.ValueString())
 
 	issueTypeSchemePayload := new(models.IssueTypeSchemePayloadScheme)
-	issueTypeSchemePayload.Name = plan.Name.Value
-	issueTypeSchemePayload.Description = plan.Description.Value
+	issueTypeSchemePayload.Name = plan.Name.ValueString()
+	issueTypeSchemePayload.Description = plan.Description.ValueString()
 
 	res, err := r.p.jira.Issue.Type.Scheme.Update(ctx, issueTypeSchemeID, issueTypeSchemePayload)
 	if err != nil {
@@ -258,9 +260,9 @@ func (r *jiraIssueTypeSchemeResource) Update(ctx context.Context, req resource.U
 	}
 
 	// Validate that default_issue_type_id is included in issue_type_ids
-	if plan.DefaultIssueTypeId.Value != "" {
+	if plan.DefaultIssueTypeId.ValueString() != "" {
 		flag := false
-		for _, v := range plan.IssueTypeIds.Elems {
+		for _, v := range plan.IssueTypeIds.Elements() {
 			if v == plan.DefaultIssueTypeId {
 				flag = true
 			}
@@ -274,9 +276,9 @@ func (r *jiraIssueTypeSchemeResource) Update(ctx context.Context, req resource.U
 	// Validate that new issue type(s) need to be added to issue type scheme
 	var ids []int
 	var exists bool
-	for _, p := range plan.IssueTypeIds.Elems {
+	for _, p := range plan.IssueTypeIds.Elements() {
 		exists = false
-		for _, s := range state.IssueTypeIds.Elems {
+		for _, s := range state.IssueTypeIds.Elements() {
 			if p == s {
 				exists = true
 			}
@@ -302,10 +304,10 @@ func (r *jiraIssueTypeSchemeResource) Update(ctx context.Context, req resource.U
 	tflog.Debug(ctx, "Updated issue type scheme in API state")
 
 	var result = jiraIssueTypeSchemeResourceModel{
-		ID:                 types.String{Value: state.ID.Value},
-		Name:               types.String{Value: plan.Name.Value},
-		Description:        types.String{Value: plan.Description.Value},
-		DefaultIssueTypeId: types.String{Value: plan.DefaultIssueTypeId.Value},
+		ID:                 types.String{Value: state.ID.ValueString()},
+		Name:               types.String{Value: plan.Name.ValueString()},
+		Description:        types.String{Value: plan.Description.ValueString()},
+		DefaultIssueTypeId: types.String{Value: plan.DefaultIssueTypeId.ValueString()},
 		IssueTypeIds:       plan.IssueTypeIds,
 	}
 
@@ -325,7 +327,7 @@ func (r *jiraIssueTypeSchemeResource) Delete(ctx context.Context, req resource.D
 	}
 	tflog.Debug(ctx, "Loaded issue type scheme from state")
 
-	issueTypeSchemeID, _ := strconv.Atoi(state.ID.Value)
+	issueTypeSchemeID, _ := strconv.Atoi(state.ID.ValueString())
 
 	res, err := r.p.jira.Issue.Type.Scheme.Delete(ctx, issueTypeSchemeID)
 	if err != nil {

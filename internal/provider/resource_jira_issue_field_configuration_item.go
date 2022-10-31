@@ -175,15 +175,15 @@ func (r *jiraIssueFieldConfigurationItemResource) Create(ctx context.Context, re
 		}
 	}
 
-	issueFieldConfigurationId, _ := strconv.Atoi(plan.IssueFieldConfiguration.Value)
+	issueFieldConfigurationId, _ := strconv.Atoi(plan.IssueFieldConfiguration.ValueString())
 	createRequestPayload := models.UpdateFieldConfigurationItemPayloadScheme{
 		FieldConfigurationItems: []*models.FieldConfigurationItemScheme{
 			{
-				ID:          plan.Item.ID.Value,
-				IsHidden:    plan.Item.IsHidden.Value,
-				IsRequired:  plan.Item.IsRequired.Value,
-				Description: plan.Item.Description.Value,
-				Renderer:    plan.Item.Renderer.Value,
+				ID:          plan.Item.ID.ValueString(),
+				IsHidden:    plan.Item.IsHidden.ValueBool(),
+				IsRequired:  plan.Item.IsRequired.ValueBool(),
+				Description: plan.Item.Description.ValueString(),
+				Renderer:    plan.Item.Renderer.ValueString(),
 			},
 		},
 	}
@@ -209,9 +209,9 @@ func (r *jiraIssueFieldConfigurationItemResource) Create(ctx context.Context, re
 	}
 
 	for _, i := range items.Values {
-		if i.ID == plan.Item.ID.Value {
+		if i.ID == plan.Item.ID.ValueString() {
 			plan.Item = &jiraIssueFieldConfigurationItem{
-				ID:          types.String{Value: plan.Item.ID.Value},
+				ID:          types.String{Value: plan.Item.ID.ValueString()},
 				Description: types.String{Value: i.Description},
 				IsHidden:    types.Bool{Value: i.IsHidden},
 				IsRequired:  types.Bool{Value: i.IsRequired},
@@ -221,7 +221,7 @@ func (r *jiraIssueFieldConfigurationItemResource) Create(ctx context.Context, re
 	}
 	tflog.Debug(ctx, "Created issue field configuration item")
 
-	plan.ID = types.String{Value: createIssueFieldConfigurationItemID(plan.IssueFieldConfiguration.Value, plan.Item.ID.Value)}
+	plan.ID = types.String{Value: createIssueFieldConfigurationItemID(plan.IssueFieldConfiguration.ValueString(), plan.Item.ID.ValueString())}
 
 	tflog.Debug(ctx, "Storing issue field configuration item info into the state", map[string]interface{}{
 		"issueFieldConfigurationItem": fmt.Sprintf("%+v, %+v", plan, *plan.Item),
@@ -241,7 +241,7 @@ func (r *jiraIssueFieldConfigurationItemResource) Read(ctx context.Context, req 
 		"issueFieldConfigurationItem": fmt.Sprintf("%+v, %+v", state, *state.Item),
 	})
 
-	issueFieldConfigurationId, _ := strconv.Atoi(state.IssueFieldConfiguration.Value)
+	issueFieldConfigurationId, _ := strconv.Atoi(state.IssueFieldConfiguration.ValueString())
 	issueFieldConfigurationItem, res, err := r.p.jira.Issue.Field.Configuration.Item.Gets(ctx, issueFieldConfigurationId, 0, 50)
 	if err != nil {
 		var resBody string
@@ -253,9 +253,9 @@ func (r *jiraIssueFieldConfigurationItemResource) Read(ctx context.Context, req 
 	}
 
 	for _, i := range issueFieldConfigurationItem.Values {
-		if i.ID == state.Item.ID.Value {
+		if i.ID == state.Item.ID.ValueString() {
 			state.Item = &jiraIssueFieldConfigurationItem{
-				ID:          types.String{Value: state.Item.ID.Value},
+				ID:          types.String{Value: state.Item.ID.ValueString()},
 				Description: types.String{Value: i.Description},
 				IsHidden:    types.Bool{Value: i.IsHidden},
 				IsRequired:  types.Bool{Value: i.IsRequired},
@@ -265,7 +265,7 @@ func (r *jiraIssueFieldConfigurationItemResource) Read(ctx context.Context, req 
 	}
 	tflog.Debug(ctx, "Retrieved issue field configuration item from API state")
 
-	state.ID = types.String{Value: createIssueFieldConfigurationItemID(state.IssueFieldConfiguration.Value, state.Item.ID.Value)}
+	state.ID = types.String{Value: createIssueFieldConfigurationItemID(state.IssueFieldConfiguration.ValueString(), state.Item.ID.ValueString())}
 
 	tflog.Debug(ctx, "Storing issue field configuration item into the state", map[string]interface{}{
 		"issueFieldConfigurationItem": fmt.Sprintf("%+v, %+v", state, *state.Item),
@@ -297,16 +297,16 @@ func (r *jiraIssueFieldConfigurationItemResource) Update(ctx context.Context, re
 	updateRequestPayload := models.UpdateFieldConfigurationItemPayloadScheme{
 		FieldConfigurationItems: []*models.FieldConfigurationItemScheme{
 			{
-				ID:          plan.Item.ID.Value,
-				IsHidden:    plan.Item.IsHidden.Value,
-				IsRequired:  plan.Item.IsRequired.Value,
-				Description: plan.Item.Description.Value,
-				Renderer:    plan.Item.Renderer.Value,
+				ID:          plan.Item.ID.ValueString(),
+				IsHidden:    plan.Item.IsHidden.ValueBool(),
+				IsRequired:  plan.Item.IsRequired.ValueBool(),
+				Description: plan.Item.Description.ValueString(),
+				Renderer:    plan.Item.Renderer.ValueString(),
 			},
 		},
 	}
 
-	issueFieldConfigurationId, _ := strconv.Atoi(plan.IssueFieldConfiguration.Value)
+	issueFieldConfigurationId, _ := strconv.Atoi(plan.IssueFieldConfiguration.ValueString())
 	res, err := r.p.jira.Issue.Field.Configuration.Item.Update(ctx, issueFieldConfigurationId, &updateRequestPayload)
 	if err != nil {
 		var resBody string
@@ -328,9 +328,9 @@ func (r *jiraIssueFieldConfigurationItemResource) Update(ctx context.Context, re
 	}
 
 	for _, i := range items.Values {
-		if i.ID == plan.Item.ID.Value {
+		if i.ID == plan.Item.ID.ValueString() {
 			plan.Item = &jiraIssueFieldConfigurationItem{
-				ID:          types.String{Value: plan.Item.ID.Value},
+				ID:          types.String{Value: plan.Item.ID.ValueString()},
 				Description: types.String{Value: i.Description},
 				IsHidden:    types.Bool{Value: i.IsHidden},
 				IsRequired:  types.Bool{Value: i.IsRequired},
@@ -341,7 +341,7 @@ func (r *jiraIssueFieldConfigurationItemResource) Update(ctx context.Context, re
 
 	tflog.Debug(ctx, "Updated issue field configuration item in API state")
 
-	plan.ID = types.String{Value: state.ID.Value}
+	plan.ID = types.String{Value: state.ID.ValueString()}
 
 	tflog.Debug(ctx, "Storing issue field configuration item plan into the state")
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
@@ -359,7 +359,7 @@ func createIssueFieldConfigurationItemID(issueFieldConfiguration, item string) s
 func (r *jiraIssueFieldConfigurationItemResource) checkIssueFieldConfigurationItemRenderable(ctx context.Context, p *jiraIssueFieldConfigurationItemResourceModel) diag.Diagnostic {
 	var isRenderable bool
 	searchPayload := models.FieldSearchOptionsScheme{
-		IDs:    []string{p.Item.ID.Value},
+		IDs:    []string{p.Item.ID.ValueString()},
 		Expand: []string{"isLocked"},
 	}
 
@@ -375,17 +375,17 @@ func (r *jiraIssueFieldConfigurationItemResource) checkIssueFieldConfigurationIt
 		"issueFieldConfigurationItem": fmt.Sprintf("%+v, %+v", itemDetails.Values[0], itemDetails.Values[0].Schema),
 	})
 
-	if itemDetails.Values[0].ID != p.Item.ID.Value {
-		return diag.NewAttributeErrorDiagnostic(path.Root("item").AtName("id"), "User Error", fmt.Sprintf(" Search result does not match issue field configuration item with ID: [%s]", p.Item.ID.Value))
+	if itemDetails.Values[0].ID != p.Item.ID.ValueString() {
+		return diag.NewAttributeErrorDiagnostic(path.Root("item").AtName("id"), "User Error", fmt.Sprintf(" Search result does not match issue field configuration item with ID: [%s]", p.Item.ID.ValueString()))
 	}
 
 	if itemDetails.Values[0].IsLocked {
-		return diag.NewAttributeErrorDiagnostic(path.Root("item").AtName("id"), "User Error", fmt.Sprintf(" Tried to set a renderer for the locked item with ID: [%s]", p.Item.ID.Value))
+		return diag.NewAttributeErrorDiagnostic(path.Root("item").AtName("id"), "User Error", fmt.Sprintf(" Tried to set a renderer for the locked item with ID: [%s]", p.Item.ID.ValueString()))
 	}
 
 	isRenderable = strings.Contains(strings.Join(renderableItemTypes, ","), itemDetails.Values[0].Schema.Type)
 	if !isRenderable {
-		return diag.NewAttributeErrorDiagnostic(path.Root("item").AtName("id"), "User Error", fmt.Sprintf(" Tried to set a renderer for the non-renderable item with ID: [%s]", p.Item.ID.Value))
+		return diag.NewAttributeErrorDiagnostic(path.Root("item").AtName("id"), "User Error", fmt.Sprintf(" Tried to set a renderer for the non-renderable item with ID: [%s]", p.Item.ID.ValueString()))
 	}
 
 	return nil

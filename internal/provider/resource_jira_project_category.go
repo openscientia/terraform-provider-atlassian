@@ -127,8 +127,8 @@ func (r *jiraProjectCategoryResource) Create(ctx context.Context, req resource.C
 	})
 
 	createPayload := models.ProjectCategoryPayloadScheme{
-		Name:        plan.Name.Value,
-		Description: plan.Description.Value,
+		Name:        plan.Name.ValueString(),
+		Description: plan.Description.ValueString(),
 	}
 
 	projectCategory, res, err := r.p.jira.Project.Category.Create(ctx, &createPayload)
@@ -163,7 +163,7 @@ func (r *jiraProjectCategoryResource) Read(ctx context.Context, req resource.Rea
 		"readState": fmt.Sprintf("%+v", state),
 	})
 
-	projectCategoryId, _ := strconv.Atoi(state.ID.Value)
+	projectCategoryId, _ := strconv.Atoi(state.ID.ValueString())
 
 	projectCategory, res, err := r.p.jira.Project.Category.Get(ctx, projectCategoryId)
 	if err != nil {
@@ -206,11 +206,11 @@ func (r *jiraProjectCategoryResource) Update(ctx context.Context, req resource.U
 		"updateState": fmt.Sprintf("%+v", state),
 	})
 
-	projectCategoryId, _ := strconv.Atoi(state.ID.Value)
+	projectCategoryId, _ := strconv.Atoi(state.ID.ValueString())
 
 	updatePayload := models.ProjectCategoryPayloadScheme{
-		Name:        plan.Name.Value,
-		Description: plan.Description.Value,
+		Name:        plan.Name.ValueString(),
+		Description: plan.Description.ValueString(),
 	}
 
 	_, res, err := r.p.jira.Project.Category.Update(ctx, projectCategoryId, &updatePayload)
@@ -238,7 +238,7 @@ func (r *jiraProjectCategoryResource) Delete(ctx context.Context, req resource.D
 	}
 	tflog.Debug(ctx, "Loaded project category from state")
 
-	projectCategoryId, _ := strconv.Atoi(state.ID.Value)
+	projectCategoryId, _ := strconv.Atoi(state.ID.ValueString())
 
 	res, err := r.p.jira.Project.Category.Delete(ctx, projectCategoryId)
 	if err != nil {

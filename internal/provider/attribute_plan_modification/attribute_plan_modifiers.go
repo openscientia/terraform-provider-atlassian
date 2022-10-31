@@ -45,7 +45,7 @@ func (m stringDefaultModifier) Modify(ctx context.Context, req tfsdk.ModifyAttri
 	}
 
 	// If value is configured, skip validator
-	if !str.Null && !str.Unknown {
+	if !str.IsNull() && !str.IsUnknown() {
 		return
 	}
 

@@ -169,13 +169,13 @@ func (r *jiraScreenSchemeResource) Create(ctx context.Context, req resource.Crea
 
 	createRequestPayload := models.ScreenSchemePayloadScheme{
 		Screens: &models.ScreenTypesScheme{
-			Create:  int(plan.Screens.Create.Value),
-			Default: int(plan.Screens.Default.Value),
-			View:    int(plan.Screens.View.Value),
-			Edit:    int(plan.Screens.Edit.Value),
+			Create:  int(plan.Screens.Create.ValueInt64()),
+			Default: int(plan.Screens.Default.ValueInt64()),
+			View:    int(plan.Screens.View.ValueInt64()),
+			Edit:    int(plan.Screens.Edit.ValueInt64()),
 		},
-		Name:        plan.Name.Value,
-		Description: plan.Description.Value,
+		Name:        plan.Name.ValueString(),
+		Description: plan.Description.ValueString(),
 	}
 	tflog.Debug(ctx, "Generated request payload", map[string]interface{}{
 		"screenSchemeReq": fmt.Sprintf("%+v", createRequestPayload),
@@ -211,7 +211,7 @@ func (r *jiraScreenSchemeResource) Read(ctx context.Context, req resource.ReadRe
 		"screenSchemeState": fmt.Sprintf("%+v", state),
 	})
 
-	screenSchemeId, _ := strconv.Atoi(state.ID.Value)
+	screenSchemeId, _ := strconv.Atoi(state.ID.ValueString())
 	resScreenScheme, res, err := r.p.jira.Screen.Scheme.Gets(ctx, []int{screenSchemeId}, 0, 50)
 	if err != nil {
 		var resBody string
@@ -259,19 +259,19 @@ func (r *jiraScreenSchemeResource) Update(ctx context.Context, req resource.Upda
 	})
 
 	updateRequestPayload := models.ScreenSchemePayloadScheme{
-		Name:        plan.Name.Value,
-		Description: plan.Description.Value,
+		Name:        plan.Name.ValueString(),
+		Description: plan.Description.ValueString(),
 		Screens: &models.ScreenTypesScheme{
-			Create:  int(plan.Screens.Create.Value),
-			Default: int(plan.Screens.Default.Value),
-			View:    int(plan.Screens.View.Value),
-			Edit:    int(plan.Screens.Edit.Value),
+			Create:  int(plan.Screens.Create.ValueInt64()),
+			Default: int(plan.Screens.Default.ValueInt64()),
+			View:    int(plan.Screens.View.ValueInt64()),
+			Edit:    int(plan.Screens.Edit.ValueInt64()),
 		},
 	}
 	tflog.Debug(ctx, "Generated request payload", map[string]interface{}{
 		"screenSchemeReq": fmt.Sprintf("%+v", updateRequestPayload),
 	})
-	res, err := r.p.jira.Screen.Scheme.Update(ctx, state.ID.Value, &updateRequestPayload)
+	res, err := r.p.jira.Screen.Scheme.Update(ctx, state.ID.ValueString(), &updateRequestPayload)
 	if err != nil {
 		var resBody string
 		if res != nil {
@@ -281,7 +281,7 @@ func (r *jiraScreenSchemeResource) Update(ctx context.Context, req resource.Upda
 	}
 	tflog.Debug(ctx, "Updated screen scheme in API state")
 
-	plan.ID = types.String{Value: state.ID.Value}
+	plan.ID = types.String{Value: state.ID.ValueString()}
 
 	tflog.Debug(ctx, "Storing screen scheme info into the state")
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
@@ -297,7 +297,7 @@ func (r *jiraScreenSchemeResource) Delete(ctx context.Context, req resource.Dele
 	}
 	tflog.Debug(ctx, "Loaded screen scheme from state")
 
-	res, err := r.p.jira.Screen.Scheme.Delete(ctx, state.ID.Value)
+	res, err := r.p.jira.Screen.Scheme.Delete(ctx, state.ID.ValueString())
 	if err != nil {
 		var resBody string
 		if res != nil {

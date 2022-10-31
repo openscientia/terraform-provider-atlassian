@@ -113,7 +113,7 @@ func (r *jiraIssueFieldConfigurationResource) Create(ctx context.Context, req re
 		"issueFieldConfigurationPlan": fmt.Sprintf("%+v", plan),
 	})
 
-	issueFieldConfiguration, res, err := r.p.jira.Issue.Field.Configuration.Create(ctx, plan.Name.Value, plan.Description.Value)
+	issueFieldConfiguration, res, err := r.p.jira.Issue.Field.Configuration.Create(ctx, plan.Name.ValueString(), plan.Description.ValueString())
 	if err != nil {
 		var resBody string
 		if res != nil {
@@ -144,7 +144,7 @@ func (r *jiraIssueFieldConfigurationResource) Read(ctx context.Context, req reso
 		"issueFieldConfigurationState": fmt.Sprintf("%+v", state),
 	})
 
-	issueFieldConfigurationId, _ := strconv.Atoi(state.ID.Value)
+	issueFieldConfigurationId, _ := strconv.Atoi(state.ID.ValueString())
 	issueFieldConfiguration, res, err := r.p.jira.Issue.Field.Configuration.Gets(ctx, []int{issueFieldConfigurationId}, false, 0, 50)
 	if err != nil {
 		var resBody string
@@ -186,8 +186,8 @@ func (r *jiraIssueFieldConfigurationResource) Update(ctx context.Context, req re
 		"issueFieldConfigurationState": fmt.Sprintf("%+v", state),
 	})
 
-	issueFieldConfigurationId, _ := strconv.Atoi(state.ID.Value)
-	res, err := r.p.jira.Issue.Field.Configuration.Update(ctx, issueFieldConfigurationId, plan.Name.Value, plan.Description.Value)
+	issueFieldConfigurationId, _ := strconv.Atoi(state.ID.ValueString())
+	res, err := r.p.jira.Issue.Field.Configuration.Update(ctx, issueFieldConfigurationId, plan.Name.ValueString(), plan.Description.ValueString())
 	if err != nil {
 		var resBody string
 		if res != nil {
@@ -198,7 +198,7 @@ func (r *jiraIssueFieldConfigurationResource) Update(ctx context.Context, req re
 	}
 	tflog.Debug(ctx, "Updated issue field configuration in API state")
 
-	plan.ID = types.String{Value: state.ID.Value}
+	plan.ID = types.String{Value: state.ID.ValueString()}
 
 	tflog.Debug(ctx, "Storing issue field configuration info into the state")
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
@@ -214,7 +214,7 @@ func (r *jiraIssueFieldConfigurationResource) Delete(ctx context.Context, req re
 	}
 	tflog.Debug(ctx, "Loaded issue field configuration from state")
 
-	issueFieldConfigurationID, _ := strconv.Atoi(state.ID.Value)
+	issueFieldConfigurationID, _ := strconv.Atoi(state.ID.ValueString())
 	res, err := r.p.jira.Issue.Field.Configuration.Delete(ctx, issueFieldConfigurationID)
 	if err != nil {
 		var resBody string

@@ -100,7 +100,7 @@ func (d *jiraProjectCategoryDataSource) Read(ctx context.Context, req datasource
 		"readConfig": fmt.Sprintf("%+v", newState),
 	})
 
-	projectCategoryId, err := strconv.Atoi(newState.ID.Value)
+	projectCategoryId, err := strconv.Atoi(newState.ID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddAttributeError(path.Root("id"), "Unable to parse value of \"id\" attribute.", "Value of \"id\" attribute can only be a numeric string.")
 		return

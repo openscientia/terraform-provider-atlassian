@@ -86,7 +86,7 @@ func (p *atlassianProvider) Configure(ctx context.Context, req provider.Configur
 
 	// User must provide a user to the provider
 	var username string
-	if data.Username.Unknown {
+	if data.Username.IsUnknown() {
 		// Cannot connect to client with an unknown value
 		resp.Diagnostics.AddWarning(
 			"Unable to create client.",
@@ -94,10 +94,10 @@ func (p *atlassianProvider) Configure(ctx context.Context, req provider.Configur
 		)
 		return
 	}
-	if data.Username.Null {
+	if data.Username.IsNull() {
 		username = os.Getenv("ATLASSIAN_USERNAME")
 	} else {
-		username = data.Username.Value
+		username = data.Username.ValueString()
 	}
 	if username == "" {
 		resp.Diagnostics.AddError(
@@ -109,7 +109,7 @@ func (p *atlassianProvider) Configure(ctx context.Context, req provider.Configur
 
 	// User must provide a password to the provider
 	var apitoken string
-	if data.ApiToken.Unknown {
+	if data.ApiToken.IsUnknown() {
 		// Cannot connect to client with an unknown value
 		resp.Diagnostics.AddError(
 			"Unable to create client.",
@@ -118,10 +118,10 @@ func (p *atlassianProvider) Configure(ctx context.Context, req provider.Configur
 		return
 	}
 
-	if data.ApiToken.Null {
+	if data.ApiToken.IsNull() {
 		apitoken = os.Getenv("ATLASSIAN_TOKEN")
 	} else {
-		apitoken = data.ApiToken.Value
+		apitoken = data.ApiToken.ValueString()
 	}
 
 	if apitoken == "" {
@@ -134,7 +134,7 @@ func (p *atlassianProvider) Configure(ctx context.Context, req provider.Configur
 
 	// User must specify a host
 	var url string
-	if data.Url.Unknown {
+	if data.Url.IsUnknown() {
 		// Cannot connect to client with an unknown value
 		resp.Diagnostics.AddError(
 			"Unable to create client.",
@@ -143,10 +143,10 @@ func (p *atlassianProvider) Configure(ctx context.Context, req provider.Configur
 		return
 	}
 
-	if data.Url.Null {
+	if data.Url.IsNull() {
 		url = os.Getenv("ATLASSIAN_URL")
 	} else {
-		url = data.Url.Value
+		url = data.Url.ValueString()
 	}
 
 	if url == "" {

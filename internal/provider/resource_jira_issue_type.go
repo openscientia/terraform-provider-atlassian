@@ -132,7 +132,7 @@ func (r *jiraIssueTypeResource) Create(ctx context.Context, req resource.CreateR
 		"createPlan": fmt.Sprintf("%+v", plan),
 	})
 
-	if !plan.Type.Unknown && !plan.HierarchyLevel.Unknown {
+	if !plan.Type.IsUnknown() && !plan.HierarchyLevel.IsUnknown() {
 		resp.Diagnostics.AddError("User Error", "Cannot use attributes `type` and `hierarchy_level` together.")
 		return
 	}
@@ -141,17 +141,17 @@ func (r *jiraIssueTypeResource) Create(ctx context.Context, req resource.CreateR
 		plan.Description = types.String{Value: ""}
 	}
 
-	if plan.Type.Unknown && plan.HierarchyLevel.Unknown {
+	if plan.Type.IsUnknown() && plan.HierarchyLevel.IsUnknown() {
 		plan.Type = types.String{Value: "standard"}
 		plan.HierarchyLevel = types.Int64{Value: 0}
-	} else if plan.Type.Unknown && !plan.HierarchyLevel.Unknown {
-		if plan.HierarchyLevel.Value == 0 {
+	} else if plan.Type.IsUnknown() && !plan.HierarchyLevel.IsUnknown() {
+		if plan.HierarchyLevel.ValueInt64() == 0 {
 			plan.Type = types.String{Value: "standard"}
 		} else {
 			plan.Type = types.String{Value: "sub-task"}
 		}
-	} else if !plan.Type.Unknown && plan.HierarchyLevel.Unknown {
-		if plan.Type.Value == "standard" {
+	} else if !plan.Type.IsUnknown() && plan.HierarchyLevel.IsUnknown() {
+		if plan.Type.ValueString() == "standard" {
 			plan.HierarchyLevel = types.Int64{Value: 0}
 		} else {
 			plan.HierarchyLevel = types.Int64{Value: -1}
@@ -159,9 +159,9 @@ func (r *jiraIssueTypeResource) Create(ctx context.Context, req resource.CreateR
 	}
 
 	issueTypePayload := new(models.IssueTypePayloadScheme)
-	issueTypePayload.Name = plan.Name.Value
-	issueTypePayload.Description = plan.Description.Value
-	issueTypePayload.HierarchyLevel = int(plan.HierarchyLevel.Value)
+	issueTypePayload.Name = plan.Name.ValueString()
+	issueTypePayload.Description = plan.Description.ValueString()
+	issueTypePayload.HierarchyLevel = int(plan.HierarchyLevel.ValueInt64())
 
 	returnedIssueType, res, err := r.p.jira.Issue.Type.Create(ctx, issueTypePayload)
 	if err != nil {
@@ -176,11 +176,11 @@ func (r *jiraIssueTypeResource) Create(ctx context.Context, req resource.CreateR
 
 	plan.ID = types.String{Value: returnedIssueType.ID}
 
-	if !plan.AvatarId.Unknown {
+	if !plan.AvatarId.IsUnknown() {
 		issueTypePayload := new(models.IssueTypePayloadScheme)
-		issueTypePayload.Name = plan.Name.Value
-		issueTypePayload.Description = plan.Description.Value
-		issueTypePayload.AvatarID = int(plan.AvatarId.Value)
+		issueTypePayload.Name = plan.Name.ValueString()
+		issueTypePayload.Description = plan.Description.ValueString()
+		issueTypePayload.AvatarID = int(plan.AvatarId.ValueInt64())
 
 		returnedIssueType, res, err := r.p.jira.Issue.Type.Update(ctx, returnedIssueType.ID, issueTypePayload)
 		if err != nil {
@@ -214,7 +214,7 @@ func (r *jiraIssueTypeResource) Read(ctx context.Context, req resource.ReadReque
 		"readState": fmt.Sprintf("%+v", state),
 	})
 
-	issueTypeID := state.ID.Value
+	issueTypeID := state.ID.ValueString()
 
 	returnedIssueType, res, err := r.p.jira.Issue.Type.Get(ctx, issueTypeID)
 	if err != nil {
@@ -260,12 +260,12 @@ func (r *jiraIssueTypeResource) Update(ctx context.Context, req resource.UpdateR
 		"updateState": fmt.Sprintf("%+v", state),
 	})
 
-	issueTypeID := state.ID.Value
+	issueTypeID := state.ID.ValueString()
 
 	issueTypePayload := new(models.IssueTypePayloadScheme)
-	issueTypePayload.Name = plan.Name.Value
-	issueTypePayload.Description = plan.Description.Value
-	issueTypePayload.AvatarID = int(plan.AvatarId.Value)
+	issueTypePayload.Name = plan.Name.ValueString()
+	issueTypePayload.Description = plan.Description.ValueString()
+	issueTypePayload.AvatarID = int(plan.AvatarId.ValueInt64())
 
 	returnedIssueType, res, err := r.p.jira.Issue.Type.Update(ctx, issueTypeID, issueTypePayload)
 	if err != nil {
@@ -278,7 +278,7 @@ func (r *jiraIssueTypeResource) Update(ctx context.Context, req resource.UpdateR
 		ID:             types.String{Value: returnedIssueType.ID},
 		Description:    types.String{Value: returnedIssueType.Description},
 		Name:           types.String{Value: returnedIssueType.Name},
-		Type:           types.String{Value: state.Type.Value},
+		Type:           types.String{Value: state.Type.ValueString()},
 		AvatarId:       types.Int64{Value: int64(returnedIssueType.AvatarID)},
 		HierarchyLevel: types.Int64{Value: int64(returnedIssueType.HierarchyLevel)},
 	}
@@ -299,7 +299,7 @@ func (r *jiraIssueTypeResource) Delete(ctx context.Context, req resource.DeleteR
 	}
 	tflog.Debug(ctx, "Loaded issue type from state")
 
-	res, err := r.p.jira.Issue.Type.Delete(ctx, state.ID.Value)
+	res, err := r.p.jira.Issue.Type.Delete(ctx, state.ID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete issue type, got error: %s\n%s", err, res.Bytes.String()))
 		return

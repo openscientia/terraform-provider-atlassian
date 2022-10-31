@@ -186,8 +186,8 @@ func (r *jiraPermissionGrantResource) Create(ctx context.Context, req resource.C
 
 	specialTypes := []string{"group", "projectRole", "user", "userCustomField"}
 	for _, st := range specialTypes {
-		if plan.Holder.Type.Value == st {
-			if plan.Holder.Parameter.Value == "" {
+		if plan.Holder.Type.ValueString() == st {
+			if plan.Holder.Parameter.ValueString() == "" {
 				resp.Diagnostics.AddAttributeError(path.Root("holder").AtMapKey("parameter"),
 					"Failed to provide a value for \"holder.parameter\" attribute",
 					fmt.Sprintf("Value must be provided if \"holder.type\" is: %s", st),
@@ -197,13 +197,13 @@ func (r *jiraPermissionGrantResource) Create(ctx context.Context, req resource.C
 		}
 	}
 
-	schemeId, _ := strconv.Atoi(plan.PermissionSchemeID.Value)
+	schemeId, _ := strconv.Atoi(plan.PermissionSchemeID.ValueString())
 	createPayload := &models.PermissionGrantPayloadScheme{
 		Holder: &models.PermissionGrantHolderScheme{
-			Type:      plan.Holder.Type.Value,
-			Parameter: plan.Holder.Parameter.Value,
+			Type:      plan.Holder.Type.ValueString(),
+			Parameter: plan.Holder.Parameter.ValueString(),
 		},
-		Permission: plan.Permission.Value,
+		Permission: plan.Permission.ValueString(),
 	}
 
 	permissionGrant, res, err := r.p.jira.Permission.Scheme.Grant.Create(ctx, schemeId, createPayload)
@@ -237,8 +237,8 @@ func (r *jiraPermissionGrantResource) Read(ctx context.Context, req resource.Rea
 		"readState": fmt.Sprintf("%+v, Holder:%+v", state, state.Holder),
 	})
 
-	grantId, _ := strconv.Atoi(state.ID.Value)
-	schemeId, _ := strconv.Atoi(state.PermissionSchemeID.Value)
+	grantId, _ := strconv.Atoi(state.ID.ValueString())
+	schemeId, _ := strconv.Atoi(state.PermissionSchemeID.ValueString())
 
 	permissionGrant, res, err := r.p.jira.Permission.Scheme.Grant.Get(ctx, schemeId, grantId, []string{"all"})
 	if err != nil {
@@ -278,8 +278,8 @@ func (r *jiraPermissionGrantResource) Delete(ctx context.Context, req resource.D
 		return
 	}
 
-	grantId, _ := strconv.Atoi(state.ID.Value)
-	schemeId, _ := strconv.Atoi(state.PermissionSchemeID.Value)
+	grantId, _ := strconv.Atoi(state.ID.ValueString())
+	schemeId, _ := strconv.Atoi(state.PermissionSchemeID.ValueString())
 
 	res, err := r.p.jira.Permission.Scheme.Grant.Delete(ctx, schemeId, grantId)
 	if err != nil {

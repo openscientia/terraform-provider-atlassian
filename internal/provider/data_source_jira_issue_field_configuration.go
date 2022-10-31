@@ -94,7 +94,7 @@ func (d *jiraIssueFieldConfigurationDataSource) Read(ctx context.Context, req da
 		"issueFieldConfiguration": fmt.Sprintf("%+v", newState),
 	})
 
-	issueFieldConfigurationId, err := strconv.Atoi(newState.ID.Value)
+	issueFieldConfigurationId, err := strconv.Atoi(newState.ID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddAttributeError(path.Root("id"), "Unable to parse value of \"id\" attribute.", "Value of \"id\" attribute can only be a numeric string.")
 		return

@@ -106,7 +106,7 @@ func (d *jiraIssueTypeDataSource) Read(ctx context.Context, req datasource.ReadR
 		return
 	}
 
-	returnedIssueType, res, err := d.p.jira.Issue.Type.Get(ctx, data.ID.Value)
+	returnedIssueType, res, err := d.p.jira.Issue.Type.Get(ctx, data.ID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to get issue type, got error: %s\n%s", err.Error(), res.Bytes.String()))
 		return
