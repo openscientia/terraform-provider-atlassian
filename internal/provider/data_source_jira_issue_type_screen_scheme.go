@@ -120,7 +120,7 @@ func (d *jiraIssueTypeScreenSchemeDataSource) Read(ctx context.Context, req data
 		"issueTypeScreenScheme": fmt.Sprintf("%+v", newState),
 	})
 
-	issueTypeScreenSchemeId, err := strconv.Atoi(newState.ID.Value)
+	issueTypeScreenSchemeId, err := strconv.Atoi(newState.ID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddAttributeError(path.Root("id"), "Unable to parse value of \"id\" attribute.", "Value of \"id\" attribute can only be a numeric string.")
 		return

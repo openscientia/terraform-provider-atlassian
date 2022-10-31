@@ -32,13 +32,13 @@ func (v intValuesValidator) Validate(ctx context.Context, req tfsdk.ValidateAttr
 		return
 	}
 
-	if num.Unknown || num.Null {
+	if num.IsUnknown() || num.IsNull() {
 		return
 	}
 
 	flag := false
 	for _, s := range v.Values {
-		if num.Value == int64(s) {
+		if num.ValueInt64() == int64(s) {
 			flag = true
 		}
 	}
@@ -90,11 +90,11 @@ func (v stringLengthBetweenValidator) Validate(ctx context.Context, req tfsdk.Va
 		return
 	}
 
-	if str.Unknown || str.Null {
+	if str.IsUnknown() || str.IsNull() {
 		return
 	}
 
-	strLen := len(str.Value)
+	strLen := len(str.ValueString())
 
 	if strLen < v.Min || strLen > v.Max {
 		resp.Diagnostics.AddAttributeError(
@@ -137,13 +137,13 @@ func (v stringValuesValidator) Validate(ctx context.Context, req tfsdk.ValidateA
 		return
 	}
 
-	if str.Unknown || str.Null {
+	if str.IsUnknown() || str.IsNull() {
 		return
 	}
 
 	flag := false
 	for _, s := range v.Values {
-		if str.Value == s {
+		if str.ValueString() == s {
 			flag = true
 		}
 	}
@@ -205,12 +205,12 @@ func (v *urlWithSchemeAttributeValidator) Validate(ctx context.Context, req tfsd
 		return
 	}
 
-	u, err := url.Parse(val.Value)
+	u, err := url.Parse(val.ValueString())
 	if err != nil {
 		res.Diagnostics.AddAttributeError(
 			req.AttributePath,
 			"Invalid URL",
-			fmt.Sprintf("Parsing URL %q failed: %v", val.Value, err),
+			fmt.Sprintf("Parsing URL %q failed: %v", val.ValueString(), err),
 		)
 		return
 	}

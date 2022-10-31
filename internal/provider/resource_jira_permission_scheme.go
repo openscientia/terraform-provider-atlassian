@@ -123,8 +123,8 @@ func (r *jiraPermissionSchemeResource) Create(ctx context.Context, req resource.
 
 	createPayload := &models.PermissionSchemeScheme{
 		Expand:      "all",
-		Name:        plan.Name.Value,
-		Description: plan.Description.Value,
+		Name:        plan.Name.ValueString(),
+		Description: plan.Description.ValueString(),
 	}
 
 	permissionScheme, res, err := r.p.jira.Permission.Scheme.Create(ctx, createPayload)
@@ -159,7 +159,7 @@ func (r *jiraPermissionSchemeResource) Read(ctx context.Context, req resource.Re
 		"readState": fmt.Sprintf("%+v", state),
 	})
 
-	schemeId, _ := strconv.Atoi(state.ID.Value)
+	schemeId, _ := strconv.Atoi(state.ID.ValueString())
 
 	permissionScheme, res, err := r.p.jira.Permission.Scheme.Get(ctx, schemeId, []string{""})
 	if err != nil {
@@ -203,12 +203,12 @@ func (r *jiraPermissionSchemeResource) Update(ctx context.Context, req resource.
 		"updateState": fmt.Sprintf("%+v", state),
 	})
 
-	schemeId, _ := strconv.Atoi(state.ID.Value)
+	schemeId, _ := strconv.Atoi(state.ID.ValueString())
 
 	updatePayload := &models.PermissionSchemeScheme{
 		ID:          schemeId,
-		Name:        plan.Name.Value,
-		Description: plan.Description.Value,
+		Name:        plan.Name.ValueString(),
+		Description: plan.Description.ValueString(),
 	}
 
 	_, res, err := r.p.jira.Permission.Scheme.Update(ctx, schemeId, updatePayload)
@@ -236,7 +236,7 @@ func (r *jiraPermissionSchemeResource) Delete(ctx context.Context, req resource.
 	}
 	tflog.Debug(ctx, "Loaded permission scheme from state")
 
-	schemeId, _ := strconv.Atoi(state.ID.Value)
+	schemeId, _ := strconv.Atoi(state.ID.ValueString())
 
 	res, err := r.p.jira.Permission.Scheme.Delete(ctx, schemeId)
 	if err != nil {

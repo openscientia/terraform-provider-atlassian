@@ -112,8 +112,8 @@ func (d *jiraPermissionGrantDataSource) Read(ctx context.Context, req datasource
 		"readConfig": fmt.Sprintf("%+v", newState),
 	})
 
-	grantId, _ := strconv.Atoi(newState.ID.Value)
-	schemeId, _ := strconv.Atoi(newState.PermissionSchemeID.Value)
+	grantId, _ := strconv.Atoi(newState.ID.ValueString())
+	schemeId, _ := strconv.Atoi(newState.PermissionSchemeID.ValueString())
 	permissionGrant, res, err := d.p.jira.Permission.Scheme.Grant.Get(ctx, schemeId, grantId, []string{"all"})
 	if err != nil {
 		var resBody string

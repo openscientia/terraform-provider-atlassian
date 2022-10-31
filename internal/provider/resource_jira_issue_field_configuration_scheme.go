@@ -113,7 +113,7 @@ func (r *jiraIssueFieldConfigurationSchemeResource) Create(ctx context.Context, 
 		"createPlan": fmt.Sprintf("%+v", plan),
 	})
 
-	issueFieldConfigurationScheme, res, err := r.p.jira.Issue.Field.Configuration.Scheme.Create(ctx, plan.Name.Value, plan.Description.Value)
+	issueFieldConfigurationScheme, res, err := r.p.jira.Issue.Field.Configuration.Scheme.Create(ctx, plan.Name.ValueString(), plan.Description.ValueString())
 	if err != nil {
 		var resBody string
 		if res != nil {
@@ -144,7 +144,7 @@ func (r *jiraIssueFieldConfigurationSchemeResource) Read(ctx context.Context, re
 		"readState": fmt.Sprintf("%+v", state),
 	})
 
-	id, _ := strconv.Atoi(state.ID.Value)
+	id, _ := strconv.Atoi(state.ID.ValueString())
 	issueFieldConfigurationScheme, res, err := r.p.jira.Issue.Field.Configuration.Scheme.Gets(ctx, []int{id}, 0, 1)
 	if err != nil {
 		var resBody string
@@ -188,8 +188,8 @@ func (r *jiraIssueFieldConfigurationSchemeResource) Update(ctx context.Context, 
 		"updateState": fmt.Sprintf("%+v", state),
 	})
 
-	id, _ := strconv.Atoi(state.ID.Value)
-	res, err := r.p.jira.Issue.Field.Configuration.Scheme.Update(ctx, id, plan.Name.Value, plan.Description.Value)
+	id, _ := strconv.Atoi(state.ID.ValueString())
+	res, err := r.p.jira.Issue.Field.Configuration.Scheme.Update(ctx, id, plan.Name.ValueString(), plan.Description.ValueString())
 	if err != nil {
 		var resBody string
 		if res != nil {
@@ -200,7 +200,7 @@ func (r *jiraIssueFieldConfigurationSchemeResource) Update(ctx context.Context, 
 	}
 	tflog.Debug(ctx, "Updated issue field configuration scheme")
 
-	plan.ID = types.String{Value: state.ID.Value}
+	plan.ID = types.String{Value: state.ID.ValueString()}
 
 	tflog.Debug(ctx, "Storing issue field configuration scheme info into the state")
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
@@ -216,7 +216,7 @@ func (r *jiraIssueFieldConfigurationSchemeResource) Delete(ctx context.Context, 
 	}
 	tflog.Debug(ctx, "Loaded issue field configuration scheme from state")
 
-	id, _ := strconv.Atoi(state.ID.Value)
+	id, _ := strconv.Atoi(state.ID.ValueString())
 	res, err := r.p.jira.Issue.Field.Configuration.Scheme.Delete(ctx, id)
 	if err != nil {
 		var resBody string

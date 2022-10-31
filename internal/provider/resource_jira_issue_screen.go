@@ -110,11 +110,11 @@ func (r *jiraIssueScreenResource) Create(ctx context.Context, req resource.Creat
 		"issueScreenConfig": fmt.Sprintf("%+v", plan),
 	})
 
-	if plan.Description.Unknown {
+	if plan.Description.IsUnknown() {
 		plan.Description = types.String{Value: ""}
 	}
 
-	newIssueScreen, res, err := r.p.jira.Screen.Create(ctx, plan.Name.Value, plan.Description.Value)
+	newIssueScreen, res, err := r.p.jira.Screen.Create(ctx, plan.Name.ValueString(), plan.Description.ValueString())
 	if err != nil {
 		var resBody string
 		if res != nil {
@@ -144,7 +144,7 @@ func (r *jiraIssueScreenResource) Read(ctx context.Context, req resource.ReadReq
 		"issueScreenState": fmt.Sprintf("%+v", state),
 	})
 
-	issueScreenId, _ := strconv.Atoi(state.ID.Value)
+	issueScreenId, _ := strconv.Atoi(state.ID.ValueString())
 
 	resIssueScreen, res, err := r.p.jira.Screen.Gets(ctx, []int{issueScreenId}, 0, 50)
 	if err != nil {
@@ -188,8 +188,8 @@ func (r *jiraIssueScreenResource) Update(ctx context.Context, req resource.Updat
 		"issueScreenState": fmt.Sprintf("%+v", state),
 	})
 
-	issueScreenId, _ := strconv.Atoi(state.ID.Value)
-	_, res, err := r.p.jira.Screen.Update(ctx, issueScreenId, plan.Name.Value, plan.Description.Value)
+	issueScreenId, _ := strconv.Atoi(state.ID.ValueString())
+	_, res, err := r.p.jira.Screen.Update(ctx, issueScreenId, plan.Name.ValueString(), plan.Description.ValueString())
 	if err != nil {
 		var resBody string
 		if res != nil {
@@ -201,9 +201,9 @@ func (r *jiraIssueScreenResource) Update(ctx context.Context, req resource.Updat
 	tflog.Debug(ctx, "Updated issue screen in API state")
 
 	var updatedState = jiraIssueScreenResourceModel{
-		ID:          types.String{Value: state.ID.Value},
-		Name:        types.String{Value: plan.Name.Value},
-		Description: types.String{Value: plan.Description.Value},
+		ID:          types.String{Value: state.ID.ValueString()},
+		Name:        types.String{Value: plan.Name.ValueString()},
+		Description: types.String{Value: plan.Description.ValueString()},
 	}
 
 	tflog.Debug(ctx, "Storing issue screen info into the state")
@@ -220,7 +220,7 @@ func (r *jiraIssueScreenResource) Delete(ctx context.Context, req resource.Delet
 	}
 	tflog.Debug(ctx, "Loaded issue screen from state")
 
-	issueScreenId, _ := strconv.Atoi(state.ID.Value)
+	issueScreenId, _ := strconv.Atoi(state.ID.ValueString())
 	res, err := r.p.jira.Screen.Delete(ctx, issueScreenId)
 	if err != nil {
 		var resBody string

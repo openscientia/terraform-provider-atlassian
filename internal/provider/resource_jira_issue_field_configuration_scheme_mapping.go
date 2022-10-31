@@ -127,12 +127,12 @@ func (r *jiraIssueFieldConfigurationSchemeMappingResource) Create(ctx context.Co
 		"createPlan": fmt.Sprintf("%+v", plan),
 	})
 
-	issueFieldConfigurationSchemeId, _ := strconv.Atoi(plan.FieldConfigurationSchemeID.Value)
+	issueFieldConfigurationSchemeId, _ := strconv.Atoi(plan.FieldConfigurationSchemeID.ValueString())
 	createRequestPayload := models.FieldConfigurationToIssueTypeMappingPayloadScheme{
 		Mappings: []*models.FieldConfigurationToIssueTypeMappingScheme{
 			{
-				IssueTypeID:          plan.IssueTypeID.Value,
-				FieldConfigurationID: plan.FieldConfigurationID.Value,
+				IssueTypeID:          plan.IssueTypeID.ValueString(),
+				FieldConfigurationID: plan.FieldConfigurationID.ValueString(),
 			},
 		},
 	}
@@ -148,7 +148,7 @@ func (r *jiraIssueFieldConfigurationSchemeMappingResource) Create(ctx context.Co
 	}
 	tflog.Debug(ctx, "Created issue field configuration scheme mapping")
 
-	plan.ID = types.String{Value: createIssueFieldConfigurationSchemeMappingID(plan.FieldConfigurationSchemeID.Value, plan.FieldConfigurationID.Value, plan.IssueTypeID.Value)}
+	plan.ID = types.String{Value: createIssueFieldConfigurationSchemeMappingID(plan.FieldConfigurationSchemeID.ValueString(), plan.FieldConfigurationID.ValueString(), plan.IssueTypeID.ValueString())}
 
 	tflog.Debug(ctx, "Storing issue field configuration scheme mapping into the state", map[string]interface{}{
 		"newState": fmt.Sprintf("%+v", plan),
@@ -168,7 +168,7 @@ func (r *jiraIssueFieldConfigurationSchemeMappingResource) Read(ctx context.Cont
 		"readState": fmt.Sprintf("%+v", state),
 	})
 
-	fieldConfigurationSchemeId, _ := strconv.Atoi(state.FieldConfigurationSchemeID.Value)
+	fieldConfigurationSchemeId, _ := strconv.Atoi(state.FieldConfigurationSchemeID.ValueString())
 	mappings, res, err := r.p.jira.Issue.Field.Configuration.Scheme.Mapping(ctx, []int{fieldConfigurationSchemeId}, 0, 50)
 	if err != nil {
 		var resBody string
@@ -181,8 +181,8 @@ func (r *jiraIssueFieldConfigurationSchemeMappingResource) Read(ctx context.Cont
 
 	found := false
 	for _, m := range mappings.Values {
-		if m.FieldConfigurationSchemeID == state.FieldConfigurationSchemeID.Value {
-			if m.IssueTypeID == state.IssueTypeID.Value && m.FieldConfigurationID == state.FieldConfigurationID.Value {
+		if m.FieldConfigurationSchemeID == state.FieldConfigurationSchemeID.ValueString() {
+			if m.IssueTypeID == state.IssueTypeID.ValueString() && m.FieldConfigurationID == state.FieldConfigurationID.ValueString() {
 				found = true
 			}
 		}
@@ -197,7 +197,7 @@ func (r *jiraIssueFieldConfigurationSchemeMappingResource) Read(ctx context.Cont
 	}
 	tflog.Debug(ctx, "Retrieved issue field configuration scheme mapping from API state")
 
-	state.ID = types.String{Value: createIssueFieldConfigurationSchemeMappingID(state.FieldConfigurationSchemeID.Value, state.FieldConfigurationID.Value, state.IssueTypeID.Value)}
+	state.ID = types.String{Value: createIssueFieldConfigurationSchemeMappingID(state.FieldConfigurationSchemeID.ValueString(), state.FieldConfigurationID.ValueString(), state.IssueTypeID.ValueString())}
 
 	tflog.Debug(ctx, "Storing issue field configuration scheme mapping into the state", map[string]interface{}{
 		"readNewState": fmt.Sprintf("%+v", state),
@@ -221,15 +221,15 @@ func (r *jiraIssueFieldConfigurationSchemeMappingResource) Delete(ctx context.Co
 	}
 	tflog.Debug(ctx, "Loaded issue field configuration scheme mapping from state")
 
-	if state.IssueTypeID.Value == "default" {
+	if state.IssueTypeID.ValueString() == "default" {
 		// It is not possible to delete a "default" mapping from API state
 		// because field configuration schemes must have at least a "default mapping
 		// therefore, the resource will only be deleted from Terraform state
 		return
 	}
 
-	fieldConfigurationSchemeId, _ := strconv.Atoi(state.FieldConfigurationSchemeID.Value)
-	res, err := r.p.jira.Issue.Field.Configuration.Scheme.Unlink(ctx, fieldConfigurationSchemeId, []string{state.IssueTypeID.Value})
+	fieldConfigurationSchemeId, _ := strconv.Atoi(state.FieldConfigurationSchemeID.ValueString())
+	res, err := r.p.jira.Issue.Field.Configuration.Scheme.Unlink(ctx, fieldConfigurationSchemeId, []string{state.IssueTypeID.ValueString()})
 	if err != nil {
 		var resBody string
 		if res != nil {

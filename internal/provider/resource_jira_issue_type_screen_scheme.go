@@ -145,13 +145,13 @@ func (r *jiraIssueTypeScreenSchemeResource) Create(ctx context.Context, req reso
 	issueTypeMappings := []*models.IssueTypeScreenSchemeMappingPayloadScheme{}
 	for _, v := range plan.IssueTypeMappings {
 		issueTypeMappings = append(issueTypeMappings, &models.IssueTypeScreenSchemeMappingPayloadScheme{
-			IssueTypeID:    v.IssueTypeId.Value,
-			ScreenSchemeID: v.ScreenSchemeId.Value,
+			IssueTypeID:    v.IssueTypeId.ValueString(),
+			ScreenSchemeID: v.ScreenSchemeId.ValueString(),
 		})
 	}
 
 	createRequestPayload := models.IssueTypeScreenSchemePayloadScheme{
-		Name:              plan.Name.Value,
+		Name:              plan.Name.ValueString(),
 		IssueTypeMappings: issueTypeMappings,
 	}
 	tflog.Debug(ctx, "Generated request payload", map[string]interface{}{
@@ -175,7 +175,7 @@ func (r *jiraIssueTypeScreenSchemeResource) Create(ctx context.Context, req reso
 
 	// TODO: Remove this when 'description' can be addded on create call above
 	// https://github.com/ctreminiom/go-atlassian/issues/131
-	res, err = r.p.jira.Issue.Type.ScreenScheme.Update(ctx, newIssueTypeScreenScheme.ID, plan.Name.Value, plan.Description.Value)
+	res, err = r.p.jira.Issue.Type.ScreenScheme.Update(ctx, newIssueTypeScreenScheme.ID, plan.Name.ValueString(), plan.Description.ValueString())
 	if err != nil {
 		var resBody string
 		if res != nil {
@@ -201,7 +201,7 @@ func (r *jiraIssueTypeScreenSchemeResource) Read(ctx context.Context, req resour
 		"issueTypeScreenSchemeState": fmt.Sprintf("%+v", state),
 	})
 
-	issueTypeScreenSchemeId, _ := strconv.Atoi(state.ID.Value)
+	issueTypeScreenSchemeId, _ := strconv.Atoi(state.ID.ValueString())
 	issueTypeScreenSchemeDetails, res, err := r.p.jira.Issue.Type.ScreenScheme.Gets(ctx, []int{issueTypeScreenSchemeId}, 0, 50)
 	if err != nil {
 		var resBody string
@@ -287,7 +287,7 @@ func (r *jiraIssueTypeScreenSchemeResource) Update(ctx context.Context, req reso
 
 	tflog.Debug(ctx, "Updated issue type screen scheme in API state")
 
-	plan.ID = types.String{Value: state.ID.Value}
+	plan.ID = types.String{Value: state.ID.ValueString()}
 
 	tflog.Debug(ctx, "Storing issue type screen scheme info into the state")
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
@@ -303,7 +303,7 @@ func (r *jiraIssueTypeScreenSchemeResource) Delete(ctx context.Context, req reso
 	}
 	tflog.Debug(ctx, "Loaded issue type screen scheme from state")
 
-	res, err := r.p.jira.Issue.Type.ScreenScheme.Delete(ctx, state.ID.Value)
+	res, err := r.p.jira.Issue.Type.ScreenScheme.Delete(ctx, state.ID.ValueString())
 	if err != nil {
 		var resBody string
 		if res != nil {
@@ -318,8 +318,8 @@ func (r *jiraIssueTypeScreenSchemeResource) Delete(ctx context.Context, req reso
 }
 
 func (r *jiraIssueTypeScreenSchemeResource) updateNameAndDescription(ctx context.Context, p, s *jiraIssueTypeScreenSchemeResourceModel) error {
-	if p.Name.Value != s.Name.Value || p.Description.Value != s.Description.Value {
-		res, err := r.p.jira.Issue.Type.ScreenScheme.Update(ctx, s.ID.Value, p.Name.Value, p.Description.Value)
+	if p.Name.ValueString() != s.Name.ValueString() || p.Description.ValueString() != s.Description.ValueString() {
+		res, err := r.p.jira.Issue.Type.ScreenScheme.Update(ctx, s.ID.ValueString(), p.Name.ValueString(), p.Description.ValueString())
 		if err != nil {
 			var resBody string
 			if res != nil {
@@ -328,7 +328,7 @@ func (r *jiraIssueTypeScreenSchemeResource) updateNameAndDescription(ctx context
 			return fmt.Errorf(" Unable to update issue type screen scheme name and description, got error: %s\n%s", err, resBody)
 		}
 		tflog.Debug(ctx, "Updated issue type screen scheme name and description", map[string]interface{}{
-			"newNameAndDescription": fmt.Sprintf("%s, %s", p.Name.Value, p.Description.Value),
+			"newNameAndDescription": fmt.Sprintf("%s, %s", p.Name.ValueString(), p.Description.ValueString()),
 		})
 	}
 
@@ -338,7 +338,7 @@ func (r *jiraIssueTypeScreenSchemeResource) updateNameAndDescription(ctx context
 func (r *jiraIssueTypeScreenSchemeResource) updateDefaultMapping(ctx context.Context, p, s *jiraIssueTypeScreenSchemeResourceModel) error {
 	var planDefaultMapping *jiraIssueTypeScreenSchemeMapping
 	for _, m := range p.IssueTypeMappings {
-		if m.IssueTypeId.Value == "default" {
+		if m.IssueTypeId.ValueString() == "default" {
 			planDefaultMapping = &jiraIssueTypeScreenSchemeMapping{
 				IssueTypeId:    m.IssueTypeId,
 				ScreenSchemeId: m.ScreenSchemeId,
@@ -346,8 +346,8 @@ func (r *jiraIssueTypeScreenSchemeResource) updateDefaultMapping(ctx context.Con
 		}
 	}
 	for _, m := range s.IssueTypeMappings {
-		if m.IssueTypeId.Value == "default" && m.ScreenSchemeId.Value != planDefaultMapping.ScreenSchemeId.Value {
-			res, err := r.p.jira.Issue.Type.ScreenScheme.UpdateDefault(ctx, s.ID.Value, planDefaultMapping.ScreenSchemeId.Value)
+		if m.IssueTypeId.ValueString() == "default" && m.ScreenSchemeId.ValueString() != planDefaultMapping.ScreenSchemeId.ValueString() {
+			res, err := r.p.jira.Issue.Type.ScreenScheme.UpdateDefault(ctx, s.ID.ValueString(), planDefaultMapping.ScreenSchemeId.ValueString())
 			if err != nil {
 				var resBody string
 				if res != nil {
@@ -369,7 +369,7 @@ func (r *jiraIssueTypeScreenSchemeResource) addMappings(ctx context.Context, p, 
 		canAdd = true
 		for _, sm := range s.IssueTypeMappings {
 			// Skip default mapping or existing mapping in state
-			if pm.IssueTypeId.Value == "default" || pm == sm {
+			if pm.IssueTypeId.ValueString() == "default" || pm == sm {
 				canAdd = false
 			}
 		}
@@ -377,12 +377,12 @@ func (r *jiraIssueTypeScreenSchemeResource) addMappings(ctx context.Context, p, 
 			addMappingPayload := &models.IssueTypeScreenSchemePayloadScheme{
 				IssueTypeMappings: []*models.IssueTypeScreenSchemeMappingPayloadScheme{
 					{
-						IssueTypeID:    pm.IssueTypeId.Value,
-						ScreenSchemeID: pm.ScreenSchemeId.Value,
+						IssueTypeID:    pm.IssueTypeId.ValueString(),
+						ScreenSchemeID: pm.ScreenSchemeId.ValueString(),
 					},
 				},
 			}
-			res, err := r.p.jira.Issue.Type.ScreenScheme.Append(ctx, s.ID.Value, addMappingPayload)
+			res, err := r.p.jira.Issue.Type.ScreenScheme.Append(ctx, s.ID.ValueString(), addMappingPayload)
 			if err != nil {
 				var resBody string
 				if res != nil {
@@ -406,16 +406,16 @@ func (r *jiraIssueTypeScreenSchemeResource) removeMappings(ctx context.Context, 
 		canRemove = true
 		for _, pm := range p.IssueTypeMappings {
 			// Skip default mapping or existing mapping in plan
-			if sm.IssueTypeId.Value == "default" || sm == pm {
+			if sm.IssueTypeId.ValueString() == "default" || sm == pm {
 				canRemove = false
 			}
 		}
 		if canRemove {
-			removeMappings = append(removeMappings, sm.IssueTypeId.Value)
+			removeMappings = append(removeMappings, sm.IssueTypeId.ValueString())
 		}
 	}
 	if len(removeMappings) > 0 {
-		res, err := r.p.jira.Issue.Type.ScreenScheme.Remove(ctx, s.ID.Value, removeMappings)
+		res, err := r.p.jira.Issue.Type.ScreenScheme.Remove(ctx, s.ID.ValueString(), removeMappings)
 		if err != nil {
 			var resBody string
 			if res != nil {
