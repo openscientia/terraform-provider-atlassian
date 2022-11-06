@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	jira "github.com/ctreminiom/go-atlassian/jira/v3"
+	"github.com/ctreminiom/go-atlassian/pkg/infra/models"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -116,7 +117,7 @@ func (d *jiraScreenSchemeDataSource) Configure(ctx context.Context, req datasour
 }
 
 func (d *jiraScreenSchemeDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	tflog.Debug(ctx, "Reading screen scheme")
+	tflog.Debug(ctx, "Reading screen scheme data source")
 
 	var newState jiraScreenSchemeDataSourceModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &newState)...)
@@ -124,7 +125,7 @@ func (d *jiraScreenSchemeDataSource) Read(ctx context.Context, req datasource.Re
 		return
 	}
 	tflog.Debug(ctx, "Loaded screen scheme config", map[string]interface{}{
-		"screenScheme": fmt.Sprintf("%+v", newState),
+		"readConfig": fmt.Sprintf("%+v", newState),
 	})
 
 	screenSchemeId, err := strconv.Atoi(newState.ID.ValueString())
@@ -133,7 +134,10 @@ func (d *jiraScreenSchemeDataSource) Read(ctx context.Context, req datasource.Re
 		return
 	}
 
-	screenScheme, res, err := d.p.jira.Screen.Scheme.Gets(ctx, []int{screenSchemeId}, 0, 50)
+	options := &models.ScreenSchemeParamsScheme{
+		IDs: []int{screenSchemeId},
+	}
+	screenScheme, res, err := d.p.jira.Screen.Scheme.Gets(ctx, options, 0, 1)
 	if err != nil {
 		var resBody string
 		if res != nil {
@@ -142,7 +146,7 @@ func (d *jiraScreenSchemeDataSource) Read(ctx context.Context, req datasource.Re
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to get screen scheme, got error: %s\n%s", err, resBody))
 	}
 	tflog.Debug(ctx, "Retrieved screen scheme from API state", map[string]interface{}{
-		"screenScheme": fmt.Sprintf("%+v", screenScheme.Values[0]),
+		"readApiState": fmt.Sprintf("%+v", screenScheme.Values[0]),
 	})
 
 	newState.Name = types.String{Value: screenScheme.Values[0].Name}
@@ -154,6 +158,6 @@ func (d *jiraScreenSchemeDataSource) Read(ctx context.Context, req datasource.Re
 		Edit:    types.Int64{Value: int64(screenScheme.Values[0].Screens.Edit)},
 	}
 
-	tflog.Debug(ctx, "Storing screen scheme info into the state")
+	tflog.Debug(ctx, "Storing screen scheme into the state")
 	resp.Diagnostics.Append(resp.State.Set(ctx, &newState)...)
 }

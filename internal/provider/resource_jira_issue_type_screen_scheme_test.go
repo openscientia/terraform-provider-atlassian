@@ -94,22 +94,22 @@ func TestAccJiraIssueTypeScreenScheme_IssueTypeMappings(t *testing.T) {
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIssueTypeScreenSchemeConfig_issuetypemappings(resourceName, randomName, "10000"),
+				Config: testAccIssueTypeScreenSchemeConfig_issuetypemappings(resourceName, randomName, "foo"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "issue_type_mappings.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "issue_type_mappings.0.issue_type_id", "default"),
 					resource.TestCheckResourceAttr(resourceName, "issue_type_mappings.0.screen_scheme_id", "1"),
-					resource.TestCheckResourceAttr(resourceName, "issue_type_mappings.1.issue_type_id", "10000"),
+					resource.TestCheckResourceAttrPair(resourceName, "issue_type_mappings.1.issue_type_id", "atlassian_jira_issue_type.foo", "id"),
 					resource.TestCheckResourceAttr(resourceName, "issue_type_mappings.1.screen_scheme_id", "1"),
 				),
 			},
 			{
-				Config: testAccIssueTypeScreenSchemeConfig_issuetypemappings(resourceName, randomName, "10001"),
+				Config: testAccIssueTypeScreenSchemeConfig_issuetypemappings(resourceName, randomName, "bar"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "issue_type_mappings.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "issue_type_mappings.0.issue_type_id", "default"),
 					resource.TestCheckResourceAttr(resourceName, "issue_type_mappings.0.screen_scheme_id", "1"),
-					resource.TestCheckResourceAttr(resourceName, "issue_type_mappings.1.issue_type_id", "10001"),
+					resource.TestCheckResourceAttrPair(resourceName, "issue_type_mappings.1.issue_type_id", "atlassian_jira_issue_type.bar", "id"),
 					resource.TestCheckResourceAttr(resourceName, "issue_type_mappings.1.screen_scheme_id", "1"),
 				),
 			},
@@ -185,9 +185,17 @@ func testAccIssueTypeScreenSchemeConfig_defaultmapping(resourceName, name string
 	}
 }
 
-func testAccIssueTypeScreenSchemeConfig_issuetypemappings(resourceName, name, nonDefaultIssueTypeId string) string {
+func testAccIssueTypeScreenSchemeConfig_issuetypemappings(resourceName, name, nonDefaultIssueTypeSuffix string) string {
 	splits := strings.Split(resourceName, ".")
 	return fmt.Sprintf(`
+	resource "atlassian_jira_issue_type" "foo" {
+		name = "%[3]s-foo"
+	}
+
+	resource "atlassian_jira_issue_type" "bar" {
+		name = "%[3]s-bar"
+	}
+
 	resource %[1]q %[2]q {
 		name = %[3]q
 		issue_type_mappings = [
@@ -196,10 +204,10 @@ func testAccIssueTypeScreenSchemeConfig_issuetypemappings(resourceName, name, no
 				screen_scheme_id = "1"
 			},
 			{
-				issue_type_id = %[4]q 
+				issue_type_id = atlassian_jira_issue_type.%[4]s.id  
 				screen_scheme_id = "1" 
 			}
 		]
 	}
-	`, splits[0], splits[1], name, nonDefaultIssueTypeId)
+	`, splits[0], splits[1], name, nonDefaultIssueTypeSuffix)
 }

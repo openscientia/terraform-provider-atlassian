@@ -131,15 +131,15 @@ func (*jiraIssueTypeScreenSchemeResource) ImportState(ctx context.Context, req r
 }
 
 func (r *jiraIssueTypeScreenSchemeResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	tflog.Debug(ctx, "Creating issue type screen scheme")
+	tflog.Debug(ctx, "Creating issue type screen scheme resource")
 
 	var plan jiraIssueTypeScreenSchemeResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	tflog.Debug(ctx, "Loaded issue type screen scheme configuration", map[string]interface{}{
-		"issueTypeScreenSchemeConfig": fmt.Sprintf("%+v", plan),
+	tflog.Debug(ctx, "Loaded issue type screen scheme plan", map[string]interface{}{
+		"createPlan": fmt.Sprintf("%+v", plan),
 	})
 
 	issueTypeMappings := []*models.IssueTypeScreenSchemeMappingPayloadScheme{}
@@ -152,11 +152,9 @@ func (r *jiraIssueTypeScreenSchemeResource) Create(ctx context.Context, req reso
 
 	createRequestPayload := models.IssueTypeScreenSchemePayloadScheme{
 		Name:              plan.Name.ValueString(),
+		Description:       plan.Description.ValueString(),
 		IssueTypeMappings: issueTypeMappings,
 	}
-	tflog.Debug(ctx, "Generated request payload", map[string]interface{}{
-		"issueTypeScreenScheme": fmt.Sprintf("%+v", createRequestPayload),
-	})
 
 	newIssueTypeScreenScheme, res, err := r.p.jira.Issue.Type.ScreenScheme.Create(ctx, &createRequestPayload)
 	if err != nil {
@@ -167,30 +165,18 @@ func (r *jiraIssueTypeScreenSchemeResource) Create(ctx context.Context, req reso
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create issue type screen scheme, got error: %s\n%s", err, resBody))
 		return
 	}
-	tflog.Debug(ctx, "Created issue type screen scheme", map[string]interface{}{
-		"issueTypeScreenScheme": fmt.Sprintf("%+v", newIssueTypeScreenScheme),
-	})
+	tflog.Debug(ctx, "Created issue type screen scheme")
 
 	plan.ID = types.String{Value: newIssueTypeScreenScheme.ID}
 
-	// TODO: Remove this when 'description' can be addded on create call above
-	// https://github.com/ctreminiom/go-atlassian/issues/131
-	res, err = r.p.jira.Issue.Type.ScreenScheme.Update(ctx, newIssueTypeScreenScheme.ID, plan.Name.ValueString(), plan.Description.ValueString())
-	if err != nil {
-		var resBody string
-		if res != nil {
-			resBody = res.Bytes.String()
-		}
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to add issue type screen scheme description, got error: %s\n%s", err, resBody))
-		return
-	}
-
-	tflog.Debug(ctx, "Storing issue type screen scheme info into the state")
+	tflog.Debug(ctx, "Storing issue type screen scheme into the state", map[string]interface{}{
+		"createNewState": fmt.Sprintf("%+v", plan),
+	})
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
 func (r *jiraIssueTypeScreenSchemeResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	tflog.Debug(ctx, "Reading issue type screen scheme")
+	tflog.Debug(ctx, "Reading issue type screen scheme resource")
 
 	var state jiraIssueTypeScreenSchemeResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -198,11 +184,14 @@ func (r *jiraIssueTypeScreenSchemeResource) Read(ctx context.Context, req resour
 		return
 	}
 	tflog.Debug(ctx, "Loaded issue type screen scheme from state", map[string]interface{}{
-		"issueTypeScreenSchemeState": fmt.Sprintf("%+v", state),
+		"readState": fmt.Sprintf("%+v", state),
 	})
 
 	issueTypeScreenSchemeId, _ := strconv.Atoi(state.ID.ValueString())
-	issueTypeScreenSchemeDetails, res, err := r.p.jira.Issue.Type.ScreenScheme.Gets(ctx, []int{issueTypeScreenSchemeId}, 0, 50)
+	options := &models.ScreenSchemeParamsScheme{
+		IDs: []int{issueTypeScreenSchemeId},
+	}
+	issueTypeScreenSchemeDetails, res, err := r.p.jira.Issue.Type.ScreenScheme.Gets(ctx, options, 0, 1)
 	if err != nil {
 		var resBody string
 		if res != nil {
@@ -235,21 +224,21 @@ func (r *jiraIssueTypeScreenSchemeResource) Read(ctx context.Context, req resour
 	state.IssueTypeMappings = mappings
 
 	tflog.Debug(ctx, "Storing issue type screen scheme into the state", map[string]interface{}{
-		"newState": fmt.Sprintf("%+v", state),
+		"readNewState": fmt.Sprintf("%+v", state),
 	})
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
 func (r *jiraIssueTypeScreenSchemeResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	tflog.Debug(ctx, "Updating issue type screen scheme")
+	tflog.Debug(ctx, "Updating issue type screen scheme resource")
 
 	var plan jiraIssueTypeScreenSchemeResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	tflog.Debug(ctx, "Loaded issue type screen scheme configuration", map[string]interface{}{
-		"issueTypeScreenSchemeConfig": fmt.Sprintf("%+v", plan),
+	tflog.Debug(ctx, "Loaded issue type screen scheme plan", map[string]interface{}{
+		"updatePlan": fmt.Sprintf("%+v", plan),
 	})
 
 	var state jiraIssueTypeScreenSchemeResourceModel
@@ -258,7 +247,7 @@ func (r *jiraIssueTypeScreenSchemeResource) Update(ctx context.Context, req reso
 		return
 	}
 	tflog.Debug(ctx, "Loaded issue type screen scheme from state", map[string]interface{}{
-		"issueTypeScreenSchemeState": fmt.Sprintf("%+v", state),
+		"updateState": fmt.Sprintf("%+v", state),
 	})
 
 	err := r.updateNameAndDescription(ctx, &plan, &state)
@@ -289,12 +278,12 @@ func (r *jiraIssueTypeScreenSchemeResource) Update(ctx context.Context, req reso
 
 	plan.ID = types.String{Value: state.ID.ValueString()}
 
-	tflog.Debug(ctx, "Storing issue type screen scheme info into the state")
+	tflog.Debug(ctx, "Storing issue type screen scheme into the state")
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
 func (r *jiraIssueTypeScreenSchemeResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	tflog.Debug(ctx, "Deleting issue type screen scheme")
+	tflog.Debug(ctx, "Deleting issue type screen scheme resource")
 
 	var state jiraIssueTypeScreenSchemeResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -309,10 +298,10 @@ func (r *jiraIssueTypeScreenSchemeResource) Delete(ctx context.Context, req reso
 		if res != nil {
 			resBody = res.Bytes.String()
 		}
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete issue type screen scheme, got error: %s\n%s", err.Error(), resBody))
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete issue type screen scheme, got error: %s\n%s", err, resBody))
 		return
 	}
-	tflog.Debug(ctx, "Removed issue type screen scheme from API state")
+	tflog.Debug(ctx, "Deleted issue type screen scheme from API state")
 
 	// If a Resource type Delete method is completed without error, the framework will automatically remove the resource.
 }

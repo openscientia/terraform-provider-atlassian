@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	jira "github.com/ctreminiom/go-atlassian/jira/v3"
+	"github.com/ctreminiom/go-atlassian/pkg/infra/models"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -109,7 +110,7 @@ func (d *jiraIssueTypeScreenSchemeDataSource) Configure(ctx context.Context, req
 }
 
 func (d *jiraIssueTypeScreenSchemeDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	tflog.Debug(ctx, "Reading issue type screen scheme")
+	tflog.Debug(ctx, "Reading issue type screen scheme data source")
 
 	var newState jiraIssueTypeScreenSchemeDataSourceModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &newState)...)
@@ -117,7 +118,7 @@ func (d *jiraIssueTypeScreenSchemeDataSource) Read(ctx context.Context, req data
 		return
 	}
 	tflog.Debug(ctx, "Loaded issue type screen scheme config", map[string]interface{}{
-		"issueTypeScreenScheme": fmt.Sprintf("%+v", newState),
+		"readConfig": fmt.Sprintf("%+v", newState),
 	})
 
 	issueTypeScreenSchemeId, err := strconv.Atoi(newState.ID.ValueString())
@@ -125,8 +126,11 @@ func (d *jiraIssueTypeScreenSchemeDataSource) Read(ctx context.Context, req data
 		resp.Diagnostics.AddAttributeError(path.Root("id"), "Unable to parse value of \"id\" attribute.", "Value of \"id\" attribute can only be a numeric string.")
 		return
 	}
+	options := &models.ScreenSchemeParamsScheme{
+		IDs: []int{issueTypeScreenSchemeId},
+	}
 
-	issueTypeScreenScheme, res, err := d.p.jira.Issue.Type.ScreenScheme.Gets(ctx, []int{issueTypeScreenSchemeId}, 0, 50)
+	issueTypeScreenScheme, res, err := d.p.jira.Issue.Type.ScreenScheme.Gets(ctx, options, 0, 1)
 	if err != nil {
 		var resBody string
 		if res != nil {
@@ -135,12 +139,6 @@ func (d *jiraIssueTypeScreenSchemeDataSource) Read(ctx context.Context, req data
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to get issue type screen scheme, got error: %s\n%s", err, resBody))
 		return
 	}
-	tflog.Debug(ctx, "Retrieved issue type screen scheme from API state", map[string]interface{}{
-		"issueTypeScreenScheme": fmt.Sprintf("%+v", issueTypeScreenScheme.Values[0]),
-	})
-
-	newState.Name = types.String{Value: issueTypeScreenScheme.Values[0].Name}
-	newState.Description = types.String{Value: issueTypeScreenScheme.Values[0].Description}
 
 	issueTypeMappings, res, err := d.p.jira.Issue.Type.ScreenScheme.Mapping(ctx, []int{issueTypeScreenSchemeId}, 0, 50)
 	if err != nil {
@@ -151,9 +149,12 @@ func (d *jiraIssueTypeScreenSchemeDataSource) Read(ctx context.Context, req data
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to get issue type screen scheme mappings, got error: %s\n%s", err, resBody))
 		return
 	}
-	tflog.Debug(ctx, "Retrieved issue type screen scheme mappings from API state", map[string]interface{}{
-		"issueTypeMappings": fmt.Sprintf("%+v", issueTypeMappings.Values[0]),
+	tflog.Debug(ctx, "Retrieved issue type screen scheme from API state", map[string]interface{}{
+		"readApiState": fmt.Sprintf("%+v, Mappings:%+v", issueTypeScreenScheme.Values[0], issueTypeMappings.Values[0]),
 	})
+
+	newState.Name = types.String{Value: issueTypeScreenScheme.Values[0].Name}
+	newState.Description = types.String{Value: issueTypeScreenScheme.Values[0].Description}
 	var mappings []jiraIssueTypeScreenSchemeMapping
 	for _, m := range issueTypeMappings.Values {
 		mappings = append(mappings, jiraIssueTypeScreenSchemeMapping{

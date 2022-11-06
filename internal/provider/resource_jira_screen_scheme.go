@@ -23,10 +23,10 @@ type (
 	}
 
 	jiraScreenSchemeResourceModel struct {
-		ID          types.String               `tfsdk:"id"`
-		Name        types.String               `tfsdk:"name"`
-		Description types.String               `tfsdk:"description"`
-		Screens     jiraScreenSchemeTypesModel `tfsdk:"screens"`
+		ID          types.String                `tfsdk:"id"`
+		Name        types.String                `tfsdk:"name"`
+		Description types.String                `tfsdk:"description"`
+		Screens     *jiraScreenSchemeTypesModel `tfsdk:"screens"`
 	}
 
 	jiraScreenSchemeTypesModel struct {
@@ -78,6 +78,9 @@ func (*jiraScreenSchemeResource) GetSchema(_ context.Context) (tfsdk.Schema, dia
 				Type:     types.StringType,
 				Validators: []tfsdk.AttributeValidator{
 					stringvalidator.LengthAtMost(255),
+				},
+				PlanModifiers: tfsdk.AttributePlanModifiers{
+					attribute_plan_modification.DefaultValue(types.StringValue("")),
 				},
 			},
 			"screens": {
@@ -146,9 +149,6 @@ func (r *jiraScreenSchemeResource) Configure(ctx context.Context, req resource.C
 
 func (*jiraScreenSchemeResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
-	// Must initialise "singleNestedAttributes" to avoid "unhandled null values" error when calling (tfsdk.Plan).Get
-	screens := jiraScreenSchemeTypesModel{}
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("screens"), screens)...)
 }
 
 func (r *jiraScreenSchemeResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -159,13 +159,9 @@ func (r *jiraScreenSchemeResource) Create(ctx context.Context, req resource.Crea
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	tflog.Debug(ctx, "Loaded screen scheme configuration", map[string]interface{}{
-		"screenSchemeConfig": fmt.Sprintf("%+v", plan),
+	tflog.Debug(ctx, "Loaded screen scheme plan", map[string]interface{}{
+		"createPlan": fmt.Sprintf("%+v", plan),
 	})
-
-	if plan.Description.IsUnknown() || plan.Description.IsNull() {
-		plan.Description = types.String{Value: ""}
-	}
 
 	createRequestPayload := models.ScreenSchemePayloadScheme{
 		Screens: &models.ScreenTypesScheme{
@@ -177,25 +173,23 @@ func (r *jiraScreenSchemeResource) Create(ctx context.Context, req resource.Crea
 		Name:        plan.Name.ValueString(),
 		Description: plan.Description.ValueString(),
 	}
-	tflog.Debug(ctx, "Generated request payload", map[string]interface{}{
-		"screenSchemeReq": fmt.Sprintf("%+v", createRequestPayload),
-	})
-	newScreenScheme, res, err := r.p.jira.Screen.Scheme.Create(ctx, &createRequestPayload)
+
+	screenScheme, res, err := r.p.jira.Screen.Scheme.Create(ctx, &createRequestPayload)
 	if err != nil {
 		var resBody string
 		if res != nil {
 			resBody = res.Bytes.String()
 		}
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create screen scheme, got error: %s\n%s", err.Error(), resBody))
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create screen scheme, got error: %s\n%s", err, resBody))
 		return
 	}
-	tflog.Debug(ctx, "Created screen scheme", map[string]interface{}{
-		"screenScheme": newScreenScheme.ID,
+	tflog.Debug(ctx, "Created screen scheme")
+
+	plan.ID = types.StringValue(strconv.Itoa(screenScheme.ID))
+
+	tflog.Debug(ctx, "Storing screen scheme into the state", map[string]interface{}{
+		"createNewState": fmt.Sprintf("%+v", plan),
 	})
-
-	plan.ID = types.String{Value: strconv.Itoa(newScreenScheme.ID)}
-
-	tflog.Debug(ctx, "Storing screen scheme info into the state")
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
@@ -208,44 +202,48 @@ func (r *jiraScreenSchemeResource) Read(ctx context.Context, req resource.ReadRe
 		return
 	}
 	tflog.Debug(ctx, "Loaded screen scheme from state", map[string]interface{}{
-		"screenSchemeState": fmt.Sprintf("%+v", state),
+		"readState": fmt.Sprintf("%+v", state),
 	})
 
 	screenSchemeId, _ := strconv.Atoi(state.ID.ValueString())
-	resScreenScheme, res, err := r.p.jira.Screen.Scheme.Gets(ctx, []int{screenSchemeId}, 0, 50)
+	options := &models.ScreenSchemeParamsScheme{
+		IDs: []int{screenSchemeId},
+	}
+	resScreenScheme, res, err := r.p.jira.Screen.Scheme.Gets(ctx, options, 0, 1)
 	if err != nil {
 		var resBody string
 		if res != nil {
 			resBody = res.Bytes.String()
 		}
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to get screen scheme, got error: %s\n%s", err.Error(), resBody))
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to get screen scheme, got error: %s\n%s", err, resBody))
 		return
 	}
 	tflog.Debug(ctx, "Retrieved screen scheme from API state")
 
 	state.Name = types.String{Value: resScreenScheme.Values[0].Name}
 	state.Description = types.String{Value: resScreenScheme.Values[0].Description}
-	state.Screens = jiraScreenSchemeTypesModel{
+	state.Screens = &jiraScreenSchemeTypesModel{
 		Create:  types.Int64{Value: int64(resScreenScheme.Values[0].Screens.Create)},
 		Default: types.Int64{Value: int64(resScreenScheme.Values[0].Screens.Default)},
 		View:    types.Int64{Value: int64(resScreenScheme.Values[0].Screens.View)},
 		Edit:    types.Int64{Value: int64(resScreenScheme.Values[0].Screens.Edit)},
 	}
-	tflog.Debug(ctx, "Storing screen scheme info into the state")
+	tflog.Debug(ctx, "Storing screen scheme into the state", map[string]interface{}{
+		"readNewState": fmt.Sprintf("%+v", state),
+	})
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
 func (r *jiraScreenSchemeResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	tflog.Debug(ctx, "Updating screen scheme")
+	tflog.Debug(ctx, "Updating screen scheme resource")
 
 	var plan jiraScreenSchemeResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	tflog.Debug(ctx, "Loaded screen scheme configuration", map[string]interface{}{
-		"screenSchemeConfig": fmt.Sprintf("%+v", plan),
+	tflog.Debug(ctx, "Loaded screen scheme plan", map[string]interface{}{
+		"updatePlan": fmt.Sprintf("%+v", plan),
 	})
 
 	var state jiraScreenSchemeResourceModel
@@ -253,9 +251,8 @@ func (r *jiraScreenSchemeResource) Update(ctx context.Context, req resource.Upda
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
 	tflog.Debug(ctx, "Loaded screen scheme from state", map[string]interface{}{
-		"screenSchemestate": fmt.Sprintf("%+v", state),
+		"updateState": fmt.Sprintf("%+v", state),
 	})
 
 	updateRequestPayload := models.ScreenSchemePayloadScheme{
@@ -268,22 +265,20 @@ func (r *jiraScreenSchemeResource) Update(ctx context.Context, req resource.Upda
 			Edit:    int(plan.Screens.Edit.ValueInt64()),
 		},
 	}
-	tflog.Debug(ctx, "Generated request payload", map[string]interface{}{
-		"screenSchemeReq": fmt.Sprintf("%+v", updateRequestPayload),
-	})
+
 	res, err := r.p.jira.Screen.Scheme.Update(ctx, state.ID.ValueString(), &updateRequestPayload)
 	if err != nil {
 		var resBody string
 		if res != nil {
 			resBody = res.Bytes.String()
 		}
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update screen scheme, got error: %s\n%s", err.Error(), resBody))
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update screen scheme, got error: %s\n%s", err, resBody))
 	}
 	tflog.Debug(ctx, "Updated screen scheme in API state")
 
 	plan.ID = types.String{Value: state.ID.ValueString()}
 
-	tflog.Debug(ctx, "Storing screen scheme info into the state")
+	tflog.Debug(ctx, "Storing screen scheme into the state")
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
@@ -303,10 +298,10 @@ func (r *jiraScreenSchemeResource) Delete(ctx context.Context, req resource.Dele
 		if res != nil {
 			resBody = res.Bytes.String()
 		}
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete screen scheme, got error: %s\n%s", err.Error(), resBody))
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete screen scheme, got error: %s\n%s", err, resBody))
 		return
 	}
-	tflog.Debug(ctx, "Removed screen scheme from API state")
+	tflog.Debug(ctx, "Deleted screen scheme from API state")
 
 	// If a Resource type Delete method is completed without error, the framework will automatically remove the resource.
 }
