@@ -12,7 +12,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - id: go-version
-        run: echo version=$(cat go.mod | sed -En 's/^go[[:space:]]+([[:digit:].]+)$/\1/p')" >> "$GITHUB_OUTPUT"
+        run: echo "version=$(cat go.mod | sed -En 's/^go[[:space:]]+([[:digit:].]+)$/\1/p')" >> "$GITHUB_OUTPUT"
   actionlint:
     needs: [go-version]
     runs-on: ubuntu-latest
