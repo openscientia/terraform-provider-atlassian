@@ -31,7 +31,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v3
         with:
-          go-version: 'tools/go.mod'
+          go-version-file: 'tools/go.mod'
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v3
         with:
