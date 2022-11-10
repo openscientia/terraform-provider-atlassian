@@ -11,14 +11,6 @@ permissions:
   contents: write
 
 jobs:
-  go-version:
-    runs-on: ubuntu-latest
-    outputs:
-      version: ${{ steps.go-version.outputs.version }}
-    steps:
-      - uses: actions/checkout@v3
-      - id: go-version
-        run: echo "::set-output name=version::$(cat go.mod | sed -En 's/^go[[:space:]]+([[:digit:].]+)$/\1/p')"
   release-notes:
     runs-on: ubuntu-latest
     steps:
@@ -40,7 +32,7 @@ jobs:
           path: release-notes.md
           retention-days: 1
   release:
-    needs: [ go-version, release-notes ]
+    needs: [ release-notes ]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -48,7 +40,7 @@ jobs:
           fetch-depth: 0
       - uses: actions/setup-go@v3
         with:
-          go-version: ${{ needs.go-version.outputs.version }}
+          go-version-file: 'go.mod'
       - name: Import GPG Key
         id: import_gpg
         uses: crazy-max/ghaction-import-gpg@v5
@@ -82,14 +74,14 @@ jobs:
         id: highest-version-tag
         run: |
           HIGHEST=$(git tag | sort -V | tail -1)
-          echo ::set-output name=tag::$HIGHEST
+          echo "tag=$HIGHEST" >> "$GITHUB_OUTPUT"
   changelog-newversion:
       needs: [ release, highest-version-tag ]
       # write new changelog header only if release tag is the $HIGHEST i.e. exists on main
       # and not a backport release branch (e.g. release/3.x). This results in
       # manually updating the CHANGELOG header if releasing from the non-default branch.
       # TODO: find a more deterministic way to determine release branch from tag commit
-      if: github.ref_name == needs.highest-version-tag.outputs.tag
+      if: github.ref_name == "${{ needs.highest-version-tag.outputs.tag }}"
       runs-on: ubuntu-latest
       steps:
         - uses: actions/checkout@v3

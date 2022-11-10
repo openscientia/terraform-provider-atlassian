@@ -7,22 +7,13 @@ on:
     paths:
       - .github/workflows/*
 jobs:
-  go-version:
-    runs-on: ubuntu-latest
-    outputs:
-      version: ${{ steps.go-version.outputs.version }}
-    steps:
-      - uses: actions/checkout@v3
-      - id: go-version
-        run: echo "::set-output name=version::$(cat go.mod | sed -En 's/^go[[:space:]]+([[:digit:].]+)$/\1/p')"
   actionlint:
-    needs: [go-version]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v3
         with:
-          go-version: '${{ needs.go-version.outputs.version }}'
+          go-version-file: 'go.mod'
       - name: Install actionlint
         run: cd tools && go install github.com/rhysd/actionlint/cmd/actionlint
       - name: Run actionlint on workflow files
