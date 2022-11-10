@@ -13,12 +13,6 @@ env:
   IN_MAINTAINER_LIST: ${{ contains(secrets.MAINTAINER_LIST, github.actor) }}
 
 jobs:
-  go-version:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - id: go-version
-        run: echo "version=$(cat go.mod | sed -En 's/^go[[:space:]]+([[:digit:].]+)$/\1/p')" >> "$GITHUB_OUTPUT"
   changes:
     name: Filter Changes
     runs-on: ubuntu-latest
@@ -60,13 +54,12 @@ jobs:
 
             Remove any changes to the `CHANGELOG.md` file and commit them in this pull request to prevent delays with reviewing and potentially merging this pull request.
   misspell:
-    needs: [go-version]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v3
         with:
-          go-version: '${{ env.version }}' 
+          go-version-file: 'go.mod' 
       - uses: actions/cache@v3
         continue-on-error: true
         timeout-minutes: 2
