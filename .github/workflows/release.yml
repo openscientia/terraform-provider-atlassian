@@ -63,6 +63,8 @@ jobs:
   highest-version-tag:
     needs: [ release ]
     runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.highest-version-tag.outputs.tag }}
     steps:
       - uses: actions/checkout@v3
         with:
@@ -79,7 +81,7 @@ jobs:
       # and not a backport release branch (e.g. release/3.x). This results in
       # manually updating the CHANGELOG header if releasing from the non-default branch.
       # TODO: find a more deterministic way to determine release branch from tag commit
-      if: github.ref_name == "${{ env.tag }}"
+      if: github.ref_name == "${{ needs.highest-version-tag.outputs.tag }}"
       runs-on: ubuntu-latest
       steps:
         - uses: actions/checkout@v3
