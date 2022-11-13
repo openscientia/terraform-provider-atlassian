@@ -7,6 +7,8 @@ documentation:
   - 'templates/**/*'
 examples:
   - 'examples/**/*'
+generators:
+  - 'internal/generate/**/*'
 github_actions:
   - '.github/*.yml'
   - '.github/workflows/*.yml'
