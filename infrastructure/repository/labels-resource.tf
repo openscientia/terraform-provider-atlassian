@@ -44,6 +44,7 @@ variable "resource_labels" {
     "jira/filtersharing",
     "jira/groupanduserpicker",
     "jira/groups",
+    "jira/groupusers",
     "jira/instanceinformation",
     "jira/issueattachments",
     "jira/issuecommentproperties",
