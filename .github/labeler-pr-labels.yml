@@ -154,6 +154,9 @@ jira/groupanduserpicker:
 jira/groups:
   - 'internal/provider/*jira_group.go'
   - 'internal/provider/*jira_group_test.go'
+jira/groupusers:
+  - 'internal/provider/*jira_group_user.go'
+  - 'internal/provider/*jira_group_user_test.go'
 jira/instanceinformation:
   - 'internal/provider/*jira_instance_information.go'
   - 'internal/provider/*jira_instance_information_test.go'

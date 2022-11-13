@@ -91,6 +91,8 @@ jira/groupanduserpicker:
   - '((\*|-)\s*`?|(data|resource)\s+"?)atlassian_jira_group_and_user_picker\b'
 jira/groups:
   - '((\*|-)\s*`?|(data|resource)\s+"?)atlassian_jira_group\b'
+jira/groupusers:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)atlassian_jira_group_user\b'
 jira/instanceinformation:
   - '((\*|-)\s*`?|(data|resource)\s+"?)atlassian_jira_instance_information\b'
 jira/issueattachments:
