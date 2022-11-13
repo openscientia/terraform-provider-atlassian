@@ -105,6 +105,7 @@ func getJiraCustomLabels() []Label {
 	var customLabels []Label
 	product := "jira"
 	names := []string{
+		"group-users",
 		"issue-custom-fields",
 		"issue-field-configuration-items",
 		"issue-field-configuration-schemes",

@@ -104,6 +104,7 @@ func getResources(url string) []Resource {
 func getJiraCustomResources() []Resource {
 	var customResources []Resource
 	resources := []string{
+		"groupusers",
 		"issuecustomfields",
 		"issuefieldconfigurationitems",
 		"issuefieldconfigurationschemes",
