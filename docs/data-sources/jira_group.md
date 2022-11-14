@@ -2,23 +2,21 @@
 page_title: "Atlassian Cloud: atlassian_jira_group"
 subcategory: "Jira Cloud"
 description: |-
-  Manages atlassian_jira_group.
+  Provides details about a specific atlassian_jira_group.
 ---
 
-# Resource: atlassian_jira_group
+# Data Source: atlassian_jira_group
 
-Provides an `atlassian_jira_group` resource.
+Provides details about a specific `atlassian_jira_group`.
 
 Learn more about [Jira Groups](https://support.atlassian.com/user-management/docs/create-and-update-groups/).
 
-See more details about the [Jira Cloud Platform REST API for Groups](https://developer.atlassian.com/cloud/jira/platform/rest/v3/api-group-groups/#api-group-groups).
+See more details about the [Jira Cloud REST API for Groups](https://developer.atlassian.com/cloud/jira/platform/rest/v3/api-group-groups/#api-group-groups).
 
 ## Example Usage
 
-### Basic
-
 ```terraform
-resource "atlassian_jira_group" "example" {
+data "atlassian_jira_group" "example" {
   name = "foo"
 }
 ```
@@ -28,7 +26,7 @@ resource "atlassian_jira_group" "example" {
 
 ### Required
 
-- `name` (String) (Forces new resource) The name of the group.
+- `name` (String) The name of the group.
 
 ### Read-Only
 
@@ -60,11 +58,3 @@ Read-Only:
 - `p24x24` (String) The URL of the item's 24x24 pixel avatar.
 - `p32x32` (String) The URL of the item's 32x32 pixel avatar.
 - `p48x48` (String) The URL of the item's 48x48 pixel avatar.
-
-## Import
-
-`atlassian_jira_group` can be imported using `name`, e.g.,
-
-```sh
-$ terraform import atlassian_jira_group.example foo
-```
