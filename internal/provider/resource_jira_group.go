@@ -46,7 +46,7 @@ var (
 	_ resource.ResourceWithImportState = (*jiraGroupResource)(nil)
 )
 
-func NewJiraGroupdResource() resource.Resource {
+func NewJiraGroupResource() resource.Resource {
 	return &jiraGroupResource{}
 }
 
@@ -155,7 +155,7 @@ func (*jiraGroupResource) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagn
 						Type:                types.StringType,
 					},
 					"account_type": {
-						MarkdownDescription: "The type of account represented by this user. This will be one of 'atlassian' (normal users), 'app' (application user) or 'customer' (Jira Service Desk customer user)",
+						MarkdownDescription: "The type of account represented by this user. This will be one of `atlassian` (normal users), `app` (application user) or `customer` (Jira Service Desk customer user)",
 						Computed:            true,
 						Type:                types.StringType,
 					},
@@ -263,26 +263,35 @@ func (r *jiraGroupResource) Read(ctx context.Context, req resource.ReadRequest, 
 		return
 	}
 
-	groupMembers, res, err := r.p.jira.Group.Members(ctx, state.Name.ValueString(), true, 0, 50)
-	if err != nil {
-		var resBody string
-		if res != nil {
-			resBody = res.Bytes.String()
+	isLast := false
+	startAt := 0
+	maxResults := 100
+	members := []*models.GroupUserDetailScheme{}
+	for !isLast {
+		groupMembers, res, err := r.p.jira.Group.Members(ctx, state.Name.ValueString(), true, startAt, maxResults)
+		if err != nil {
+			var resBody string
+			if res != nil {
+				resBody = res.Bytes.String()
+			}
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to get group members, got error: %s\n%s", err, resBody))
+			return
 		}
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to get members of group, got error: %s\n%s", err, resBody))
-		return
+		startAt += maxResults
+		isLast = groupMembers.IsLast
+		members = append(members, groupMembers.Values...)
 	}
 
 	tflog.Debug(ctx, "Retrieved group from API state", map[string]interface{}{
-		"readApiState": fmt.Sprintf("%+v, Members:%+v", group.Values[0], groupMembers.Values),
+		"readApiState": fmt.Sprintf("%+v, Members Count:%+v", group.Values[0], len(members)),
 	})
 
 	state.ID = types.StringValue(group.Values[0].GroupID)
 	state.GroupID = types.StringValue(group.Values[0].GroupID)
 	state.Self = types.StringValue(fmt.Sprintf("https://%s/rest/api/3/group?groupId=%s", r.p.jira.Site.Host, group.Values[0].GroupID))
 
-	var members []jiraGroupUsersModel
-	for _, u := range groupMembers.Values {
+	var users []jiraGroupUsersModel
+	for _, u := range members {
 		m := &jiraGroupUsersModel{
 			Self:         types.StringValue(u.Self),
 			AccountID:    types.StringValue(u.AccountID),
@@ -298,9 +307,9 @@ func (r *jiraGroupResource) Read(ctx context.Context, req resource.ReadRequest, 
 			TimeZone:    types.StringValue(u.TimeZone),
 			AccountType: types.StringValue(u.AccountType),
 		}
-		members = append(members, *m)
+		users = append(users, *m)
 	}
-	state.Users, _ = types.SetValueFrom(ctx, state.Users.ElementType(ctx), members)
+	state.Users, _ = types.SetValueFrom(ctx, state.Users.ElementType(ctx), users)
 
 	tflog.Debug(ctx, "Storing group into the state", map[string]interface{}{
 		"readNewState": fmt.Sprintf("%+v", state),

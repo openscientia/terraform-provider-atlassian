@@ -43,7 +43,7 @@ resource "atlassian_jira_group" "example" {
 Read-Only:
 
 - `account_id` (String) The account ID of the user, which uniquely identifies the user across all Atlassian products.
-- `account_type` (String) The type of account represented by this user. This will be one of 'atlassian' (normal users), 'app' (application user) or 'customer' (Jira Service Desk customer user)
+- `account_type` (String) The type of account represented by this user. This will be one of `atlassian` (normal users), `app` (application user) or `customer` (Jira Service Desk customer user)
 - `active` (Boolean) Whether the user is active.
 - `avatar_urls` (Attributes) The avatars of the user. (see [below for nested schema](#nestedatt--users--avatar_urls))
 - `display_name` (String) The display name of the user. Depending on the user’s privacy settings, this may return an alternative value.
