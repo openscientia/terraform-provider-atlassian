@@ -240,7 +240,7 @@ func (r *jiraGroupUserResource) Create(ctx context.Context, req resource.CreateR
 		isLast = groupUsers.IsLast
 		users = append(users, groupUsers.Values...)
 	}
-	tflog.Debug(ctx, "Retrived group users from API state")
+	tflog.Debug(ctx, "Retrieved group users from API state")
 
 	for _, u := range users {
 		if u.AccountID == plan.AccountID.ValueString() {
@@ -297,7 +297,7 @@ func (r *jiraGroupUserResource) Read(ctx context.Context, req resource.ReadReque
 		isLast = groupUsers.IsLast
 		users = append(users, groupUsers.Values...)
 	}
-	tflog.Debug(ctx, "Retrived group users from API state")
+	tflog.Debug(ctx, "Retrieved group users from API state")
 
 	for _, u := range users {
 		if u.AccountID == state.AccountID.ValueString() {
