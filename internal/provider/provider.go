@@ -175,7 +175,7 @@ func (p *atlassianProvider) Configure(ctx context.Context, req provider.Configur
 
 func (*atlassianProvider) Resources(ctx context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
-		NewJiraGroupdResource,
+		NewJiraGroupResource,
 		NewJiraGroupUserResource,
 		NewJiraIssueFieldConfigurationItemResource,
 		NewJiraIssueFieldConfigurationResource,
@@ -194,6 +194,7 @@ func (*atlassianProvider) Resources(ctx context.Context) []func() resource.Resou
 
 func (*atlassianProvider) DataSources(ctx context.Context) []func() datasource.DataSource {
 	return []func() datasource.DataSource{
+		NewJiraGroupDataSource,
 		NewJiraIssueFieldConfigurationDataSource,
 		NewJiraIssueFieldConfigurationSchemeDataSource,
 		NewJiraIssueScreenDataSource,
