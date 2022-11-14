@@ -1,0 +1,30 @@
+---
+page_title: "Atlassian Cloud: {{ .Name }}"
+subcategory: "Jira Cloud"
+description: |-
+  Manages {{ .Name }}.
+---
+
+# {{ .Type }}: {{ .Name }}
+
+Provides an `{{ .Name }}` resource.
+
+Learn more about [Jira Group Users](https://support.atlassian.com/user-management/docs/create-and-update-groups/).
+
+See more details about the [Jira Cloud Platform REST API for Group Users](https://developer.atlassian.com/cloud/jira/platform/rest/v3/api-group-groups/#api-rest-api-3-group-user-post).
+
+## Example Usage
+
+### Basic
+
+{{ .Name | printf "examples/resources/%s/basic.tf" | tffile }}
+
+{{ .SchemaMarkdown | trimspace }}
+
+## Import
+
+`{{ .Name }}` can be imported using `group_name` and `account_id` separated by a comma (`,`) e.g.,
+
+```sh
+$ terraform import {{ .Name | printf "%s.example foo,1234567890"}}
+```
