@@ -85,14 +85,15 @@ func (d *jiraIssueScreenDataSource) Configure(ctx context.Context, req datasourc
 }
 
 func (d *jiraIssueScreenDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	tflog.Debug(ctx, "Reading issue screen")
+	tflog.Debug(ctx, "Reading issue screen data source")
+
 	var newState jiraIssueScreenDataSourceModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &newState)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 	tflog.Debug(ctx, "Loaded issue screen config", map[string]interface{}{
-		"issueScreen": fmt.Sprintf("%+v", newState),
+		"readConfig": fmt.Sprintf("%+v", newState),
 	})
 
 	issueScreenId, err := strconv.Atoi(newState.ID.ValueString())
@@ -110,10 +111,12 @@ func (d *jiraIssueScreenDataSource) Read(ctx context.Context, req datasource.Rea
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to get issue screen, got error: %s\n%s", err.Error(), resBody))
 		return
 	}
-	tflog.Debug(ctx, "Retrieve issue screen from API state")
+	tflog.Debug(ctx, "Retrieve issue screen from API state", map[string]interface{}{
+		"readApiState": fmt.Sprintf("%+v", issueScreen),
+	})
 
-	newState.Name = types.String{Value: issueScreen.Values[0].Name}
-	newState.Description = types.String{Value: issueScreen.Values[0].Description}
+	newState.Name = types.StringValue(issueScreen.Values[0].Name)
+	newState.Description = types.StringValue(issueScreen.Values[0].Description)
 
 	tflog.Debug(ctx, "Storing issue screen info into the state")
 	resp.Diagnostics.Append(resp.State.Set(ctx, &newState)...)

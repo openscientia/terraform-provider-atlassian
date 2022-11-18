@@ -153,13 +153,13 @@ func (d *jiraIssueTypeScreenSchemeDataSource) Read(ctx context.Context, req data
 		"readApiState": fmt.Sprintf("%+v, Mappings:%+v", issueTypeScreenScheme.Values[0], issueTypeMappings.Values[0]),
 	})
 
-	newState.Name = types.String{Value: issueTypeScreenScheme.Values[0].Name}
-	newState.Description = types.String{Value: issueTypeScreenScheme.Values[0].Description}
+	newState.Name = types.StringValue(issueTypeScreenScheme.Values[0].Name)
+	newState.Description = types.StringValue(issueTypeScreenScheme.Values[0].Description)
 	var mappings []jiraIssueTypeScreenSchemeMapping
 	for _, m := range issueTypeMappings.Values {
 		mappings = append(mappings, jiraIssueTypeScreenSchemeMapping{
-			IssueTypeId:    types.String{Value: m.IssueTypeID},
-			ScreenSchemeId: types.String{Value: m.ScreenSchemeID},
+			IssueTypeId:    types.StringValue(m.IssueTypeID),
+			ScreenSchemeId: types.StringValue(m.ScreenSchemeID),
 		})
 	}
 	newState.IssueTypeMappings = mappings

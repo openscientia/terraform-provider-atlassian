@@ -83,7 +83,7 @@ func (d *jiraIssueFieldConfigurationSchemeDataSource) Configure(ctx context.Cont
 }
 
 func (d *jiraIssueFieldConfigurationSchemeDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	tflog.Debug(ctx, "Reading issue field configuration scheme")
+	tflog.Debug(ctx, "Reading issue field configuration scheme data source")
 
 	var newState jiraIssueFieldConfigurationSchemeDataSourceModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &newState)...)
@@ -91,7 +91,7 @@ func (d *jiraIssueFieldConfigurationSchemeDataSource) Read(ctx context.Context, 
 		return
 	}
 	tflog.Debug(ctx, "Loaded issue field configuration scheme config", map[string]interface{}{
-		"issueFieldConfiguration": fmt.Sprintf("%+v", newState),
+		"readConfig": fmt.Sprintf("%+v", newState),
 	})
 
 	issueFieldConfigurationSchemeId, err := strconv.Atoi(newState.ID.ValueString())
@@ -110,11 +110,11 @@ func (d *jiraIssueFieldConfigurationSchemeDataSource) Read(ctx context.Context, 
 		return
 	}
 	tflog.Debug(ctx, "Retrieved issue field configuration scheme from API state", map[string]interface{}{
-		"issueFieldConfigurationScheme": fmt.Sprintf("%+v", issueFieldConfigurationScheme),
+		"readApiState": fmt.Sprintf("%+v", issueFieldConfigurationScheme),
 	})
 
-	newState.Name = types.String{Value: issueFieldConfigurationScheme.Values[0].Name}
-	newState.Description = types.String{Value: issueFieldConfigurationScheme.Values[0].Description}
+	newState.Name = types.StringValue(issueFieldConfigurationScheme.Values[0].Name)
+	newState.Description = types.StringValue(issueFieldConfigurationScheme.Values[0].Description)
 
 	tflog.Debug(ctx, "Storing issue field configuration scheme into the state")
 	resp.Diagnostics.Append(resp.State.Set(ctx, &newState)...)

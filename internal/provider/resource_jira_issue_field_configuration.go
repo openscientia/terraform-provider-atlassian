@@ -71,7 +71,7 @@ func (*jiraIssueFieldConfigurationResource) GetSchema(_ context.Context) (tfsdk.
 					stringvalidator.LengthAtMost(255),
 				},
 				PlanModifiers: tfsdk.AttributePlanModifiers{
-					attribute_plan_modification.DefaultValue(types.String{Value: ""}),
+					attribute_plan_modification.DefaultValue(types.StringValue("")),
 				},
 			},
 		},
@@ -102,7 +102,7 @@ func (*jiraIssueFieldConfigurationResource) ImportState(ctx context.Context, req
 }
 
 func (r *jiraIssueFieldConfigurationResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	tflog.Debug(ctx, "Creating issue field configuration")
+	tflog.Debug(ctx, "Creating issue field configuration resource")
 
 	var plan jiraIssueFieldConfigurationResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
@@ -110,7 +110,7 @@ func (r *jiraIssueFieldConfigurationResource) Create(ctx context.Context, req re
 		return
 	}
 	tflog.Debug(ctx, "Loaded issue field configuration plan", map[string]interface{}{
-		"issueFieldConfigurationPlan": fmt.Sprintf("%+v", plan),
+		"createPlan": fmt.Sprintf("%+v", plan),
 	})
 
 	issueFieldConfiguration, res, err := r.p.jira.Issue.Field.Configuration.Create(ctx, plan.Name.ValueString(), plan.Description.ValueString())
@@ -122,18 +122,18 @@ func (r *jiraIssueFieldConfigurationResource) Create(ctx context.Context, req re
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create issue field configuration, got error: %s\n%s", err, resBody))
 		return
 	}
-	tflog.Debug(ctx, "Created issue field configuration", map[string]interface{}{
-		"issueFieldConfiguration": fmt.Sprintf("%+v", issueFieldConfiguration),
+	tflog.Debug(ctx, "Created issue field configuration")
+
+	plan.ID = types.StringValue(strconv.Itoa(issueFieldConfiguration.ID))
+
+	tflog.Debug(ctx, "Storing issue field configuration info into the state", map[string]interface{}{
+		"createNewState": fmt.Sprintf("%+v", plan),
 	})
-
-	plan.ID = types.String{Value: strconv.Itoa(issueFieldConfiguration.ID)}
-
-	tflog.Debug(ctx, "Storing issue field configuration info into the state")
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
 func (r *jiraIssueFieldConfigurationResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	tflog.Debug(ctx, "Reading issue field configuration")
+	tflog.Debug(ctx, "Reading issue field configuration resource")
 
 	var state jiraIssueFieldConfigurationResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -141,7 +141,7 @@ func (r *jiraIssueFieldConfigurationResource) Read(ctx context.Context, req reso
 		return
 	}
 	tflog.Debug(ctx, "Loaded issue field configuration from state", map[string]interface{}{
-		"issueFieldConfigurationState": fmt.Sprintf("%+v", state),
+		"readState": fmt.Sprintf("%+v", state),
 	})
 
 	issueFieldConfigurationId, _ := strconv.Atoi(state.ID.ValueString())
@@ -156,17 +156,17 @@ func (r *jiraIssueFieldConfigurationResource) Read(ctx context.Context, req reso
 	}
 	tflog.Debug(ctx, "Retrieved issue field configuration from API state")
 
-	state.Name = types.String{Value: issueFieldConfiguration.Values[0].Name}
-	state.Description = types.String{Value: issueFieldConfiguration.Values[0].Description}
+	state.Name = types.StringValue(issueFieldConfiguration.Values[0].Name)
+	state.Description = types.StringValue(issueFieldConfiguration.Values[0].Description)
 
 	tflog.Debug(ctx, "Storing issue field configuration into the state", map[string]interface{}{
-		"issueFieldConfiguration": fmt.Sprintf("%+v", state),
+		"readNewState": fmt.Sprintf("%+v", state),
 	})
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
 func (r *jiraIssueFieldConfigurationResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	tflog.Debug(ctx, "Updating issue field configuration")
+	tflog.Debug(ctx, "Updating issue field configuration resource")
 
 	var plan jiraIssueFieldConfigurationResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
@@ -174,7 +174,7 @@ func (r *jiraIssueFieldConfigurationResource) Update(ctx context.Context, req re
 		return
 	}
 	tflog.Debug(ctx, "Loaded issue field configuration plan", map[string]interface{}{
-		"issueFieldConfigurationPlan": fmt.Sprintf("%+v", plan),
+		"updatePlan": fmt.Sprintf("%+v", plan),
 	})
 
 	var state jiraIssueFieldConfigurationResourceModel
@@ -183,7 +183,7 @@ func (r *jiraIssueFieldConfigurationResource) Update(ctx context.Context, req re
 		return
 	}
 	tflog.Debug(ctx, "Loaded issue field configuration from state", map[string]interface{}{
-		"issueFieldConfigurationState": fmt.Sprintf("%+v", state),
+		"updateState": fmt.Sprintf("%+v", state),
 	})
 
 	issueFieldConfigurationId, _ := strconv.Atoi(state.ID.ValueString())
@@ -198,14 +198,14 @@ func (r *jiraIssueFieldConfigurationResource) Update(ctx context.Context, req re
 	}
 	tflog.Debug(ctx, "Updated issue field configuration in API state")
 
-	plan.ID = types.String{Value: state.ID.ValueString()}
+	plan.ID = types.StringValue(state.ID.ValueString())
 
 	tflog.Debug(ctx, "Storing issue field configuration info into the state")
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
 func (r *jiraIssueFieldConfigurationResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	tflog.Debug(ctx, "Deleting issue field configuration")
+	tflog.Debug(ctx, "Deleting issue field configuration resource")
 
 	var state jiraIssueFieldConfigurationResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)

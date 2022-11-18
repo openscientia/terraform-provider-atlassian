@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/openscientia/terraform-provider-atlassian/internal/provider/attribute_plan_modification"
 )
 
 type (
@@ -69,12 +70,18 @@ func (*jiraIssueTypeSchemeResource) GetSchema(ctx context.Context) (tfsdk.Schema
 				Validators: []tfsdk.AttributeValidator{
 					stringvalidator.LengthAtMost(4000),
 				},
+				PlanModifiers: tfsdk.AttributePlanModifiers{
+					attribute_plan_modification.DefaultValue(types.StringValue("")),
+				},
 			},
 			"default_issue_type_id": {
 				MarkdownDescription: "The ID of the default issue type of the issue type scheme. This ID must be included in issue_type_ids.",
 				Optional:            true,
 				Computed:            true,
 				Type:                types.StringType,
+				PlanModifiers: tfsdk.AttributePlanModifiers{
+					attribute_plan_modification.DefaultValue(types.StringValue("")),
+				},
 			},
 			"issue_type_ids": {
 				MarkdownDescription: "The list of issue types IDs of the issue type scheme. At least one standard issue type ID is required.",
@@ -122,14 +129,6 @@ func (r *jiraIssueTypeSchemeResource) Create(ctx context.Context, req resource.C
 		"createPlan": fmt.Sprintf("%+v", plan),
 	})
 
-	if plan.Description.IsUnknown() {
-		plan.Description = types.String{Value: ""}
-	}
-
-	if plan.DefaultIssueTypeId.IsUnknown() {
-		plan.DefaultIssueTypeId = types.String{Value: ""}
-	}
-
 	if plan.DefaultIssueTypeId.ValueString() != "" {
 		flag := false
 		for _, v := range plan.IssueTypeIds.Elements() {
@@ -163,7 +162,7 @@ func (r *jiraIssueTypeSchemeResource) Create(ctx context.Context, req resource.C
 	}
 	tflog.Debug(ctx, "Created issue type scheme")
 
-	plan.ID = types.String{Value: returnedIssueTypeScheme.IssueTypeSchemeID}
+	plan.ID = types.StringValue(returnedIssueTypeScheme.IssueTypeSchemeID)
 
 	tflog.Debug(ctx, "Storing issue type scheme into the state", map[string]interface{}{
 		"createNewState": fmt.Sprintf("%+v", plan),
@@ -211,9 +210,9 @@ func (r *jiraIssueTypeSchemeResource) Read(ctx context.Context, req resource.Rea
 	}
 	tflog.Debug(ctx, "Retrieved issue type scheme from API state")
 
-	state.Name = types.String{Value: issueTypeScheme.Values[0].Name}
-	state.Description = types.String{Value: issueTypeScheme.Values[0].Description}
-	state.DefaultIssueTypeId = types.String{Value: issueTypeScheme.Values[0].DefaultIssueTypeID}
+	state.Name = types.StringValue(issueTypeScheme.Values[0].Name)
+	state.Description = types.StringValue(issueTypeScheme.Values[0].Description)
+	state.DefaultIssueTypeId = types.StringValue(issueTypeScheme.Values[0].DefaultIssueTypeID)
 	state.IssueTypeIds = ids
 
 	tflog.Debug(ctx, "Storing issue type scheme into the state", map[string]interface{}{
@@ -304,16 +303,14 @@ func (r *jiraIssueTypeSchemeResource) Update(ctx context.Context, req resource.U
 	tflog.Debug(ctx, "Updated issue type scheme in API state")
 
 	var result = jiraIssueTypeSchemeResourceModel{
-		ID:                 types.String{Value: state.ID.ValueString()},
-		Name:               types.String{Value: plan.Name.ValueString()},
-		Description:        types.String{Value: plan.Description.ValueString()},
-		DefaultIssueTypeId: types.String{Value: plan.DefaultIssueTypeId.ValueString()},
+		ID:                 types.StringValue(state.ID.ValueString()),
+		Name:               types.StringValue(plan.Name.ValueString()),
+		Description:        types.StringValue(plan.Description.ValueString()),
+		DefaultIssueTypeId: types.StringValue(plan.DefaultIssueTypeId.ValueString()),
 		IssueTypeIds:       plan.IssueTypeIds,
 	}
 
-	tflog.Debug(ctx, "Storing issue type scheme into the state", map[string]interface{}{
-		"updateNewState": fmt.Sprintf("%+v", result),
-	})
+	tflog.Debug(ctx, "Storing issue type scheme into the state")
 	resp.Diagnostics.Append(resp.State.Set(ctx, &result)...)
 }
 

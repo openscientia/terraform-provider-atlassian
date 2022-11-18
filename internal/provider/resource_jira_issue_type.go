@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/openscientia/terraform-provider-atlassian/internal/provider/attribute_plan_modification"
 )
 
 type (
@@ -67,6 +68,9 @@ func (*jiraIssueTypeResource) GetSchema(ctx context.Context) (tfsdk.Schema, diag
 				Optional:            true,
 				Computed:            true,
 				Type:                types.StringType,
+				PlanModifiers: tfsdk.AttributePlanModifiers{
+					attribute_plan_modification.DefaultValue(types.StringValue("")),
+				},
 			},
 			"type": {
 				MarkdownDescription: "The type of the issue type. Can be either `standard` or `sub-task`.",
@@ -137,24 +141,20 @@ func (r *jiraIssueTypeResource) Create(ctx context.Context, req resource.CreateR
 		return
 	}
 
-	if plan.Description.IsUnknown() {
-		plan.Description = types.String{Value: ""}
-	}
-
 	if plan.Type.IsUnknown() && plan.HierarchyLevel.IsUnknown() {
-		plan.Type = types.String{Value: "standard"}
-		plan.HierarchyLevel = types.Int64{Value: 0}
+		plan.Type = types.StringValue("standard")
+		plan.HierarchyLevel = types.Int64Value(0)
 	} else if plan.Type.IsUnknown() && !plan.HierarchyLevel.IsUnknown() {
 		if plan.HierarchyLevel.ValueInt64() == 0 {
-			plan.Type = types.String{Value: "standard"}
+			plan.Type = types.StringValue("standard")
 		} else {
-			plan.Type = types.String{Value: "sub-task"}
+			plan.Type = types.StringValue("sub-task")
 		}
 	} else if !plan.Type.IsUnknown() && plan.HierarchyLevel.IsUnknown() {
 		if plan.Type.ValueString() == "standard" {
-			plan.HierarchyLevel = types.Int64{Value: 0}
+			plan.HierarchyLevel = types.Int64Value(0)
 		} else {
-			plan.HierarchyLevel = types.Int64{Value: -1}
+			plan.HierarchyLevel = types.Int64Value(-1)
 		}
 	}
 
@@ -174,7 +174,7 @@ func (r *jiraIssueTypeResource) Create(ctx context.Context, req resource.CreateR
 	}
 	tflog.Debug(ctx, "Created issue type")
 
-	plan.ID = types.String{Value: returnedIssueType.ID}
+	plan.ID = types.StringValue(returnedIssueType.ID)
 
 	if !plan.AvatarId.IsUnknown() {
 		issueTypePayload := new(models.IssueTypePayloadScheme)
@@ -191,9 +191,9 @@ func (r *jiraIssueTypeResource) Create(ctx context.Context, req resource.CreateR
 			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update issue type, got error: %s\n%s", err, resBody))
 			return
 		}
-		plan.AvatarId = types.Int64{Value: int64(returnedIssueType.AvatarID)}
+		plan.AvatarId = types.Int64Value(int64(returnedIssueType.AvatarID))
 	} else {
-		plan.AvatarId = types.Int64{Value: int64(returnedIssueType.AvatarID)}
+		plan.AvatarId = types.Int64Value(int64(returnedIssueType.AvatarID))
 	}
 
 	tflog.Debug(ctx, "Storing issue type into the state", map[string]interface{}{
@@ -223,15 +223,15 @@ func (r *jiraIssueTypeResource) Read(ctx context.Context, req resource.ReadReque
 	}
 	tflog.Debug(ctx, "Retrieved issue type from API state")
 
-	state.Name = types.String{Value: returnedIssueType.Name}
-	state.Description = types.String{Value: returnedIssueType.Description}
+	state.Name = types.StringValue(returnedIssueType.Name)
+	state.Description = types.StringValue(returnedIssueType.Description)
 	if returnedIssueType.HierarchyLevel == 0 {
-		state.Type = types.String{Value: "standard"}
+		state.Type = types.StringValue("standard")
 	} else {
-		state.Type = types.String{Value: "sub-task"}
+		state.Type = types.StringValue("sub-task")
 	}
-	state.HierarchyLevel = types.Int64{Value: int64(returnedIssueType.HierarchyLevel)}
-	state.AvatarId = types.Int64{Value: int64(returnedIssueType.AvatarID)}
+	state.HierarchyLevel = types.Int64Value(int64(returnedIssueType.HierarchyLevel))
+	state.AvatarId = types.Int64Value(int64(returnedIssueType.AvatarID))
 
 	tflog.Debug(ctx, "Storing issue type into the state", map[string]interface{}{
 		"readNewState": fmt.Sprintf("%+v", state),
@@ -275,17 +275,15 @@ func (r *jiraIssueTypeResource) Update(ctx context.Context, req resource.UpdateR
 	tflog.Debug(ctx, "Updated issue type in API state")
 
 	var result = jiraIssueTypeResourceModel{
-		ID:             types.String{Value: returnedIssueType.ID},
-		Description:    types.String{Value: returnedIssueType.Description},
-		Name:           types.String{Value: returnedIssueType.Name},
-		Type:           types.String{Value: state.Type.ValueString()},
-		AvatarId:       types.Int64{Value: int64(returnedIssueType.AvatarID)},
-		HierarchyLevel: types.Int64{Value: int64(returnedIssueType.HierarchyLevel)},
+		ID:             types.StringValue(returnedIssueType.ID),
+		Description:    types.StringValue(returnedIssueType.Description),
+		Name:           types.StringValue(returnedIssueType.Name),
+		Type:           types.StringValue(state.Type.ValueString()),
+		AvatarId:       types.Int64Value(int64(returnedIssueType.AvatarID)),
+		HierarchyLevel: types.Int64Value(int64(returnedIssueType.HierarchyLevel)),
 	}
 
-	tflog.Debug(ctx, "Storing issue type into the state", map[string]interface{}{
-		"updateNewState": fmt.Sprintf("%+v", result),
-	})
+	tflog.Debug(ctx, "Storing issue type into the state")
 	resp.Diagnostics.Append(resp.State.Set(ctx, &result)...)
 }
 

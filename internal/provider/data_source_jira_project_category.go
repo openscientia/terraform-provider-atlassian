@@ -119,9 +119,9 @@ func (d *jiraProjectCategoryDataSource) Read(ctx context.Context, req datasource
 		"readApiState": fmt.Sprintf("%+v", projectCategory),
 	})
 
-	newState.Name = types.String{Value: projectCategory.Name}
-	newState.Description = types.String{Value: projectCategory.Description}
-	newState.Self = types.String{Value: projectCategory.Self}
+	newState.Name = types.StringValue(projectCategory.Name)
+	newState.Description = types.StringValue(projectCategory.Description)
+	newState.Self = types.StringValue(projectCategory.Self)
 
 	tflog.Debug(ctx, "Storing project category into the state")
 	resp.Diagnostics.Append(resp.State.Set(ctx, &newState)...)

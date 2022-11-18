@@ -156,7 +156,7 @@ func (*jiraIssueFieldConfigurationItemResource) ImportState(ctx context.Context,
 }
 
 func (r *jiraIssueFieldConfigurationItemResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	tflog.Debug(ctx, "Creating issue field configuration item")
+	tflog.Debug(ctx, "Creating issue field configuration item resource")
 
 	var plan jiraIssueFieldConfigurationItemResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
@@ -164,7 +164,7 @@ func (r *jiraIssueFieldConfigurationItemResource) Create(ctx context.Context, re
 		return
 	}
 	tflog.Debug(ctx, "Loaded issue field configuration item plan", map[string]interface{}{
-		"issueFieldConfigurationItem": fmt.Sprintf("%+v, %+v", plan, *plan.Item),
+		"createPlan": fmt.Sprintf("%+v, %+v", plan, *plan.Item),
 	})
 
 	if !plan.Item.Renderer.IsNull() && !plan.Item.Renderer.IsUnknown() {
@@ -211,26 +211,26 @@ func (r *jiraIssueFieldConfigurationItemResource) Create(ctx context.Context, re
 	for _, i := range items.Values {
 		if i.ID == plan.Item.ID.ValueString() {
 			plan.Item = &jiraIssueFieldConfigurationItem{
-				ID:          types.String{Value: plan.Item.ID.ValueString()},
-				Description: types.String{Value: i.Description},
-				IsHidden:    types.Bool{Value: i.IsHidden},
-				IsRequired:  types.Bool{Value: i.IsRequired},
-				Renderer:    types.String{Value: i.Renderer},
+				ID:          types.StringValue(plan.Item.ID.ValueString()),
+				Description: types.StringValue(i.Description),
+				IsHidden:    types.BoolValue(i.IsHidden),
+				IsRequired:  types.BoolValue(i.IsRequired),
+				Renderer:    types.StringValue(i.Renderer),
 			}
 		}
 	}
 	tflog.Debug(ctx, "Created issue field configuration item")
 
-	plan.ID = types.String{Value: createIssueFieldConfigurationItemID(plan.IssueFieldConfiguration.ValueString(), plan.Item.ID.ValueString())}
+	plan.ID = types.StringValue(fmt.Sprintf("%s-%s", plan.IssueFieldConfiguration.ValueString(), plan.Item.ID.ValueString()))
 
 	tflog.Debug(ctx, "Storing issue field configuration item info into the state", map[string]interface{}{
-		"issueFieldConfigurationItem": fmt.Sprintf("%+v, %+v", plan, *plan.Item),
+		"createNewState": fmt.Sprintf("%+v, %+v", plan, *plan.Item),
 	})
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
 func (r *jiraIssueFieldConfigurationItemResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	tflog.Debug(ctx, "Reading issue field configuration item")
+	tflog.Debug(ctx, "Reading issue field configuration item resource")
 
 	var state jiraIssueFieldConfigurationItemResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -238,7 +238,7 @@ func (r *jiraIssueFieldConfigurationItemResource) Read(ctx context.Context, req 
 		return
 	}
 	tflog.Debug(ctx, "Loaded issue field configuration item from state", map[string]interface{}{
-		"issueFieldConfigurationItem": fmt.Sprintf("%+v, %+v", state, *state.Item),
+		"readState": fmt.Sprintf("%+v, %+v", state, *state.Item),
 	})
 
 	issueFieldConfigurationId, _ := strconv.Atoi(state.IssueFieldConfiguration.ValueString())
@@ -255,26 +255,26 @@ func (r *jiraIssueFieldConfigurationItemResource) Read(ctx context.Context, req 
 	for _, i := range issueFieldConfigurationItem.Values {
 		if i.ID == state.Item.ID.ValueString() {
 			state.Item = &jiraIssueFieldConfigurationItem{
-				ID:          types.String{Value: state.Item.ID.ValueString()},
-				Description: types.String{Value: i.Description},
-				IsHidden:    types.Bool{Value: i.IsHidden},
-				IsRequired:  types.Bool{Value: i.IsRequired},
-				Renderer:    types.String{Value: i.Renderer},
+				ID:          types.StringValue(state.Item.ID.ValueString()),
+				Description: types.StringValue(i.Description),
+				IsHidden:    types.BoolValue(i.IsHidden),
+				IsRequired:  types.BoolValue(i.IsRequired),
+				Renderer:    types.StringValue(i.Renderer),
 			}
 		}
 	}
 	tflog.Debug(ctx, "Retrieved issue field configuration item from API state")
 
-	state.ID = types.String{Value: createIssueFieldConfigurationItemID(state.IssueFieldConfiguration.ValueString(), state.Item.ID.ValueString())}
+	state.ID = types.StringValue(fmt.Sprintf("%s-%s", state.IssueFieldConfiguration.ValueString(), state.Item.ID.ValueString()))
 
 	tflog.Debug(ctx, "Storing issue field configuration item into the state", map[string]interface{}{
-		"issueFieldConfigurationItem": fmt.Sprintf("%+v, %+v", state, *state.Item),
+		"readNewState": fmt.Sprintf("%+v, %+v", state, *state.Item),
 	})
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
 func (r *jiraIssueFieldConfigurationItemResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	tflog.Debug(ctx, "Updating issue field configuration item")
+	tflog.Debug(ctx, "Updating issue field configuration item resource")
 
 	var plan jiraIssueFieldConfigurationItemResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
@@ -282,7 +282,7 @@ func (r *jiraIssueFieldConfigurationItemResource) Update(ctx context.Context, re
 		return
 	}
 	tflog.Debug(ctx, "Loaded issue field configuration item plan", map[string]interface{}{
-		"issueFieldConfigurationItemPlan": fmt.Sprintf("%+v, %+v", plan, *plan.Item),
+		"updatePlan": fmt.Sprintf("%+v, %+v", plan, *plan.Item),
 	})
 
 	var state jiraIssueFieldConfigurationItemResourceModel
@@ -291,7 +291,7 @@ func (r *jiraIssueFieldConfigurationItemResource) Update(ctx context.Context, re
 		return
 	}
 	tflog.Debug(ctx, "Loaded issue field configuration item from state", map[string]interface{}{
-		"issueFieldConfigurationItemState": fmt.Sprintf("%+v, %+v", state, *state.Item),
+		"updateState": fmt.Sprintf("%+v, %+v", state, *state.Item),
 	})
 
 	updateRequestPayload := models.UpdateFieldConfigurationItemPayloadScheme{
@@ -330,18 +330,18 @@ func (r *jiraIssueFieldConfigurationItemResource) Update(ctx context.Context, re
 	for _, i := range items.Values {
 		if i.ID == plan.Item.ID.ValueString() {
 			plan.Item = &jiraIssueFieldConfigurationItem{
-				ID:          types.String{Value: plan.Item.ID.ValueString()},
-				Description: types.String{Value: i.Description},
-				IsHidden:    types.Bool{Value: i.IsHidden},
-				IsRequired:  types.Bool{Value: i.IsRequired},
-				Renderer:    types.String{Value: i.Renderer},
+				ID:          types.StringValue(plan.Item.ID.ValueString()),
+				Description: types.StringValue(i.Description),
+				IsHidden:    types.BoolValue(i.IsHidden),
+				IsRequired:  types.BoolValue(i.IsRequired),
+				Renderer:    types.StringValue(i.Renderer),
 			}
 		}
 	}
 
 	tflog.Debug(ctx, "Updated issue field configuration item in API state")
 
-	plan.ID = types.String{Value: state.ID.ValueString()}
+	plan.ID = types.StringValue(state.ID.ValueString())
 
 	tflog.Debug(ctx, "Storing issue field configuration item plan into the state")
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
@@ -350,10 +350,6 @@ func (r *jiraIssueFieldConfigurationItemResource) Update(ctx context.Context, re
 func (r *jiraIssueFieldConfigurationItemResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	tflog.Warn(ctx, "Cannot destroy atlassian_jira_issue_field_configuration_item resource. Terraform will only remove this resource from the state file.")
 	// If a Resource type Delete method is completed without error, the framework will automatically remove the resource.
-}
-
-func createIssueFieldConfigurationItemID(issueFieldConfiguration, item string) string {
-	return strings.Join([]string{issueFieldConfiguration, item}, "-")
 }
 
 func (r *jiraIssueFieldConfigurationItemResource) checkIssueFieldConfigurationItemRenderable(ctx context.Context, p *jiraIssueFieldConfigurationItemResourceModel) diag.Diagnostic {

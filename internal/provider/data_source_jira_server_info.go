@@ -141,20 +141,18 @@ func (d *jiraServerInfoDataSource) Read(ctx context.Context, req datasource.Read
 	})
 
 	newState := &jiraServerInfoDataSourceModel{
-		ID:             types.String{Value: serverInfo.BaseURL},
-		BaseURL:        types.String{Value: serverInfo.BaseURL},
-		Version:        types.String{Value: serverInfo.Version},
-		VersionNumbers: types.List{ElemType: types.Int64Type},
-		DeploymentType: types.String{Value: serverInfo.DeploymentType},
-		BuildNumber:    types.Int64{Value: int64(serverInfo.BuildNumber)},
-		BuildDate:      types.String{Value: serverInfo.BuildDate},
-		ServerTime:     types.String{Value: serverInfo.ServerTime},
-		ScmInfo:        types.String{Value: serverInfo.ScmInfo},
-		ServerTitle:    types.String{Value: serverInfo.ServerTitle},
+		ID:             types.StringValue(serverInfo.BaseURL),
+		BaseURL:        types.StringValue(serverInfo.BaseURL),
+		Version:        types.StringValue(serverInfo.Version),
+		VersionNumbers: types.ListNull(types.Int64Type),
+		DeploymentType: types.StringValue(serverInfo.DeploymentType),
+		BuildNumber:    types.Int64Value(int64(serverInfo.BuildNumber)),
+		BuildDate:      types.StringValue(serverInfo.BuildDate),
+		ServerTime:     types.StringValue(serverInfo.ServerTime),
+		ScmInfo:        types.StringValue(serverInfo.ScmInfo),
+		ServerTitle:    types.StringValue(serverInfo.ServerTitle),
 	}
-
-	// Get version numbers
-	tfsdk.ValueFrom(ctx, serverInfo.VersionNumbers, types.ListType{ElemType: types.Int64Type}, &newState.VersionNumbers)
+	newState.VersionNumbers, _ = types.ListValueFrom(ctx, types.Int64Type, serverInfo.VersionNumbers)
 
 	tflog.Debug(ctx, "Storing server info into the state")
 	resp.Diagnostics.Append(resp.State.Set(ctx, &newState)...)

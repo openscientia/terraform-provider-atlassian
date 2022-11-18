@@ -263,25 +263,25 @@ func (d *jiraMyselfDataSource) Read(ctx context.Context, req datasource.ReadRequ
 		return
 	}
 	tflog.Debug(ctx, "Retrieved myself from API state", map[string]interface{}{
-		"myself": fmt.Sprintf("%+v, groups:%+v, applicationRoles:%+v", myself, *myself.Groups, *myself.ApplicationRoles),
+		"readApiState": fmt.Sprintf("%+v, groups:%+v, applicationRoles:%+v", myself, *myself.Groups, *myself.ApplicationRoles),
 	})
 
 	newState := jiraMyselfDataSourceModel{
-		ID:           types.String{Value: myself.AccountID},
-		Self:         types.String{Value: myself.Self},
-		AccountId:    types.String{Value: myself.AccountID},
-		AccountType:  types.String{Value: myself.AccountType},
-		EmailAddress: types.String{Value: myself.EmailAddress},
+		ID:           types.StringValue(myself.AccountID),
+		Self:         types.StringValue(myself.Self),
+		AccountId:    types.StringValue(myself.AccountID),
+		AccountType:  types.StringValue(myself.AccountType),
+		EmailAddress: types.StringValue(myself.EmailAddress),
 		AvatarUrls: &jiraMyselfAvatarUrlsModel{
-			One6X16:   types.String{Value: myself.AvatarUrls.One6X16},
-			Two4X24:   types.String{Value: myself.AvatarUrls.Two4X24},
-			Three2X32: types.String{Value: myself.AvatarUrls.Three2X32},
-			Four8X48:  types.String{Value: myself.AvatarUrls.Four8X48},
+			One6X16:   types.StringValue(myself.AvatarUrls.One6X16),
+			Two4X24:   types.StringValue(myself.AvatarUrls.Two4X24),
+			Three2X32: types.StringValue(myself.AvatarUrls.Three2X32),
+			Four8X48:  types.StringValue(myself.AvatarUrls.Four8X48),
 		},
-		DisplayName:      types.String{Value: myself.DisplayName},
-		Active:           types.Bool{Value: myself.Active},
-		TimeZone:         types.String{Value: myself.TimeZone},
-		Locale:           types.String{Value: myself.Locale},
+		DisplayName:      types.StringValue(myself.DisplayName),
+		Active:           types.BoolValue(myself.Active),
+		TimeZone:         types.StringValue(myself.TimeZone),
+		Locale:           types.StringValue(myself.Locale),
 		Groups:           []jiraMyselfGroupsModel{},
 		ApplicationRoles: []jiraMyselfApplicationRolesModel{},
 	}
@@ -290,8 +290,8 @@ func (d *jiraMyselfDataSource) Read(ctx context.Context, req datasource.ReadRequ
 	var groups []jiraMyselfGroupsModel
 	for _, v := range myself.Groups.Items {
 		g := jiraMyselfGroupsModel{
-			Name: types.String{Value: v.Name},
-			Self: types.String{Value: v.Self},
+			Name: types.StringValue(v.Name),
+			Self: types.StringValue(v.Self),
 		}
 
 		groups = append(groups, g)
@@ -302,22 +302,22 @@ func (d *jiraMyselfDataSource) Read(ctx context.Context, req datasource.ReadRequ
 	var roles []jiraMyselfApplicationRolesModel
 	for _, v := range myself.ApplicationRoles.Items {
 		r := jiraMyselfApplicationRolesModel{
-			Key:                  types.String{Value: v.Key},
-			Name:                 types.String{Value: v.Name},
-			Groups:               types.List{ElemType: types.StringType},
-			DefaultGroups:        types.List{ElemType: types.StringType},
-			SelectedByDefault:    types.Bool{Value: v.SelectedByDefault},
-			NumberOfSeats:        types.Int64{Value: int64(v.NumberOfSeats)},
-			RemainingSeats:       types.Int64{Value: int64(v.RemainingSeats)},
-			UserCount:            types.Int64{Value: int64(v.UserCount)},
-			UserCountDescription: types.String{Value: v.UserCountDescription},
-			HasUnlimitedSeats:    types.Bool{Value: v.HasUnlimitedSeats},
-			Platform:             types.Bool{Value: v.Platform},
+			Key:                  types.StringValue(v.Key),
+			Name:                 types.StringValue(v.Name),
+			Groups:               types.ListNull(types.StringType),
+			DefaultGroups:        types.ListNull(types.StringType),
+			SelectedByDefault:    types.BoolValue(v.SelectedByDefault),
+			NumberOfSeats:        types.Int64Value(int64(v.NumberOfSeats)),
+			RemainingSeats:       types.Int64Value(int64(v.RemainingSeats)),
+			UserCount:            types.Int64Value(int64(v.UserCount)),
+			UserCountDescription: types.StringValue(v.UserCountDescription),
+			HasUnlimitedSeats:    types.BoolValue(v.HasUnlimitedSeats),
+			Platform:             types.BoolValue(v.Platform),
 		}
 		// Get groups
-		tfsdk.ValueFrom(ctx, v.Groups, types.ListType{ElemType: types.StringType}, r.Groups)
+		r.Groups, _ = types.ListValueFrom(ctx, types.StringType, v.Groups)
 		// Get default groups
-		tfsdk.ValueFrom(ctx, v.DefaultGroups, types.ListType{ElemType: types.StringType}, r.DefaultGroups)
+		r.DefaultGroups, _ = types.ListValueFrom(ctx, types.StringType, v.DefaultGroups)
 
 		roles = append(roles, r)
 	}
