@@ -72,7 +72,7 @@ func (*jiraProjectCategoryResource) GetSchema(_ context.Context) (tfsdk.Schema, 
 				Computed: true,
 				Type:     types.StringType,
 				PlanModifiers: tfsdk.AttributePlanModifiers{
-					attribute_plan_modification.DefaultValue(types.String{Value: ""}),
+					attribute_plan_modification.DefaultValue(types.StringValue("")),
 				},
 				Validators: []tfsdk.AttributeValidator{
 					stringvalidator.LengthAtMost(1000),
@@ -142,8 +142,8 @@ func (r *jiraProjectCategoryResource) Create(ctx context.Context, req resource.C
 	}
 	tflog.Debug(ctx, "Created project category")
 
-	plan.ID = types.String{Value: projectCategory.ID}
-	plan.Self = types.String{Value: projectCategory.Self}
+	plan.ID = types.StringValue(projectCategory.ID)
+	plan.Self = types.StringValue(projectCategory.Self)
 
 	tflog.Debug(ctx, "Storing project category into the state", map[string]interface{}{
 		"createNewState": fmt.Sprintf("%+v", plan),
@@ -175,9 +175,9 @@ func (r *jiraProjectCategoryResource) Read(ctx context.Context, req resource.Rea
 	}
 	tflog.Debug(ctx, "Retrieved project category from API state")
 
-	state.Name = types.String{Value: projectCategory.Name}
-	state.Description = types.String{Value: projectCategory.Description}
-	state.Self = types.String{Value: projectCategory.Self}
+	state.Name = types.StringValue(projectCategory.Name)
+	state.Description = types.StringValue(projectCategory.Description)
+	state.Self = types.StringValue(projectCategory.Self)
 
 	tflog.Debug(ctx, "Storing project category into the state", map[string]interface{}{
 		"readNewState": fmt.Sprintf("%+v", state),

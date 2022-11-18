@@ -149,13 +149,13 @@ func (d *jiraScreenSchemeDataSource) Read(ctx context.Context, req datasource.Re
 		"readApiState": fmt.Sprintf("%+v", screenScheme.Values[0]),
 	})
 
-	newState.Name = types.String{Value: screenScheme.Values[0].Name}
-	newState.Description = types.String{Value: screenScheme.Values[0].Description}
+	newState.Name = types.StringValue(screenScheme.Values[0].Name)
+	newState.Description = types.StringValue(screenScheme.Values[0].Description)
 	newState.Screens = &jiraScreenSchemeTypesModel{
-		Create:  types.Int64{Value: int64(screenScheme.Values[0].Screens.Create)},
-		Default: types.Int64{Value: int64(screenScheme.Values[0].Screens.Default)},
-		View:    types.Int64{Value: int64(screenScheme.Values[0].Screens.View)},
-		Edit:    types.Int64{Value: int64(screenScheme.Values[0].Screens.Edit)},
+		Create:  types.Int64Value(int64(screenScheme.Values[0].Screens.Create)),
+		Default: types.Int64Value(int64(screenScheme.Values[0].Screens.Default)),
+		View:    types.Int64Value(int64(screenScheme.Values[0].Screens.View)),
+		Edit:    types.Int64Value(int64(screenScheme.Values[0].Screens.Edit)),
 	}
 
 	tflog.Debug(ctx, "Storing screen scheme into the state")

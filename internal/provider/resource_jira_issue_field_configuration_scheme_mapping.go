@@ -148,10 +148,10 @@ func (r *jiraIssueFieldConfigurationSchemeMappingResource) Create(ctx context.Co
 	}
 	tflog.Debug(ctx, "Created issue field configuration scheme mapping")
 
-	plan.ID = types.String{Value: createIssueFieldConfigurationSchemeMappingID(plan.FieldConfigurationSchemeID.ValueString(), plan.FieldConfigurationID.ValueString(), plan.IssueTypeID.ValueString())}
+	plan.ID = types.StringValue(fmt.Sprintf("%s-%s-%s", plan.FieldConfigurationSchemeID.ValueString(), plan.FieldConfigurationID.ValueString(), plan.IssueTypeID.ValueString()))
 
 	tflog.Debug(ctx, "Storing issue field configuration scheme mapping into the state", map[string]interface{}{
-		"newState": fmt.Sprintf("%+v", plan),
+		"createNewState": fmt.Sprintf("%+v", plan),
 	})
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
@@ -197,7 +197,7 @@ func (r *jiraIssueFieldConfigurationSchemeMappingResource) Read(ctx context.Cont
 	}
 	tflog.Debug(ctx, "Retrieved issue field configuration scheme mapping from API state")
 
-	state.ID = types.String{Value: createIssueFieldConfigurationSchemeMappingID(state.FieldConfigurationSchemeID.ValueString(), state.FieldConfigurationID.ValueString(), state.IssueTypeID.ValueString())}
+	state.ID = types.StringValue(fmt.Sprintf("%s-%s-%s", state.FieldConfigurationSchemeID.ValueString(), state.FieldConfigurationID.ValueString(), state.IssueTypeID.ValueString()))
 
 	tflog.Debug(ctx, "Storing issue field configuration scheme mapping into the state", map[string]interface{}{
 		"readNewState": fmt.Sprintf("%+v", state),
@@ -241,8 +241,4 @@ func (r *jiraIssueFieldConfigurationSchemeMappingResource) Delete(ctx context.Co
 	tflog.Debug(ctx, "Deleted issue field configuration scheme mapping from API state")
 
 	// If a Resource type Delete method is completed without error, the framework will automatically remove the resource.
-}
-
-func createIssueFieldConfigurationSchemeMappingID(fieldConfigurationSchemeId, fieldConfigurationId, issueTypeId string) string {
-	return strings.Join([]string{fieldConfigurationSchemeId, fieldConfigurationId, issueTypeId}, "-")
 }

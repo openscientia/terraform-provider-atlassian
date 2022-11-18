@@ -119,9 +119,9 @@ func (d *jiraPermissionSchemeDataSource) Read(ctx context.Context, req datasourc
 		"readApiState": fmt.Sprintf("%+v", permissionScheme),
 	})
 
-	newState.Self = types.String{Value: permissionScheme.Self}
-	newState.Name = types.String{Value: permissionScheme.Name}
-	newState.Description = types.String{Value: permissionScheme.Description}
+	newState.Self = types.StringValue(permissionScheme.Self)
+	newState.Name = types.StringValue(permissionScheme.Name)
+	newState.Description = types.StringValue(permissionScheme.Description)
 
 	tflog.Debug(ctx, "Storing permission scheme into the state")
 	resp.Diagnostics.Append(resp.State.Set(ctx, &newState)...)

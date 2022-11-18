@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
 type (
@@ -98,30 +99,33 @@ func (d *jiraIssueTypeDataSource) Configure(ctx context.Context, req datasource.
 }
 
 func (d *jiraIssueTypeDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data jiraIssueTypeDataSourceModel
+	tflog.Debug(ctx, "Reading issue type data source")
 
-	diags := req.Config.Get(ctx, &data)
-	resp.Diagnostics.Append(diags...)
+	var newstate jiraIssueTypeDataSourceModel
+	resp.Diagnostics.Append(req.Config.Get(ctx, &newstate)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	returnedIssueType, res, err := d.p.jira.Issue.Type.Get(ctx, data.ID.ValueString())
+	issueType, res, err := d.p.jira.Issue.Type.Get(ctx, newstate.ID.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to get issue type, got error: %s\n%s", err.Error(), res.Bytes.String()))
+		var resBody string
+		if res != nil {
+			resBody = res.Bytes.String()
+		}
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to get issue type, got error: %s\n%s", err, resBody))
 		return
 	}
+	tflog.Debug(ctx, "Retrieved issue type from API state", map[string]interface{}{
+		"readApiState": fmt.Sprintf("%+v", issueType),
+	})
 
-	data.ID = types.String{Value: returnedIssueType.ID}
-	data.Name = types.String{Value: returnedIssueType.Name}
-	data.Description = types.String{Value: returnedIssueType.Description}
-	data.HierarchyLevel = types.Int64{Value: int64(returnedIssueType.HierarchyLevel)}
-	data.IconURL = types.String{Value: returnedIssueType.IconURL}
-	data.AvatarID = types.Int64{Value: int64(returnedIssueType.AvatarID)}
+	newstate.Name = types.StringValue(issueType.Name)
+	newstate.Description = types.StringValue(issueType.Description)
+	newstate.HierarchyLevel = types.Int64Value(int64(issueType.HierarchyLevel))
+	newstate.IconURL = types.StringValue(issueType.IconURL)
+	newstate.AvatarID = types.Int64Value(int64(issueType.AvatarID))
 
-	diags = resp.State.Set(ctx, &data)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	tflog.Debug(ctx, "Storing issue type into the state")
+	resp.Diagnostics.Append(resp.State.Set(ctx, &newstate)...)
 }

@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/openscientia/terraform-provider-atlassian/internal/provider/attribute_plan_modification"
 	"github.com/openscientia/terraform-provider-atlassian/internal/provider/attribute_validation"
 )
 
@@ -69,6 +70,9 @@ func (*jiraIssueScreenResource) GetSchema(context.Context) (tfsdk.Schema, diag.D
 				Validators: []tfsdk.AttributeValidator{
 					attribute_validation.StringLengthBetween(0, 255),
 				},
+				PlanModifiers: tfsdk.AttributePlanModifiers{
+					attribute_plan_modification.DefaultValue(types.StringValue("")),
+				},
 			},
 		},
 	}, nil
@@ -105,14 +109,9 @@ func (r *jiraIssueScreenResource) Create(ctx context.Context, req resource.Creat
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	tflog.Debug(ctx, "Loaded issue screen configuration", map[string]interface{}{
-		"issueScreenConfig": fmt.Sprintf("%+v", plan),
+	tflog.Debug(ctx, "Loaded issue screen plan", map[string]interface{}{
+		"createPlan": fmt.Sprintf("%+v", plan),
 	})
-
-	if plan.Description.IsUnknown() {
-		plan.Description = types.String{Value: ""}
-	}
 
 	newIssueScreen, res, err := r.p.jira.Screen.Create(ctx, plan.Name.ValueString(), plan.Description.ValueString())
 	if err != nil {
@@ -120,15 +119,16 @@ func (r *jiraIssueScreenResource) Create(ctx context.Context, req resource.Creat
 		if res != nil {
 			resBody = res.Bytes.String()
 		}
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create issue screen, got error: %s\n%s", err.Error(), resBody))
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create issue screen, got error: %s\n%s", err, resBody))
 		return
 	}
-	tflog.Debug(ctx, "Created issue screen", map[string]interface{}{
-		"issueScreen": newIssueScreen.ID,
-	})
+	tflog.Debug(ctx, "Created issue screen")
 
-	tflog.Debug(ctx, "Storing issue screen info into the state")
-	plan.ID = types.String{Value: strconv.Itoa(newIssueScreen.ID)}
+	plan.ID = types.StringValue(strconv.Itoa(newIssueScreen.ID))
+
+	tflog.Debug(ctx, "Storing issue screen info into the state", map[string]interface{}{
+		"createNewState": fmt.Sprintf("%+v", plan),
+	})
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
@@ -141,41 +141,41 @@ func (r *jiraIssueScreenResource) Read(ctx context.Context, req resource.ReadReq
 		return
 	}
 	tflog.Debug(ctx, "Loaded issue screen from state", map[string]interface{}{
-		"issueScreenState": fmt.Sprintf("%+v", state),
+		"readState": fmt.Sprintf("%+v", state),
 	})
 
 	issueScreenId, _ := strconv.Atoi(state.ID.ValueString())
 
-	resIssueScreen, res, err := r.p.jira.Screen.Gets(ctx, []int{issueScreenId}, 0, 50)
+	issueScreen, res, err := r.p.jira.Screen.Gets(ctx, []int{issueScreenId}, 0, 1)
 	if err != nil {
 		var resBody string
 		if res != nil {
 			resBody = res.Bytes.String()
 		}
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to get issue screen, got error: %s\n%s", err.Error(), resBody))
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to get issue screen, got error: %s\n%s", err, resBody))
 		return
 	}
 	tflog.Debug(ctx, "Retrieved issue screen from API state")
 
-	state.Name = types.String{Value: resIssueScreen.Values[0].Name}
-	state.Description = types.String{Value: resIssueScreen.Values[0].Description}
-	tflog.Debug(ctx, "Updated state with API state")
+	state.Name = types.StringValue(issueScreen.Values[0].Name)
+	state.Description = types.StringValue(issueScreen.Values[0].Description)
 
-	tflog.Debug(ctx, "Storing issue screen info into the state")
+	tflog.Debug(ctx, "Storing issue screen info into the state", map[string]interface{}{
+		"readNewState": fmt.Sprintf("%+v", state),
+	})
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
 func (r *jiraIssueScreenResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	tflog.Debug(ctx, "Updating issue screen")
+	tflog.Debug(ctx, "Updating issue screen resource")
 
 	var plan jiraIssueScreenResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	tflog.Debug(ctx, "Loaded issue screen configuration", map[string]interface{}{
-		"issueScreenConfig": fmt.Sprintf("%+v", plan),
+	tflog.Debug(ctx, "Loaded issue screen plan", map[string]interface{}{
+		"updatePlan": fmt.Sprintf("%+v", plan),
 	})
 
 	var state jiraIssueScreenResourceModel
@@ -183,9 +183,8 @@ func (r *jiraIssueScreenResource) Update(ctx context.Context, req resource.Updat
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
 	tflog.Debug(ctx, "Loaded issue screen from state", map[string]interface{}{
-		"issueScreenState": fmt.Sprintf("%+v", state),
+		"updateState": fmt.Sprintf("%+v", state),
 	})
 
 	issueScreenId, _ := strconv.Atoi(state.ID.ValueString())
@@ -195,15 +194,15 @@ func (r *jiraIssueScreenResource) Update(ctx context.Context, req resource.Updat
 		if res != nil {
 			resBody = res.Bytes.String()
 		}
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update issue screen, got error: %s\n%s", err.Error(), resBody))
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update issue screen, got error: %s\n%s", err, resBody))
 		return
 	}
 	tflog.Debug(ctx, "Updated issue screen in API state")
 
 	var updatedState = jiraIssueScreenResourceModel{
-		ID:          types.String{Value: state.ID.ValueString()},
-		Name:        types.String{Value: plan.Name.ValueString()},
-		Description: types.String{Value: plan.Description.ValueString()},
+		ID:          types.StringValue(state.ID.ValueString()),
+		Name:        types.StringValue(plan.Name.ValueString()),
+		Description: types.StringValue(plan.Description.ValueString()),
 	}
 
 	tflog.Debug(ctx, "Storing issue screen info into the state")
@@ -227,7 +226,7 @@ func (r *jiraIssueScreenResource) Delete(ctx context.Context, req resource.Delet
 		if res != nil {
 			resBody = res.Bytes.String()
 		}
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete issue screen, got error: %s\n%s", err.Error(), resBody))
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete issue screen, got error: %s\n%s", err, resBody))
 		return
 	}
 	tflog.Debug(ctx, "Removed issue screen from API state")

@@ -116,7 +116,7 @@ func (*jiraPermissionGrantResource) GetSchema(_ context.Context) (tfsdk.Schema, 
 							Computed:            true,
 							Type:                types.StringType,
 							PlanModifiers: tfsdk.AttributePlanModifiers{
-								attribute_plan_modification.DefaultValue(types.String{Value: ""}),
+								attribute_plan_modification.DefaultValue(types.StringValue("")),
 							},
 						},
 					},
@@ -217,7 +217,7 @@ func (r *jiraPermissionGrantResource) Create(ctx context.Context, req resource.C
 	}
 	tflog.Debug(ctx, "Created permission grant")
 
-	plan.ID = types.String{Value: strconv.Itoa(permissionGrant.ID)}
+	plan.ID = types.StringValue(strconv.Itoa(permissionGrant.ID))
 
 	tflog.Debug(ctx, "Storing permission grant into the state", map[string]interface{}{
 		"createNewState": fmt.Sprintf("%+v, Holder:%+v", plan, plan.Holder),
@@ -252,10 +252,10 @@ func (r *jiraPermissionGrantResource) Read(ctx context.Context, req resource.Rea
 	tflog.Debug(ctx, "Retrieved permission grant from API state")
 
 	state.Holder = &jiraPermissionGrantHolderModel{
-		Type:      types.String{Value: permissionGrant.Holder.Type},
-		Parameter: types.String{Value: permissionGrant.Holder.Parameter},
+		Type:      types.StringValue(permissionGrant.Holder.Type),
+		Parameter: types.StringValue(permissionGrant.Holder.Parameter),
 	}
-	state.Permission = types.String{Value: permissionGrant.Permission}
+	state.Permission = types.StringValue(permissionGrant.Permission)
 
 	tflog.Debug(ctx, "Storing permission grant into the state", map[string]interface{}{
 		"readNewState": fmt.Sprintf("%+v, Holder:%+v", state, state.Holder),

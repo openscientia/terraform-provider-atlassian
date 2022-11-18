@@ -95,7 +95,7 @@ func (*jiraScreenSchemeResource) GetSchema(_ context.Context) (tfsdk.Schema, dia
 							Computed:            true,
 							Type:                types.Int64Type,
 							PlanModifiers: tfsdk.AttributePlanModifiers{
-								attribute_plan_modification.DefaultValue(types.Int64{Value: 0}),
+								attribute_plan_modification.DefaultValue(types.Int64Value(0)),
 							},
 						},
 						"default": {
@@ -109,7 +109,7 @@ func (*jiraScreenSchemeResource) GetSchema(_ context.Context) (tfsdk.Schema, dia
 							Computed:            true,
 							Type:                types.Int64Type,
 							PlanModifiers: tfsdk.AttributePlanModifiers{
-								attribute_plan_modification.DefaultValue(types.Int64{Value: 0}),
+								attribute_plan_modification.DefaultValue(types.Int64Value(0)),
 							},
 						},
 						"edit": {
@@ -118,7 +118,7 @@ func (*jiraScreenSchemeResource) GetSchema(_ context.Context) (tfsdk.Schema, dia
 							Computed:            true,
 							Type:                types.Int64Type,
 							PlanModifiers: tfsdk.AttributePlanModifiers{
-								attribute_plan_modification.DefaultValue(types.Int64{Value: 0}),
+								attribute_plan_modification.DefaultValue(types.Int64Value(0)),
 							},
 						},
 					},
@@ -220,13 +220,13 @@ func (r *jiraScreenSchemeResource) Read(ctx context.Context, req resource.ReadRe
 	}
 	tflog.Debug(ctx, "Retrieved screen scheme from API state")
 
-	state.Name = types.String{Value: resScreenScheme.Values[0].Name}
-	state.Description = types.String{Value: resScreenScheme.Values[0].Description}
+	state.Name = types.StringValue(resScreenScheme.Values[0].Name)
+	state.Description = types.StringValue(resScreenScheme.Values[0].Description)
 	state.Screens = &jiraScreenSchemeTypesModel{
-		Create:  types.Int64{Value: int64(resScreenScheme.Values[0].Screens.Create)},
-		Default: types.Int64{Value: int64(resScreenScheme.Values[0].Screens.Default)},
-		View:    types.Int64{Value: int64(resScreenScheme.Values[0].Screens.View)},
-		Edit:    types.Int64{Value: int64(resScreenScheme.Values[0].Screens.Edit)},
+		Create:  types.Int64Value(int64(resScreenScheme.Values[0].Screens.Create)),
+		Default: types.Int64Value(int64(resScreenScheme.Values[0].Screens.Default)),
+		View:    types.Int64Value(int64(resScreenScheme.Values[0].Screens.View)),
+		Edit:    types.Int64Value(int64(resScreenScheme.Values[0].Screens.Edit)),
 	}
 	tflog.Debug(ctx, "Storing screen scheme into the state", map[string]interface{}{
 		"readNewState": fmt.Sprintf("%+v", state),
@@ -276,7 +276,7 @@ func (r *jiraScreenSchemeResource) Update(ctx context.Context, req resource.Upda
 	}
 	tflog.Debug(ctx, "Updated screen scheme in API state")
 
-	plan.ID = types.String{Value: state.ID.ValueString()}
+	plan.ID = types.StringValue(state.ID.ValueString())
 
 	tflog.Debug(ctx, "Storing screen scheme into the state")
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)

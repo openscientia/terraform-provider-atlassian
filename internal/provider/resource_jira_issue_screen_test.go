@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func TestAccJiraIssueScreen(t *testing.T) {
+func TestAccJiraIssueScreen_Basic(t *testing.T) {
 	resourceName := "atlassian_jira_issue_screen.test"
 	testAttributeNames := []string{"Test Issue Screen 1", "Test Issue Screen 2"}
 
@@ -17,7 +17,7 @@ func TestAccJiraIssueScreen(t *testing.T) {
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccJiraIssueScreenConfig(resourceName, testAttributeNames[0]),
+				Config: testAccJiraIssueScreenConfig_basic(resourceName, testAttributeNames[0]),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "name", testAttributeNames[0]),
@@ -32,7 +32,7 @@ func TestAccJiraIssueScreen(t *testing.T) {
 			},
 			// Update and Read testing
 			{
-				Config: testAccJiraIssueScreenConfig(resourceName, testAttributeNames[1]),
+				Config: testAccJiraIssueScreenConfig_basic(resourceName, testAttributeNames[1]),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", testAttributeNames[1]),
 				),
@@ -42,7 +42,7 @@ func TestAccJiraIssueScreen(t *testing.T) {
 	})
 }
 
-func testAccJiraIssueScreenConfig(resource_name, name string) string {
+func testAccJiraIssueScreenConfig_basic(resource_name, name string) string {
 	splits := strings.Split(resource_name, ".")
 	return fmt.Sprintf(
 		`resource %[1]q %[2]q {

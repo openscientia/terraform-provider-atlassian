@@ -128,10 +128,10 @@ func (d *jiraPermissionGrantDataSource) Read(ctx context.Context, req datasource
 	})
 
 	newState.Holder = &jiraPermissionGrantHolderModel{
-		Type:      types.String{Value: permissionGrant.Holder.Type},
-		Parameter: types.String{Value: permissionGrant.Holder.Parameter},
+		Type:      types.StringValue(permissionGrant.Holder.Type),
+		Parameter: types.StringValue(permissionGrant.Holder.Parameter),
 	}
-	newState.Permission = types.String{Value: permissionGrant.Permission}
+	newState.Permission = types.StringValue(permissionGrant.Permission)
 
 	tflog.Debug(ctx, "Storing permission grant into the state")
 	resp.Diagnostics.Append(resp.State.Set(ctx, &newState)...)

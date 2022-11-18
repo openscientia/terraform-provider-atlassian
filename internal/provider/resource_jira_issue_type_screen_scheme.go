@@ -78,7 +78,7 @@ func (*jiraIssueTypeScreenSchemeResource) GetSchema(_ context.Context) (tfsdk.Sc
 					stringvalidator.LengthAtMost(255),
 				},
 				PlanModifiers: tfsdk.AttributePlanModifiers{
-					attribute_plan_modification.DefaultValue(types.String{Value: ""}),
+					attribute_plan_modification.DefaultValue(types.StringValue("")),
 				},
 			},
 			"issue_type_mappings": {
@@ -167,7 +167,7 @@ func (r *jiraIssueTypeScreenSchemeResource) Create(ctx context.Context, req reso
 	}
 	tflog.Debug(ctx, "Created issue type screen scheme")
 
-	plan.ID = types.String{Value: newIssueTypeScreenScheme.ID}
+	plan.ID = types.StringValue(newIssueTypeScreenScheme.ID)
 
 	tflog.Debug(ctx, "Storing issue type screen scheme into the state", map[string]interface{}{
 		"createNewState": fmt.Sprintf("%+v", plan),
@@ -212,13 +212,13 @@ func (r *jiraIssueTypeScreenSchemeResource) Read(ctx context.Context, req resour
 	}
 	tflog.Debug(ctx, "Retrieved issue type screen scheme from API state")
 
-	state.Name = types.String{Value: issueTypeScreenSchemeDetails.Values[0].Name}
-	state.Description = types.String{Value: issueTypeScreenSchemeDetails.Values[0].Description}
+	state.Name = types.StringValue(issueTypeScreenSchemeDetails.Values[0].Name)
+	state.Description = types.StringValue(issueTypeScreenSchemeDetails.Values[0].Description)
 	var mappings []jiraIssueTypeScreenSchemeMapping
 	for _, v := range issueTypeScreenSchemeMappings.Values {
 		mappings = append(mappings, jiraIssueTypeScreenSchemeMapping{
-			IssueTypeId:    types.String{Value: v.IssueTypeID},
-			ScreenSchemeId: types.String{Value: v.ScreenSchemeID},
+			IssueTypeId:    types.StringValue(v.IssueTypeID),
+			ScreenSchemeId: types.StringValue(v.ScreenSchemeID),
 		})
 	}
 	state.IssueTypeMappings = mappings
@@ -276,7 +276,7 @@ func (r *jiraIssueTypeScreenSchemeResource) Update(ctx context.Context, req reso
 
 	tflog.Debug(ctx, "Updated issue type screen scheme in API state")
 
-	plan.ID = types.String{Value: state.ID.ValueString()}
+	plan.ID = types.StringValue(state.ID.ValueString())
 
 	tflog.Debug(ctx, "Storing issue type screen scheme into the state")
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)

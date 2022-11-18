@@ -79,7 +79,7 @@ func (*jiraPermissionSchemeResource) GetSchema(_ context.Context) (tfsdk.Schema,
 				Computed:            true,
 				Type:                types.StringType,
 				PlanModifiers: tfsdk.AttributePlanModifiers{
-					attribute_plan_modification.DefaultValue(types.String{Value: ""}),
+					attribute_plan_modification.DefaultValue(types.StringValue("")),
 				},
 			},
 		},
@@ -138,8 +138,8 @@ func (r *jiraPermissionSchemeResource) Create(ctx context.Context, req resource.
 	}
 	tflog.Debug(ctx, "Created permission scheme in API state")
 
-	plan.ID = types.String{Value: strconv.Itoa(permissionScheme.ID)}
-	plan.Self = types.String{Value: permissionScheme.Self}
+	plan.ID = types.StringValue(strconv.Itoa(permissionScheme.ID))
+	plan.Self = types.StringValue(permissionScheme.Self)
 
 	tflog.Debug(ctx, "Storing permission scheme into the state", map[string]interface{}{
 		"createNewState": fmt.Sprintf("%+v", plan),
@@ -172,9 +172,9 @@ func (r *jiraPermissionSchemeResource) Read(ctx context.Context, req resource.Re
 	}
 	tflog.Debug(ctx, "Retrieved permission scheme from API state")
 
-	state.Self = types.String{Value: permissionScheme.Self}
-	state.Name = types.String{Value: permissionScheme.Name}
-	state.Description = types.String{Value: permissionScheme.Description}
+	state.Self = types.StringValue(permissionScheme.Self)
+	state.Name = types.StringValue(permissionScheme.Name)
+	state.Description = types.StringValue(permissionScheme.Description)
 
 	tflog.Debug(ctx, "Storing permission scheme into the state", map[string]interface{}{
 		"readNewState": fmt.Sprintf("%+v", state),

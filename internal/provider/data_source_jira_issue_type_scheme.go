@@ -103,6 +103,9 @@ func (d *jiraIssueTypeSchemeDataSource) Read(ctx context.Context, req datasource
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	tflog.Debug(ctx, "Loaded issue type scheme config", map[string]interface{}{
+		"readConfig": fmt.Sprintf("%+v", newState),
+	})
 
 	issueTypeSchemeID, err := strconv.Atoi(newState.ID.ValueString())
 	if err != nil {
@@ -142,10 +145,10 @@ func (d *jiraIssueTypeSchemeDataSource) Read(ctx context.Context, req datasource
 		ids, _ = types.ListValue(types.StringType, append(ids.Elements(), id))
 	}
 
-	newState.ID = types.String{Value: issueTypeScheme.Values[0].ID}
-	newState.Name = types.String{Value: issueTypeScheme.Values[0].Name}
-	newState.Description = types.String{Value: issueTypeScheme.Values[0].Description}
-	newState.DefaultIssueTypeId = types.String{Value: issueTypeScheme.Values[0].DefaultIssueTypeID}
+	newState.ID = types.StringValue(issueTypeScheme.Values[0].ID)
+	newState.Name = types.StringValue(issueTypeScheme.Values[0].Name)
+	newState.Description = types.StringValue(issueTypeScheme.Values[0].Description)
+	newState.DefaultIssueTypeId = types.StringValue(issueTypeScheme.Values[0].DefaultIssueTypeID)
 	newState.IssueTypeIds = ids
 
 	tflog.Debug(ctx, "Storing issue type scheme into the state")
