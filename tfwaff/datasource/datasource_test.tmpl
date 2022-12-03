@@ -1,0 +1,40 @@
+package {{ .ProviderLower }}
+
+import (
+	"fmt"
+	"strings"
+	"testing"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+)
+
+func TestAcc{{ .ServiceTitle }}{{ .DataSourcePascal }}DataSource_Basic(t *testing.T) {
+	randomName := acctest.RandomWithPrefix("tf-test-{{ .DataSourceKebab }}")
+	dataSourceName := "data.{{ .DataSourceSnakeFull }}.test"
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAcc{{ .DataSourcePascal }}DataSourceConfig_basic(dataSourceName, randomName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair("{{ .DataSourceSnakeFull }}.test", "id", dataSourceName, "id"),
+				),
+			},
+		},
+	})
+}
+
+func testAcc{{ .DataSourcePascal }}DataSourceConfig_basic(dataSourceName, name string) string {
+	splits := strings.Split(dataSourceName, ".")
+	return fmt.Sprintf(`
+	  resource %[1]q %[2]q {
+		name = %[3]q
+	  }
+
+	  data %[1]q %[2]q {
+		name = %[1]s.%[2]s.name
+	  }
+	`, splits[1], splits[2], name)
+}

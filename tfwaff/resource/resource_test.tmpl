@@ -1,0 +1,67 @@
+package {{ .ProviderLower }}
+
+import (
+	"fmt"
+	"strings"
+	"testing"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+)
+
+func TestAcc{{ .ServiceTitle }}{{ .ResourcePascal }}_Basic(t *testing.T) {
+	randomName := acctest.RandomWithPrefix("tf-test-{{ .ResourceKebab }}")
+	resourceName = "{{ .ResourceSnakeFull }}.test"
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAcc{{ .ResourcePascal }}Config_basic(resourceName, randomName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(resourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "name", randomName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateId:     randomName,
+			},
+		},
+	})
+}
+
+// Example of per-attribute acceptance testing
+//func TestAccJira{{ .ResourcePascal }}_Name(t *testing.T) {
+//	randomName := acctest.RandomWithPrefix("tf-test-{{ .ResourceKebab }}")
+//	resourceName = "{{ .ResourceSnakeFull }}.test"
+//	resource.ParallelTest(t, resource.TestCase{
+//		PreCheck:                 func() { testAccPreCheck(t) },
+//		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+//		Steps: []resource.TestStep{
+//			{
+//				Config: testAcc{{ .ResourcePascal }}Config_basic(resourceName, randomName+"1"),
+//				Check: resource.ComposeTestCheckFunc(
+//					resource.TestCheckResourceAttr(resourceName, "name", randomName+"1"),
+//				),
+//			},
+//			{
+//				Config: testAcc{{ .ResourcePascal }}Config_basic(resourceName, randomName+"2"),
+//				Check: resource.ComposeTestCheckFunc(
+//					resource.TestCheckResourceAttr(resourceName, "name", randomName+"2"),
+//				),
+//			},
+//		},
+//	})
+//}
+
+func testAcc{{ .ResourcePascal }}Config_basic(resourceName, name string) string {
+	splits := strings.Split(resourceName, ".")
+	return fmt.Sprintf(`
+	resource %[1]q %[2]q {
+		name = %[3]q
+	}
+	`, splits[0], splits[1], name)
+}
