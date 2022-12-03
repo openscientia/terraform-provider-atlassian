@@ -1,0 +1,220 @@
+package {{ .ProviderLower }}
+
+import (
+	"context"
+	"fmt"
+
+	jira "github.com/ctreminiom/go-atlassian/jira/v3"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
+)
+
+type (
+	{{ .ServiceLower }}{{ .ResourcePascal }}{{ .ResourceSuffix }} struct {
+		p {{ .ProviderLower }}{{ .ProviderSuffix }}
+	}
+
+	{{ .ServiceLower }}{{ .ResourcePascal }}{{ .ResourceModelSuffix }} struct {
+		ID          types.String `tfsdk:"id"`
+	}
+)
+
+var (
+	_ resource.Resource                = (*{{ .ServiceLower }}{{ .ResourcePascal }}{{ .ResourceSuffix }})(nil)
+	_ resource.ResourceWithImportState = (*{{ .ServiceLower }}{{ .ResourcePascal }}{{ .ResourceSuffix }})(nil)
+)
+
+func New{{ .ServiceTitle }}{{ .ResourcePascal }}{{ .ResourceSuffix }}() resource.Resource {
+	return &{{ .ServiceLower }}{{ .ResourcePascal }}{{ .ResourceSuffix }}{}
+}
+
+func (*{{ .ServiceLower }}{{ .ResourcePascal }}{{ .ResourceSuffix }}) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_{{ .ServiceLower }}_{{ .ResourceSnake }}"
+}
+
+func (*{{ .ServiceLower }}{{ .ResourcePascal }}{{ .ResourceSuffix }}) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
+	return tfsdk.Schema{
+		Version:             1,
+		MarkdownDescription: "{{ .ServiceTitle }} {{ .ResourceTitle }} Resource",
+		Attributes: map[string]tfsdk.Attribute{
+			"id": {
+				MarkdownDescription: "The ID of the {{ .ResourceProse }}.",
+				Computed:            true,
+				Type:                types.StringType,
+				PlanModifiers: tfsdk.AttributePlanModifiers{
+					resource.UseStateForUnknown(),
+				},
+			},
+		},
+	}, nil
+}
+
+func (r *{{ .ServiceLower }}{{ .ResourcePascal }}{{ .ResourceSuffix }}) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+	// Prevent panic if the provider has not been configured
+	if req.ProviderData == nil {
+		return
+	}
+
+	client, ok := req.ProviderData.(*{{ .ServiceLower }}.Client)
+	if !ok {
+		resp.Diagnostics.AddError(
+			"Unexpected Resource Configure Type",
+			fmt.Sprintf("Expected *{{ .ServiceLower }}.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+		)
+
+		return
+	}
+
+	r.p.{{ .ServiceLower }} = client
+}
+
+func (*{{ .ServiceLower }}{{ .ResourcePascal }}{{ .ResourceSuffix }}) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+}
+
+func (r *{{ .ServiceLower }}{{ .ResourcePascal }}{{ .ResourceSuffix }}) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	tflog.Debug(ctx, "Creating {{ .ResourceProse }} resource")
+
+	var plan {{ .ServiceLower }}{{ .ResourcePascal }}{{ .ResourceSuffix }}
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	tflog.Debug(ctx, "Loaded {{ .ResourceProse }} plan", map[string]interface{}{
+		"createPlan": fmt.Sprintf("%+v", plan),
+	})
+
+
+	// Initialise any payload variables before making any API calls
+	// 
+	// Use a variabled named after the resource to store the new API state
+	// {{ .ResourceCamel }}, res, err := r.p.{{ .ServiceLower }}.Create(args...)
+	// 
+	// Make sure to return an error if API call is not successful, for example:
+	// if err != nil {
+	//    var resBody string
+	//    if res != nil {
+	//    	resBody = res.Bytes.String()
+	//    }
+	//    resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create {{ .ResourceProse }}, got error: %s\n%s", err, resBody))
+	//    return
+	// }
+	tflog.Debug(ctx, "Created {{ .ResourceProse }} in API state")
+
+	// Update Terraform plan with API state
+
+	tflog.Debug(ctx, "Storing {{ .ResourceProse }} into the state", map[string]interface{}{
+		"createNewState": fmt.Sprintf("%+v", plan),
+	})
+	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+}
+
+func (r *{{ .ServiceLower }}{{ .ResourcePascal }}{{ .ResourceSuffix }}) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	tflog.Debug(ctx, "Reading {{ .ResourceProse }} resource")
+
+	var state {{ .ServiceLower }}{{ .ResourcePascal }}{{ .ResourceSuffix }}
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	tflog.Debug(ctx, "Loaded {{ .ResourceProse }} from state", map[string]interface{}{
+		"readState": fmt.Sprintf("%+v", state),
+	})
+
+	// Initialise any payload variables before making any API calls
+	// 
+	// Use a variabled named after the resource to store the new API state
+	// {{ .ResourceCamel }}, res, err := r.p.{{ .ServiceLower }}.Get(args...)
+	// 
+	// Make sure to return an error if API call is not successful, for example:
+	// if err != nil {
+	// 	  var resBody string
+	// 	  if res != nil {
+	// 	  	resBody = res.Bytes.String()
+	// 	  }
+	// 	  resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to get {{ .ResourceProse }}, got error: %s\n%s", err, resBody))
+	// 	  return
+	// }
+	tflog.Debug(ctx, "Retrieved {{ .ResourceProse }} from API state")
+
+	// Update Terraform state with API state
+
+	tflog.Debug(ctx, "Storing {{ .ResourceProse }} into the state", map[string]interface{}{
+		"readNewState": fmt.Sprintf("%+v", state),
+	})
+	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+}
+
+func (r *{{ .ServiceLower }}{{ .ResourcePascal }}{{ .ResourceSuffix }}) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	tflog.Debug(ctx, "Updating {{ .ResourceProse }} resource")
+
+	var plan {{ .ServiceLower }}{{ .ResourcePascal }}{{ .ResourceSuffix }}
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	tflog.Debug(ctx, "Loaded {{ .ResourceProse }} plan", map[string]interface{}{
+		"updatePlan": fmt.Sprintf("%+v", plan),
+	})
+
+	var state {{ .ServiceLower }}{{ .ResourcePascal }}{{ .ResourceSuffix }}
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	tflog.Debug(ctx, "Loaded {{ .ResourceProse }} from state", map[string]interface{}{
+		"updateState": fmt.Sprintf("%+v", state),
+	})
+
+	// Initialise any payload variables before making any API calls
+	// 
+	// Use a variabled named after the resource to store the new API state
+	// {{ .ResourceCamel }}, res, err := r.p.{{ .ServiceLower }}.Update(args...)
+	// 
+	// Make sure to return an error if API call is not successful, for example:
+	// if err != nil {
+	// 	  var resBody string
+	// 	  if res != nil {
+	// 	  	resBody = res.Bytes.String()
+	// 	  }
+	// 	  resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update {{ .ResourceProse }}, got error: %s\n%s", err, resBody))
+	// 	  return
+	// }
+	tflog.Debug(ctx, "Updated {{ .ResourceProse }} in API state")
+
+	tflog.Debug(ctx, "Storing {{ .ResourceProse }} into the state")
+	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+}
+
+func (r *{{ .ServiceLower }}{{ .ResourcePascal }}{{ .ResourceSuffix }}) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	tflog.Debug(ctx, "Deleting {{ .ResourceProse }} resource")
+
+	var state {{ .ServiceLower }}{{ .ResourcePascal }}{{ .ResourceSuffix }}
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	tflog.Debug(ctx, "Loaded {{ .ResourceProse }} from state")
+
+	// Initialise any payload variables before making any API calls
+	// 
+	// Use a variabled named after the resource to store the new API state
+	// {{ .ResourceCamel }}, res, err := r.p.{{ .ServiceLower }}.Delete(args...)
+	// 
+	// Make sure to return an error if API call is not successful, for example:
+	// if err != nil {
+	// 	  var resBody string
+	// 	  if res != nil {
+	// 	  	resBody = res.Bytes.String()
+	// 	  }
+	// 	  resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete {{ .ResourceProse }}, got error: %s\n%s", err, resBody))
+	// 	  return
+	// }
+	tflog.Debug(ctx, "Deleted {{ .ResourceProse }} from API state")
+
+	// If a Resource type Delete method is completed without error, the framework will automatically remove the resource.
+}

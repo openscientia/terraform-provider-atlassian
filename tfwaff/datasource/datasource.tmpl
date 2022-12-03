@@ -1,0 +1,107 @@
+package {{ .ProviderLower }}
+
+import (
+	"context"
+	"fmt"
+
+	jira "github.com/ctreminiom/go-atlassian/jira/v3"
+	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
+)
+
+type (
+	{{ .ServiceLower }}{{ .DataSourcePascal }}{{ .DataSourceSuffix }} struct {
+		p {{ .ProviderLower }}{{ .ProviderSuffix }}
+	}
+
+	{{ .ServiceLower }}{{ .DataSourcePascal }}{{ .DataSourceModelSuffix }} struct {
+		ID          types.String `tfsdk:"id"`
+	}
+)
+
+var (
+	_ datasource.DataSource = (*{{ .ServiceLower }}{{ .DataSourcePascal }}{{ .DataSourceSuffix }})(nil)
+)
+
+func New{{ .ServiceTitle }}{{ .DataSourcePascal }}{{ .DataSourceSuffix }}() datasource.DataSource {
+	return &{{ .ServiceLower }}{{ .DataSourcePascal }}{{ .DataSourceSuffix }}{}
+}
+
+func (*{{ .ServiceLower }}{{ .DataSourcePascal }}{{ .DataSourceSuffix }}) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_{{ .ServiceLower }}_{{ .DataSourceSnake }}"
+}
+
+func (*{{ .ServiceLower }}{{ .DataSourcePascal }}{{ .DataSourceSuffix }}) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
+	return tfsdk.Schema{
+		Version:             1,
+		MarkdownDescription: "{{ .ServiceTitle }} {{ .DataSourceTitle }} Data Source",
+		Attributes: map[string]tfsdk.Attribute{
+			"id": {
+				MarkdownDescription: "The ID of the {{ .DataSourceProse }}.",
+				Required:            true,
+				Type:                types.StringType,
+			},
+		},
+	}, nil
+}
+
+func (d *{{ .ServiceLower }}{{ .DataSourcePascal }}{{ .DataSourceSuffix }}) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+	// Prevent panic if the provider has not been configured.
+	if req.ProviderData == nil {
+		return
+	}
+
+	client, ok := req.ProviderData.(*{{ .ServiceLower }}.Client)
+
+	if !ok {
+		resp.Diagnostics.AddError(
+			"Unexpected Data Source Configure Type",
+			fmt.Sprintf("Expected *{{ .ServiceLower }}.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+		)
+
+		return
+	}
+
+	d.p.{{ .ServiceLower }} = client
+}
+
+func (d *{{ .ServiceLower }}{{ .DataSourcePascal }}{{ .DataSourceSuffix }}) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	tflog.Debug(ctx, "Reading {{ .DataSourceProse }} data source")
+
+	var newState {{ .ServiceLower }}{{ .DataSourcePascal }}{{ .DataSourceModelSuffix }}
+	resp.Diagnostics.Append(req.Config.Get(ctx, &newState)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	tflog.Debug(ctx, "Loaded {{ .DataSourceProse }} config", map[string]interface{}{
+		"readConfig": fmt.Sprintf("%+v", newState),
+	})
+
+    // Initialise any payload variables before making any API calls
+	// 
+	// Use a variabled named after the data source to store the new API state
+	// {{ .DataSourceCamel }}, res, err := d.p.{{ .ServiceLower }}.Read(args...)
+	// 
+	// Make sure to return an error if API call is not successful, for example:
+	// if err != nil {
+	// 	  var resBody string
+	// 	  if res != nil {
+	// 	  	resBody = res.Bytes.String()
+	// 	  }
+	// 	  resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to get {{ .DataSourceProse }}, got error: %s\n%s", err, resBody))
+	// 	  return
+	// }
+	//
+	// It is recommended to debug the API state
+	// tflog.Debug(ctx, "Retrieved {{ .DataSourceProse }} from API state", map[string]interface{}{
+	//	 "readApiState": fmt.Sprintf("%+v", {{ .DataSourceCamel }}),
+	// })
+
+	// store API state into Terraform state
+
+	tflog.Debug(ctx, "Storing {{ .DataSourceProse }} into the state")
+	resp.Diagnostics.Append(resp.State.Set(ctx, &newState)...)
+}
