@@ -70,7 +70,10 @@ variable "common_labels" {
       color       = "60dea9",
       description = "PRs: expanded test coverage. Issues: expanded coverage, enhancements to test infrastructure."
     },
-
+    "tfwaff" = {
+      color       = "bfdadc",
+      description = "Pertains to the `tfwaff` provider scaffolding tool"
+    },
   }
   description = "Name-color-description mapping of workflow issues."
   type        = map(any)
