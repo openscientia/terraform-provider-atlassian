@@ -13,7 +13,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
@@ -52,76 +55,67 @@ func (*jiraIssueFieldConfigurationItemResource) Metadata(ctx context.Context, re
 	resp.TypeName = req.ProviderTypeName + "_jira_issue_field_configuration_item"
 }
 
-func (*jiraIssueFieldConfigurationItemResource) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
-	return tfsdk.Schema{
+func (*jiraIssueFieldConfigurationItemResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
+	resp.Schema = schema.Schema{
 		Version:             1,
 		MarkdownDescription: "Jira Issue Field Configuration Item Resource",
-		Attributes: map[string]tfsdk.Attribute{
-			"id": {
+		Attributes: map[string]schema.Attribute{
+			"id": schema.StringAttribute{
 				MarkdownDescription: "The ID of the issue field configuration item. " +
 					"It is computed using `issue_field_configuration` and `item.id` separated by a hyphen (`-`).",
 				Computed: true,
-				Type:     types.StringType,
 			},
-			"issue_field_configuration": {
+			"issue_field_configuration": schema.StringAttribute{
 				MarkdownDescription: "(Forces new resource) The ID of the issue field configuration.",
 				Required:            true,
-				Type:                types.StringType,
-				PlanModifiers: tfsdk.AttributePlanModifiers{
-					resource.RequiresReplace(),
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"item": {
+			"item": schema.SingleNestedAttribute{
 				MarkdownDescription: "Details of a field within the issue field configuration.",
 				Required:            true,
-				Attributes: tfsdk.SingleNestedAttributes(
-					map[string]tfsdk.Attribute{
-						"id": {
-							MarkdownDescription: "(Forces new resource) The ID of the field within the issue field configuration.",
-							Required:            true,
-							Type:                types.StringType,
-							Validators: []tfsdk.AttributeValidator{
-								stringvalidator.RegexMatches(regexp.MustCompile(`^customfield_[0-9]{5}$|^[a-zA-Z]*$`), ""),
-							},
-							PlanModifiers: tfsdk.AttributePlanModifiers{
-								resource.RequiresReplace(),
-							},
+				Attributes: map[string]schema.Attribute{
+					"id": schema.StringAttribute{
+						MarkdownDescription: "(Forces new resource) The ID of the field within the issue field configuration.",
+						Required:            true,
+						Validators: []validator.String{
+							stringvalidator.RegexMatches(regexp.MustCompile(`^customfield_[0-9]{5}$|^[a-zA-Z]*$`), ""),
 						},
-						"description": {
-							MarkdownDescription: "The description of the field within the issue field configuration.",
-							Computed:            true,
-							Optional:            true,
-							Type:                types.StringType,
-						},
-						"is_hidden": {
-							MarkdownDescription: "Whether the field is hidden in the issue field configuration. " +
-								"Can be `true` or `false`.",
-							Computed: true,
-							Optional: true,
-							Type:     types.BoolType,
-						},
-						"is_required": {
-							MarkdownDescription: "Whether the field is required in the issue field configuration. " +
-								"Can be `true` or `false`.",
-							Computed: true,
-							Optional: true,
-							Type:     types.BoolType,
-						},
-						"renderer": {
-							MarkdownDescription: "The renderer type for the field within the issue field configuration. " +
-								"Can be `text-renderer` or `wiki-renderer`.",
-							Computed: true,
-							Optional: true,
-							Type:     types.StringType,
-							Validators: []tfsdk.AttributeValidator{
-								stringvalidator.OneOf("text-renderer", "wiki-renderer"),
-							},
+						PlanModifiers: []planmodifier.String{
+							stringplanmodifier.RequiresReplace(),
 						},
 					},
-				),
+					"description": schema.StringAttribute{
+						MarkdownDescription: "The description of the field within the issue field configuration.",
+						Computed:            true,
+						Optional:            true,
+					},
+					"is_hidden": schema.BoolAttribute{
+						MarkdownDescription: "Whether the field is hidden in the issue field configuration. " +
+							"Can be `true` or `false`.",
+						Computed: true,
+						Optional: true,
+					},
+					"is_required": schema.BoolAttribute{
+						MarkdownDescription: "Whether the field is required in the issue field configuration. " +
+							"Can be `true` or `false`.",
+						Computed: true,
+						Optional: true,
+					},
+					"renderer": schema.StringAttribute{
+						MarkdownDescription: "The renderer type for the field within the issue field configuration. " +
+							"Can be `text-renderer` or `wiki-renderer`.",
+						Computed: true,
+						Optional: true,
+						Validators: []validator.String{
+							stringvalidator.OneOf("text-renderer", "wiki-renderer"),
+						},
+					},
+				},
 			},
 		},
-	}, nil
+	}
 }
 
 func (r *jiraIssueFieldConfigurationItemResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
@@ -136,7 +130,6 @@ func (r *jiraIssueFieldConfigurationItemResource) Configure(ctx context.Context,
 			"Unexpected Resource Configure Type",
 			fmt.Sprintf("Expected *jira.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
 		)
-
 		return
 	}
 

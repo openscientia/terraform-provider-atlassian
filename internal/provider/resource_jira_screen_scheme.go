@@ -8,13 +8,15 @@ import (
 	jira "github.com/ctreminiom/go-atlassian/jira/v3"
 	"github.com/ctreminiom/go-atlassian/pkg/infra/models"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/openscientia/terraform-provider-atlassian/internal/provider/attribute_plan_modification"
+	"github.com/openscientia/terraform-provider-atlassian/internal/provider/planmodifiers/int64modifiers"
+	"github.com/openscientia/terraform-provider-atlassian/internal/provider/planmodifiers/stringmodifiers"
 )
 
 type (
@@ -50,82 +52,73 @@ func (*jiraScreenSchemeResource) Metadata(ctx context.Context, req resource.Meta
 	resp.TypeName = req.ProviderTypeName + "_jira_screen_scheme"
 }
 
-func (*jiraScreenSchemeResource) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
-	return tfsdk.Schema{
+func (*jiraScreenSchemeResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
+	resp.Schema = schema.Schema{
 		Version:             1,
 		MarkdownDescription: "Jira Screen Scheme Resource",
-		Attributes: map[string]tfsdk.Attribute{
-			"id": {
+		Attributes: map[string]schema.Attribute{
+			"id": schema.StringAttribute{
 				MarkdownDescription: "The ID of the screen scheme.",
 				Computed:            true,
-				Type:                types.StringType,
 			},
-			"name": {
+			"name": schema.StringAttribute{
 				MarkdownDescription: "The name of the screen scheme. " +
 					"The name must be unique. " +
 					"The maximum length is 255 characters.",
 				Required: true,
-				Type:     types.StringType,
-				Validators: []tfsdk.AttributeValidator{
+				Validators: []validator.String{
 					stringvalidator.LengthAtMost(255),
 				},
 			},
-			"description": {
+			"description": schema.StringAttribute{
 				MarkdownDescription: "The description of the screen scheme. " +
 					"The maximum length is 255 characters.",
 				Optional: true,
 				Computed: true,
-				Type:     types.StringType,
-				Validators: []tfsdk.AttributeValidator{
+				Validators: []validator.String{
 					stringvalidator.LengthAtMost(255),
 				},
-				PlanModifiers: tfsdk.AttributePlanModifiers{
-					attribute_plan_modification.DefaultValue(types.StringValue("")),
+				PlanModifiers: []planmodifier.String{
+					stringmodifiers.DefaultValue(""),
 				},
 			},
-			"screens": {
+			"screens": schema.SingleNestedAttribute{
 				MarkdownDescription: "The IDs of the screens for the screen types of the screen scheme. " +
 					"Only screens used in classic projects are accepted.",
 				Required: true,
-				Attributes: tfsdk.SingleNestedAttributes(
-					map[string]tfsdk.Attribute{
-						"create": {
-							MarkdownDescription: "The ID of the create screen.",
-							Optional:            true,
-							Computed:            true,
-							Type:                types.Int64Type,
-							PlanModifiers: tfsdk.AttributePlanModifiers{
-								attribute_plan_modification.DefaultValue(types.Int64Value(0)),
-							},
-						},
-						"default": {
-							MarkdownDescription: "The ID of the default screen. Required when creating a screen scheme.",
-							Required:            true,
-							Type:                types.Int64Type,
-						},
-						"view": {
-							MarkdownDescription: "The ID of the view screen.",
-							Optional:            true,
-							Computed:            true,
-							Type:                types.Int64Type,
-							PlanModifiers: tfsdk.AttributePlanModifiers{
-								attribute_plan_modification.DefaultValue(types.Int64Value(0)),
-							},
-						},
-						"edit": {
-							MarkdownDescription: "The ID of the edit screen.",
-							Optional:            true,
-							Computed:            true,
-							Type:                types.Int64Type,
-							PlanModifiers: tfsdk.AttributePlanModifiers{
-								attribute_plan_modification.DefaultValue(types.Int64Value(0)),
-							},
+				Attributes: map[string]schema.Attribute{
+					"create": schema.Int64Attribute{
+						MarkdownDescription: "The ID of the create screen.",
+						Optional:            true,
+						Computed:            true,
+						PlanModifiers: []planmodifier.Int64{
+							int64modifiers.DefaultValue(0),
 						},
 					},
-				),
+					"default": schema.Int64Attribute{
+						MarkdownDescription: "The ID of the default screen. Required when creating a screen scheme.",
+						Required:            true,
+					},
+					"view": schema.Int64Attribute{
+						MarkdownDescription: "The ID of the view screen.",
+						Optional:            true,
+						Computed:            true,
+						PlanModifiers: []planmodifier.Int64{
+							int64modifiers.DefaultValue(0),
+						},
+					},
+					"edit": schema.Int64Attribute{
+						MarkdownDescription: "The ID of the edit screen.",
+						Optional:            true,
+						Computed:            true,
+						PlanModifiers: []planmodifier.Int64{
+							int64modifiers.DefaultValue(0),
+						},
+					},
+				},
 			},
 		},
-	}, nil
+	}
 }
 
 func (r *jiraScreenSchemeResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
@@ -140,7 +133,6 @@ func (r *jiraScreenSchemeResource) Configure(ctx context.Context, req resource.C
 			"Unexpected Resource Configure Type",
 			fmt.Sprintf("Expected *jira.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
 		)
-
 		return
 	}
 

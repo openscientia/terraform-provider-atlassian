@@ -6,8 +6,7 @@ import (
 
 	jira "github.com/ctreminiom/go-atlassian/jira/v3"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
@@ -43,65 +42,53 @@ func (*jiraServerInfoDataSource) Metadata(ctx context.Context, req datasource.Me
 	resp.TypeName = req.ProviderTypeName + "_jira_server_info"
 }
 
-func (*jiraServerInfoDataSource) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
-	return tfsdk.Schema{
-		Version:             1,
+func (*jiraServerInfoDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	resp.Schema = schema.Schema{
 		MarkdownDescription: "Jira Server Info Data Source",
-		Attributes: map[string]tfsdk.Attribute{
-			"id": {
+		Attributes: map[string]schema.Attribute{
+			"id": schema.StringAttribute{
 				MarkdownDescription: "The ID of server info. Defaults to `base_url`.",
 				Computed:            true,
-				Type:                types.StringType,
 			},
-			"base_url": {
+			"base_url": schema.StringAttribute{
 				MarkdownDescription: "The base URL of the Jira instance.",
 				Computed:            true,
-				Type:                types.StringType,
 			},
-			"version": {
+			"version": schema.StringAttribute{
 				MarkdownDescription: "The version of Jira.",
 				Computed:            true,
-				Type:                types.StringType,
 			},
-			"version_numbers": {
+			"version_numbers": schema.ListAttribute{
 				MarkdownDescription: "The major, minor, and revision version numbers of the Jira version.",
 				Computed:            true,
-				Type: types.ListType{
-					ElemType: types.Int64Type,
-				},
+				ElementType:         types.Int64Type,
 			},
-			"deployment_type": {
+			"deployment_type": schema.StringAttribute{
 				MarkdownDescription: "The type of server deployment. This is always returned as Cloud.",
 				Computed:            true,
-				Type:                types.StringType,
 			},
-			"build_number": {
+			"build_number": schema.Int64Attribute{
 				MarkdownDescription: "The build number of the Jira version.",
 				Computed:            true,
-				Type:                types.Int64Type,
 			},
-			"build_date": {
+			"build_date": schema.StringAttribute{
 				MarkdownDescription: "The timestamp when the Jira version was built.",
 				Computed:            true,
-				Type:                types.StringType,
 			},
-			"server_time": {
+			"server_time": schema.StringAttribute{
 				MarkdownDescription: "The time in Jira when this request was responded to.",
 				Computed:            true,
-				Type:                types.StringType,
 			},
-			"scm_info": {
+			"scm_info": schema.StringAttribute{
 				MarkdownDescription: "The unique identifier of the Jira version.",
 				Computed:            true,
-				Type:                types.StringType,
 			},
-			"server_title": {
+			"server_title": schema.StringAttribute{
 				MarkdownDescription: "The name of the Jira instance.",
 				Computed:            true,
-				Type:                types.StringType,
 			},
 		},
-	}, nil
+	}
 }
 
 func (d *jiraServerInfoDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
@@ -117,7 +104,6 @@ func (d *jiraServerInfoDataSource) Configure(ctx context.Context, req datasource
 			"Unexpected Data Source Configure Type",
 			fmt.Sprintf("Expected *jira.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
 		)
-
 		return
 	}
 

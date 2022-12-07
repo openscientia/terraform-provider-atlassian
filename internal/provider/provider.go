@@ -6,12 +6,12 @@ import (
 
 	jira "github.com/ctreminiom/go-atlassian/jira/v3"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
+	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/openscientia/terraform-provider-atlassian/internal/provider/attribute_validation"
+	"github.com/openscientia/terraform-provider-atlassian/internal/provider/validators"
 )
 
 type (
@@ -45,35 +45,28 @@ func (p *atlassianProvider) Metadata(_ context.Context, req provider.MetadataReq
 	resp.TypeName = "atlassian"
 }
 
-func (*atlassianProvider) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostics) {
-	return tfsdk.Schema{
-		Version:             1,
+func (*atlassianProvider) Schema(_ context.Context, _ provider.SchemaRequest, resp *provider.SchemaResponse) {
+	resp.Schema = schema.Schema{
 		MarkdownDescription: "Atlassian Provider",
-		Attributes: map[string]tfsdk.Attribute{
-			"url": {
+		Attributes: map[string]schema.Attribute{
+			"url": schema.StringAttribute{
 				MarkdownDescription: "Atlassian Host URL. Can also be set with the `ATLASSIAN_URL` environment variable.",
-				Computed:            true,
 				Optional:            true,
-				Type:                types.StringType,
-				Validators: []tfsdk.AttributeValidator{
-					attribute_validation.UrlWithScheme("https"),
+				Validators: []validator.String{
+					validators.UrlWithScheme("https"),
 				},
 			},
-			"username": {
+			"username": schema.StringAttribute{
 				MarkdownDescription: "Atlassian Username. Can also be set with the `ATLASSIAN_USERNAME` environment variable.",
-				Computed:            true,
 				Optional:            true,
-				Type:                types.StringType,
 			},
-			"apitoken": {
+			"apitoken": schema.StringAttribute{
 				MarkdownDescription: "Atlassian API Token. Can also be set with the `ATLASSIAN_TOKEN` environment variable.",
-				Computed:            true,
 				Optional:            true,
 				Sensitive:           true,
-				Type:                types.StringType,
 			},
 		},
-	}, nil
+	}
 }
 
 func (p *atlassianProvider) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {

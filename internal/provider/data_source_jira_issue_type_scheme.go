@@ -7,8 +7,7 @@ import (
 
 	jira "github.com/ctreminiom/go-atlassian/jira/v3"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
@@ -39,40 +38,33 @@ func (*jiraIssueTypeSchemeDataSource) Metadata(ctx context.Context, req datasour
 	resp.TypeName = req.ProviderTypeName + "_jira_issue_type_scheme"
 }
 
-func (*jiraIssueTypeSchemeDataSource) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostics) {
-	return tfsdk.Schema{
-		Version:             1,
+func (*jiraIssueTypeSchemeDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	resp.Schema = schema.Schema{
 		MarkdownDescription: "Jira Issue Type Scheme Data Source",
-		Attributes: map[string]tfsdk.Attribute{
-			"id": {
+		Attributes: map[string]schema.Attribute{
+			"id": schema.StringAttribute{
 				MarkdownDescription: "The ID of the issue type scheme.",
-				Type:                types.StringType,
 				Required:            true,
 			},
-			"name": {
+			"name": schema.StringAttribute{
 				MarkdownDescription: "The name of the issue type scheme.",
-				Type:                types.StringType,
 				Computed:            true,
 			},
-			"description": {
+			"description": schema.StringAttribute{
 				MarkdownDescription: "The description of the issue type scheme.",
-				Type:                types.StringType,
 				Computed:            true,
 			},
-			"default_issue_type_id": {
+			"default_issue_type_id": schema.StringAttribute{
 				MarkdownDescription: "The ID of the default issue type of the issue type scheme.",
-				Type:                types.StringType,
 				Computed:            true,
 			},
-			"issue_type_ids": {
+			"issue_type_ids": schema.ListAttribute{
 				MarkdownDescription: "The list of issue types IDs of the issue type scheme.",
-				Type: types.ListType{
-					ElemType: types.StringType,
-				},
-				Computed: true,
+				ElementType:         types.StringType,
+				Computed:            true,
 			},
 		},
-	}, nil
+	}
 }
 
 func (d *jiraIssueTypeSchemeDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
@@ -88,7 +80,6 @@ func (d *jiraIssueTypeSchemeDataSource) Configure(ctx context.Context, req datas
 			"Unexpected Data Source Configure Type",
 			fmt.Sprintf("Expected *jira.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
 		)
-
 		return
 	}
 
@@ -139,17 +130,16 @@ func (d *jiraIssueTypeSchemeDataSource) Read(ctx context.Context, req datasource
 		"readApiState": fmt.Sprintf("%+v, items:%+v", issueTypeScheme.Values[0], issueTypeSchemeItems.Values),
 	})
 
-	ids := types.ListNull(types.StringType)
+	var ids []string
 	for _, item := range issueTypeSchemeItems.Values {
-		id := types.StringValue(item.IssueTypeID)
-		ids, _ = types.ListValue(types.StringType, append(ids.Elements(), id))
+		ids = append(ids, item.IssueTypeID)
 	}
 
 	newState.ID = types.StringValue(issueTypeScheme.Values[0].ID)
 	newState.Name = types.StringValue(issueTypeScheme.Values[0].Name)
 	newState.Description = types.StringValue(issueTypeScheme.Values[0].Description)
 	newState.DefaultIssueTypeId = types.StringValue(issueTypeScheme.Values[0].DefaultIssueTypeID)
-	newState.IssueTypeIds = ids
+	newState.IssueTypeIds, _ = types.ListValueFrom(ctx, types.StringType, ids)
 
 	tflog.Debug(ctx, "Storing issue type scheme into the state")
 	resp.Diagnostics.Append(resp.State.Set(ctx, &newState)...)

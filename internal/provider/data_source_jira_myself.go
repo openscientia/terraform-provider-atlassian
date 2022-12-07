@@ -6,8 +6,7 @@ import (
 
 	jira "github.com/ctreminiom/go-atlassian/jira/v3"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
@@ -71,163 +70,140 @@ func (*jiraMyselfDataSource) Metadata(ctx context.Context, req datasource.Metada
 	resp.TypeName = req.ProviderTypeName + "_jira_myself"
 }
 
-func (*jiraMyselfDataSource) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
-	return tfsdk.Schema{
-		Version:             1,
+func (*jiraMyselfDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	resp.Schema = schema.Schema{
 		MarkdownDescription: "Jira Myself Data Source",
-		Attributes: map[string]tfsdk.Attribute{
-			"id": {
+		Attributes: map[string]schema.Attribute{
+			"id": schema.StringAttribute{
 				MarkdownDescription: "The ID of myself. Defaults to value of `account_id`.",
 				Computed:            true,
-				Type:                types.StringType,
 			},
-			"self": {
+			"self": schema.StringAttribute{
 				MarkdownDescription: "The URL of the user.",
 				Computed:            true,
-				Type:                types.StringType,
 			},
-			"account_id": {
+			"account_id": schema.StringAttribute{
 				MarkdownDescription: "The account ID of the user, which uniquely identifies the user across all Atlassian products.",
 				Computed:            true,
-				Type:                types.StringType,
 			},
-			"account_type": {
+			"account_type": schema.StringAttribute{
 				MarkdownDescription: "The user account type. Can take the following values: `atlassian`, `app`, `customer`.",
 				Computed:            true,
-				Type:                types.StringType,
 			},
-			"email_address": {
+			"email_address": schema.StringAttribute{
 				MarkdownDescription: "The email address of the user. Depending on the user’s privacy setting, this may be returned as null.",
 				Computed:            true,
-				Type:                types.StringType,
 			},
-			"avatar_urls": {
+			"avatar_urls": schema.SingleNestedAttribute{
 				MarkdownDescription: "The avatars of the user.",
 				Computed:            true,
-				Attributes: tfsdk.SingleNestedAttributes(map[string]tfsdk.Attribute{
-					"p16x16": {
+				Attributes: map[string]schema.Attribute{
+					"p16x16": schema.StringAttribute{
 						MarkdownDescription: "The URL of the item's 16x16 pixel avatar.",
 						Computed:            true,
-						Type:                types.StringType,
 					},
-					"p24x24": {
+					"p24x24": schema.StringAttribute{
 						MarkdownDescription: "The URL of the item's 24x24 pixel avatar.",
 						Computed:            true,
-						Type:                types.StringType,
 					},
-					"p32x32": {
+					"p32x32": schema.StringAttribute{
 						MarkdownDescription: "The URL of the item's 32x32 pixel avatar.",
 						Computed:            true,
-						Type:                types.StringType,
 					},
-					"p48x48": {
+					"p48x48": schema.StringAttribute{
 						MarkdownDescription: "The URL of the item's 48x48 pixel avatar.",
 						Computed:            true,
-						Type:                types.StringType,
 					},
-				}),
+				},
 			},
-			"display_name": {
+			"display_name": schema.StringAttribute{
 				MarkdownDescription: "The display name of the user. Depending on the user’s privacy setting, this may return an alternative value.",
 				Computed:            true,
-				Type:                types.StringType,
 			},
-			"active": {
+			"active": schema.BoolAttribute{
 				MarkdownDescription: "Whether the user is active.",
 				Computed:            true,
-				Type:                types.BoolType,
 			},
-			"timezone": {
+			"timezone": schema.StringAttribute{
 				MarkdownDescription: "The time zone specified in the user's profile. Depending on the user’s privacy setting, this may be returned as null.",
 				Computed:            true,
-				Type:                types.StringType,
 			},
-			"locale": {
+			"locale": schema.StringAttribute{
 				MarkdownDescription: "The locale of the user. Depending on the user’s privacy setting, this may be returned as null.",
 				Computed:            true,
-				Type:                types.StringType,
 			},
-			"groups": {
+			"groups": schema.SetNestedAttribute{
 				MarkdownDescription: "The groups that the user belongs to.",
 				Computed:            true,
-				Attributes: tfsdk.SetNestedAttributes(
-					map[string]tfsdk.Attribute{
-						"name": {
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"name": schema.StringAttribute{
 							MarkdownDescription: "The name of the group.",
 							Computed:            true,
-							Type:                types.StringType,
 						},
-						"self": {
+						"self": schema.StringAttribute{
 							MarkdownDescription: "The URL for the group details.",
 							Computed:            true,
-							Type:                types.StringType,
 						},
 					},
-				),
+				},
 			},
-			"application_roles": {
+			"application_roles": schema.SetNestedAttribute{
 				MarkdownDescription: "The application roles the user is assigned to.",
 				Computed:            true,
-				Attributes: tfsdk.SetNestedAttributes(map[string]tfsdk.Attribute{
-					"key": {
-						MarkdownDescription: "The key of the application role.",
-						Computed:            true,
-						Type:                types.StringType,
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"key": schema.StringAttribute{
+							MarkdownDescription: "The key of the application role.",
+							Computed:            true,
+						},
+						"groups": schema.ListAttribute{
+							MarkdownDescription: "The groups associated with the application role.",
+							Computed:            true,
+							ElementType:         types.StringType,
+						},
+						"name": schema.StringAttribute{
+							MarkdownDescription: "The display name of the application role.",
+							Computed:            true,
+						},
+						"default_groups": schema.ListAttribute{
+							MarkdownDescription: "The groups that are granted default access for this application role.",
+							Computed:            true,
+							ElementType:         types.StringType,
+						},
+						"select_by_default": schema.BoolAttribute{
+							MarkdownDescription: "Determines whether this application role should be selected by default on user creation.",
+							Computed:            true,
+						},
+						"number_of_seats": schema.Int64Attribute{
+							MarkdownDescription: "The maximum count of users on your license.",
+							Computed:            true,
+						},
+						"remaining_seats": schema.Int64Attribute{
+							MarkdownDescription: "The count of users remaining on your license.",
+							Computed:            true,
+						},
+						"user_count": schema.Int64Attribute{
+							MarkdownDescription: "The number of users counting against your license.",
+							Computed:            true,
+						},
+						"user_count_description": schema.StringAttribute{
+							MarkdownDescription: "The type of users being counted against your license.",
+							Computed:            true,
+						},
+						"has_unlimited_seats": schema.BoolAttribute{
+							MarkdownDescription: "Whether unlimited user licenses are available.",
+							Computed:            true,
+						},
+						"platform": schema.BoolAttribute{
+							MarkdownDescription: "Indicates if the application role belongs to Jira platform (jira-core).",
+							Computed:            true,
+						},
 					},
-					"groups": {
-						MarkdownDescription: "The groups associated with the application role.",
-						Computed:            true,
-						Type:                types.ListType{ElemType: types.StringType},
-					},
-					"name": {
-						MarkdownDescription: "The display name of the application role.",
-						Computed:            true,
-						Type:                types.StringType,
-					},
-					"default_groups": {
-						MarkdownDescription: "The groups that are granted default access for this application role.",
-						Computed:            true,
-						Type:                types.ListType{ElemType: types.StringType},
-					},
-					"select_by_default": {
-						MarkdownDescription: "Determines whether this application role should be selected by default on user creation.",
-						Computed:            true,
-						Type:                types.BoolType,
-					},
-					"number_of_seats": {
-						MarkdownDescription: "The maximum count of users on your license.",
-						Computed:            true,
-						Type:                types.Int64Type,
-					},
-					"remaining_seats": {
-						MarkdownDescription: "The count of users remaining on your license.",
-						Computed:            true,
-						Type:                types.Int64Type,
-					},
-					"user_count": {
-						MarkdownDescription: "The number of users counting against your license.",
-						Computed:            true,
-						Type:                types.Int64Type,
-					},
-					"user_count_description": {
-						MarkdownDescription: "The type of users being counted against your license.",
-						Computed:            true,
-						Type:                types.StringType,
-					},
-					"has_unlimited_seats": {
-						MarkdownDescription: "Whether unlimited user licenses are available.",
-						Computed:            true,
-						Type:                types.BoolType,
-					},
-					"platform": {
-						MarkdownDescription: "Indicates if the application role belongs to Jira platform (jira-core).",
-						Computed:            true,
-						Type:                types.BoolType,
-					},
-				}),
+				},
 			},
 		},
-	}, nil
+	}
 }
 
 func (d *jiraMyselfDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
@@ -243,7 +219,6 @@ func (d *jiraMyselfDataSource) Configure(ctx context.Context, req datasource.Con
 			"Unexpected Data Source Configure Type",
 			fmt.Sprintf("Expected *jira.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
 		)
-
 		return
 	}
 

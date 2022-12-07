@@ -7,9 +7,8 @@ import (
 
 	jira "github.com/ctreminiom/go-atlassian/jira/v3"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/path"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
@@ -38,28 +37,24 @@ func (*jiraIssueFieldConfigurationDataSource) Metadata(ctx context.Context, req 
 	resp.TypeName = req.ProviderTypeName + "_jira_issue_field_configuration"
 }
 
-func (*jiraIssueFieldConfigurationDataSource) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
-	return tfsdk.Schema{
-		Version:             1,
+func (*jiraIssueFieldConfigurationDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	resp.Schema = schema.Schema{
 		MarkdownDescription: "Jira Issue Field Configuration Data Source",
-		Attributes: map[string]tfsdk.Attribute{
-			"id": {
+		Attributes: map[string]schema.Attribute{
+			"id": schema.StringAttribute{
 				MarkdownDescription: "The ID of the issue field configuration.",
 				Required:            true,
-				Type:                types.StringType,
 			},
-			"name": {
+			"name": schema.StringAttribute{
 				MarkdownDescription: "The name of the issue field configuration.",
 				Computed:            true,
-				Type:                types.StringType,
 			},
-			"description": {
+			"description": schema.StringAttribute{
 				MarkdownDescription: "The description of the issue field configuration.",
 				Computed:            true,
-				Type:                types.StringType,
 			},
 		},
-	}, nil
+	}
 }
 
 func (d *jiraIssueFieldConfigurationDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
@@ -75,7 +70,6 @@ func (d *jiraIssueFieldConfigurationDataSource) Configure(ctx context.Context, r
 			"Unexpected Data Source Configure Type",
 			fmt.Sprintf("Expected *jira.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
 		)
-
 		return
 	}
 

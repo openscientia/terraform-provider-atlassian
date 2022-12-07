@@ -7,9 +7,8 @@ import (
 
 	jira "github.com/ctreminiom/go-atlassian/jira/v3"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/path"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
@@ -39,33 +38,28 @@ func (*jiraPermissionSchemeDataSource) Metadata(ctx context.Context, req datasou
 	resp.TypeName = req.ProviderTypeName + "_jira_permission_scheme"
 }
 
-func (*jiraPermissionSchemeDataSource) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
-	return tfsdk.Schema{
-		Version:             1,
+func (*jiraPermissionSchemeDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	resp.Schema = schema.Schema{
 		MarkdownDescription: "Jira Permission Scheme Data Source",
-		Attributes: map[string]tfsdk.Attribute{
-			"id": {
+		Attributes: map[string]schema.Attribute{
+			"id": schema.StringAttribute{
 				MarkdownDescription: "The ID of the permission scheme.",
 				Required:            true,
-				Type:                types.StringType,
 			},
-			"self": {
+			"self": schema.StringAttribute{
 				MarkdownDescription: "The URL of the permission scheme.",
 				Computed:            true,
-				Type:                types.StringType,
 			},
-			"name": {
+			"name": schema.StringAttribute{
 				MarkdownDescription: "The name of the permission scheme.",
 				Computed:            true,
-				Type:                types.StringType,
 			},
-			"description": {
+			"description": schema.StringAttribute{
 				MarkdownDescription: "The description of the permission scheme.",
 				Computed:            true,
-				Type:                types.StringType,
 			},
 		},
-	}, nil
+	}
 }
 
 func (d *jiraPermissionSchemeDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
@@ -81,7 +75,6 @@ func (d *jiraPermissionSchemeDataSource) Configure(ctx context.Context, req data
 			"Unexpected Data Source Configure Type",
 			fmt.Sprintf("Expected *jira.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
 		)
-
 		return
 	}
 

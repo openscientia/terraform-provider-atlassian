@@ -7,10 +7,13 @@ import (
 	jira "github.com/ctreminiom/go-atlassian/jira/v3"
 	"github.com/ctreminiom/go-atlassian/pkg/infra/models"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	common "github.com/openscientia/terraform-provider-atlassian/internal/provider/models"
@@ -54,118 +57,105 @@ func (*jiraGroupResource) Metadata(ctx context.Context, req resource.MetadataReq
 	resp.TypeName = req.ProviderTypeName + "_jira_group"
 }
 
-func (*jiraGroupResource) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
-	return tfsdk.Schema{
+func (*jiraGroupResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
+	resp.Schema = schema.Schema{
 		Version:             1,
 		MarkdownDescription: "Jira Group Resource",
-		Attributes: map[string]tfsdk.Attribute{
-			"id": {
+		Attributes: map[string]schema.Attribute{
+			"id": schema.StringAttribute{
 				MarkdownDescription: "The ID of the group. Defaults to `group_id`.",
 				Computed:            true,
-				Type:                types.StringType,
-				PlanModifiers: tfsdk.AttributePlanModifiers{
-					resource.UseStateForUnknown(),
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"name": {
+			"name": schema.StringAttribute{
 				MarkdownDescription: "(Forces new resource) The name of the group.",
 				Required:            true,
-				Type:                types.StringType,
-				PlanModifiers: tfsdk.AttributePlanModifiers{
-					resource.RequiresReplace(),
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"group_id": {
+			"group_id": schema.StringAttribute{
 				MarkdownDescription: "The ID of the group, which uniquely identifies the group across all Atlassian products.",
 				Computed:            true,
-				Type:                types.StringType,
-				PlanModifiers: tfsdk.AttributePlanModifiers{
-					resource.UseStateForUnknown(),
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"self": {
+			"self": schema.StringAttribute{
 				MarkdownDescription: "The URL for these group details.",
 				Computed:            true,
-				Type:                types.StringType,
-				PlanModifiers: tfsdk.AttributePlanModifiers{
-					resource.UseStateForUnknown(),
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"users": {
+			"users": schema.SetNestedAttribute{
 				MarkdownDescription: "The list of users in the group.",
 				Computed:            true,
-				Attributes: tfsdk.SetNestedAttributes(map[string]tfsdk.Attribute{
-					"self": {
-						MarkdownDescription: "The URL of the user.",
-						Computed:            true,
-						Type:                types.StringType,
-					},
-					"account_id": {
-						MarkdownDescription: "The account ID of the user, which uniquely identifies the user across all Atlassian products.",
-						Computed:            true,
-						Type:                types.StringType,
-						Validators: []tfsdk.AttributeValidator{
-							stringvalidator.LengthAtMost(128),
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"self": schema.StringAttribute{
+							MarkdownDescription: "The URL of the user.",
+							Computed:            true,
+						},
+						"account_id": schema.StringAttribute{
+							MarkdownDescription: "The account ID of the user, which uniquely identifies the user across all Atlassian products.",
+							Computed:            true,
+							Validators: []validator.String{
+								stringvalidator.LengthAtMost(128),
+							},
+						},
+						"email_address": schema.StringAttribute{
+							MarkdownDescription: "The email address of the user. Depending on the user’s privacy settings, this may be returned as null.",
+							Computed:            true,
+						},
+						"avatar_urls": schema.SingleNestedAttribute{
+							MarkdownDescription: "The avatars of the user.",
+							Computed:            true,
+							Attributes: map[string]schema.Attribute{
+								"p16x16": schema.StringAttribute{
+									MarkdownDescription: "The URL of the item's 16x16 pixel avatar.",
+									Computed:            true,
+								},
+								"p24x24": schema.StringAttribute{
+									MarkdownDescription: "The URL of the item's 24x24 pixel avatar.",
+									Computed:            true,
+								},
+								"p32x32": schema.StringAttribute{
+									MarkdownDescription: "The URL of the item's 32x32 pixel avatar.",
+									Computed:            true,
+								},
+								"p48x48": schema.StringAttribute{
+									MarkdownDescription: "The URL of the item's 48x48 pixel avatar.",
+									Computed:            true,
+								},
+							},
+						},
+						"display_name": schema.StringAttribute{
+							MarkdownDescription: "The display name of the user. Depending on the user’s privacy settings, this may return an alternative value.",
+							Computed:            true,
+						},
+						"active": schema.BoolAttribute{
+							MarkdownDescription: "Whether the user is active.",
+							Computed:            true,
+						},
+						"timezone": schema.StringAttribute{
+							MarkdownDescription: "The time zone specified in the user's profile. Depending on the user’s privacy settings, this may be returned as null.",
+							Computed:            true,
+						},
+						"account_type": schema.StringAttribute{
+							MarkdownDescription: "The type of account represented by this user. This will be one of `atlassian` (normal users), `app` (application user) or `customer` (Jira Service Desk customer user)",
+							Computed:            true,
 						},
 					},
-					"email_address": {
-						MarkdownDescription: "The email address of the user. Depending on the user’s privacy settings, this may be returned as null.",
-						Computed:            true,
-						Type:                types.StringType,
-					},
-					"avatar_urls": {
-						MarkdownDescription: "The avatars of the user.",
-						Computed:            true,
-						Attributes: tfsdk.SingleNestedAttributes(map[string]tfsdk.Attribute{
-							"p16x16": {
-								MarkdownDescription: "The URL of the item's 16x16 pixel avatar.",
-								Computed:            true,
-								Type:                types.StringType,
-							},
-							"p24x24": {
-								MarkdownDescription: "The URL of the item's 24x24 pixel avatar.",
-								Computed:            true,
-								Type:                types.StringType,
-							},
-							"p32x32": {
-								MarkdownDescription: "The URL of the item's 32x32 pixel avatar.",
-								Computed:            true,
-								Type:                types.StringType,
-							},
-							"p48x48": {
-								MarkdownDescription: "The URL of the item's 48x48 pixel avatar.",
-								Computed:            true,
-								Type:                types.StringType,
-							},
-						}),
-					},
-					"display_name": {
-						MarkdownDescription: "The display name of the user. Depending on the user’s privacy settings, this may return an alternative value.",
-						Computed:            true,
-						Type:                types.StringType,
-					},
-					"active": {
-						MarkdownDescription: "Whether the user is active.",
-						Computed:            true,
-						Type:                types.BoolType,
-					},
-					"timezone": {
-						MarkdownDescription: "The time zone specified in the user's profile. Depending on the user’s privacy settings, this may be returned as null.",
-						Computed:            true,
-						Type:                types.StringType,
-					},
-					"account_type": {
-						MarkdownDescription: "The type of account represented by this user. This will be one of `atlassian` (normal users), `app` (application user) or `customer` (Jira Service Desk customer user)",
-						Computed:            true,
-						Type:                types.StringType,
-					},
-				}),
-				PlanModifiers: tfsdk.AttributePlanModifiers{
-					resource.UseStateForUnknown(),
+				},
+				PlanModifiers: []planmodifier.Set{
+					setplanmodifier.UseStateForUnknown(),
 				},
 			},
 		},
-	}, nil
+	}
 }
 
 func (r *jiraGroupResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
@@ -180,7 +170,6 @@ func (r *jiraGroupResource) Configure(ctx context.Context, req resource.Configur
 			"Unexpected Resource Configure Type",
 			fmt.Sprintf("Expected *jira.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
 		)
-
 		return
 	}
 

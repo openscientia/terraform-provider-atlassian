@@ -6,7 +6,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func TestAccJiraIssueTypeDataSource(t *testing.T) {
+func TestAccJiraIssueTypeDataSource_Basic(t *testing.T) {
 	dataSourceName := "data.atlassian_jira_issue_type.test"
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -14,7 +14,7 @@ func TestAccJiraIssueTypeDataSource(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Read testing
 			{
-				Config: testAccJiraIssueTypeDataSourceConfig,
+				Config: testAccJiraIssueTypeDataSourceConfig_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "name", "Epic"),
 				),
@@ -23,7 +23,7 @@ func TestAccJiraIssueTypeDataSource(t *testing.T) {
 	})
 }
 
-const testAccJiraIssueTypeDataSourceConfig = `
+const testAccJiraIssueTypeDataSourceConfig_basic = `
 data "atlassian_jira_issue_type" "test" {
   id = "10000" // default id of epic issue type
 }

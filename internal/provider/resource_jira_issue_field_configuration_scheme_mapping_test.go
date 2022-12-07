@@ -71,7 +71,7 @@ func TestAccJiraIssueFieldConfigurationSchemeMapping_FieldConfigurationId(t *tes
 func TestAccJiraIssueFieldConfigurationSchemeMapping_IssueTypeId(t *testing.T) {
 	randomName := acctest.RandomWithPrefix("tf-test-issue-field-configuration-scheme-mapping")
 	resourceName = "atlassian_jira_issue_field_configuration_scheme_mapping.test"
-	issue_type_id := []string{"10000", "10001"} // epic, story
+	issue_type_id := []string{"10000", "10012"} // epic, story
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,

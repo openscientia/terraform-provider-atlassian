@@ -7,8 +7,7 @@ import (
 
 	jira "github.com/ctreminiom/go-atlassian/jira/v3"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
@@ -38,46 +37,38 @@ func (*jiraPermissionGrantDataSource) Metadata(ctx context.Context, req datasour
 	resp.TypeName = req.ProviderTypeName + "_jira_permission_grant"
 }
 
-func (*jiraPermissionGrantDataSource) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
-	return tfsdk.Schema{
-		Version:             1,
+func (*jiraPermissionGrantDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	resp.Schema = schema.Schema{
 		MarkdownDescription: "Jira Permission Grant Data Source",
-		Attributes: map[string]tfsdk.Attribute{
-			"id": {
+		Attributes: map[string]schema.Attribute{
+			"id": schema.StringAttribute{
 				MarkdownDescription: "The ID of the permission grant.",
 				Required:            true,
-				Type:                types.StringType,
 			},
-			"permission_scheme_id": {
+			"permission_scheme_id": schema.StringAttribute{
 				MarkdownDescription: "The ID of the permission scheme in which to create a new permission grant.",
 				Required:            true,
-				Type:                types.StringType,
 			},
-			"holder": {
+			"holder": schema.SingleNestedAttribute{
 				MarkdownDescription: "The user, group, field or role being granted the permission.",
 				Computed:            true,
-				Attributes: tfsdk.SingleNestedAttributes(
-					map[string]tfsdk.Attribute{
-						"type": {
-							MarkdownDescription: "The type of permission holder.",
-							Computed:            true,
-							Type:                types.StringType,
-						},
-						"parameter": {
-							MarkdownDescription: "The identifier associated with the `type` value that defines the holder of the permission.",
-							Computed:            true,
-							Type:                types.StringType,
-						},
+				Attributes: map[string]schema.Attribute{
+					"type": schema.StringAttribute{
+						MarkdownDescription: "The type of permission holder.",
+						Computed:            true,
 					},
-				),
+					"parameter": schema.StringAttribute{
+						MarkdownDescription: "The identifier associated with the `type` value that defines the holder of the permission.",
+						Computed:            true,
+					},
+				},
 			},
-			"permission": {
+			"permission": schema.StringAttribute{
 				MarkdownDescription: "The permission to grant.",
 				Computed:            true,
-				Type:                types.StringType,
 			},
 		},
-	}, nil
+	}
 }
 
 func (d *jiraPermissionGrantDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
@@ -93,7 +84,6 @@ func (d *jiraPermissionGrantDataSource) Configure(ctx context.Context, req datas
 			"Unexpected Data Source Configure Type",
 			fmt.Sprintf("Expected *jira.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
 		)
-
 		return
 	}
 
