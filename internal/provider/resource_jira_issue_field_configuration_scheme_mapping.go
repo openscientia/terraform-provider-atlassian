@@ -8,10 +8,11 @@ import (
 
 	jira "github.com/ctreminiom/go-atlassian/jira/v3"
 	"github.com/ctreminiom/go-atlassian/pkg/infra/models"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
@@ -42,44 +43,40 @@ func (*jiraIssueFieldConfigurationSchemeMappingResource) Metadata(ctx context.Co
 	resp.TypeName = req.ProviderTypeName + "_jira_issue_field_configuration_scheme_mapping"
 }
 
-func (*jiraIssueFieldConfigurationSchemeMappingResource) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
-	return tfsdk.Schema{
+func (*jiraIssueFieldConfigurationSchemeMappingResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
+	resp.Schema = schema.Schema{
 		Version:             1,
 		MarkdownDescription: "Jira Issue Field Configuration Scheme Mapping Resource",
-		Attributes: map[string]tfsdk.Attribute{
-			"id": {
+		Attributes: map[string]schema.Attribute{
+			"id": schema.StringAttribute{
 				MarkdownDescription: "The ID of the issue field configuration scheme mapping. " +
 					"It is computed using `field_configuration_scheme_id`, `field_configuration_id` and `issue_type_id` separated by a hyphen (`-`).",
 				Computed: true,
-				Type:     types.StringType,
 			},
-			"field_configuration_scheme_id": {
+			"field_configuration_scheme_id": schema.StringAttribute{
 				MarkdownDescription: "(Forces new resource) The ID of the issue field configuration scheme.",
 				Required:            true,
-				Type:                types.StringType,
-				PlanModifiers: tfsdk.AttributePlanModifiers{
-					resource.RequiresReplace(),
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"field_configuration_id": {
+			"field_configuration_id": schema.StringAttribute{
 				MarkdownDescription: "(Forces new resource) The ID of the issue field configuration.",
 				Required:            true,
-				Type:                types.StringType,
-				PlanModifiers: tfsdk.AttributePlanModifiers{
-					resource.RequiresReplace(),
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"issue_type_id": {
+			"issue_type_id": schema.StringAttribute{
 				MarkdownDescription: "(Forces new resource) The ID of the issue type or `default`. " +
 					"When set to `default` this issue field configuration scheme mapping applies to all issue types without an issue field configuration.",
 				Required: true,
-				Type:     types.StringType,
-				PlanModifiers: tfsdk.AttributePlanModifiers{
-					resource.RequiresReplace(),
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
 				},
 			},
 		},
-	}, nil
+	}
 }
 
 func (r *jiraIssueFieldConfigurationSchemeMappingResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
@@ -94,7 +91,6 @@ func (r *jiraIssueFieldConfigurationSchemeMappingResource) Configure(ctx context
 			"Unexpected Resource Configure Type",
 			fmt.Sprintf("Expected *jira.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
 		)
-
 		return
 	}
 

@@ -8,9 +8,8 @@ import (
 	jira "github.com/ctreminiom/go-atlassian/jira/v3"
 	"github.com/ctreminiom/go-atlassian/pkg/infra/models"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/path"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
@@ -40,60 +39,50 @@ func (*jiraScreenSchemeDataSource) Metadata(ctx context.Context, req datasource.
 	resp.TypeName = req.ProviderTypeName + "_jira_screen_scheme"
 }
 
-func (d *jiraScreenSchemeDataSource) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
-	return tfsdk.Schema{
-		Version:             1,
+func (d *jiraScreenSchemeDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	resp.Schema = schema.Schema{
 		MarkdownDescription: "Jira Screen Scheme Data Source",
-		Attributes: map[string]tfsdk.Attribute{
-			"id": {
+		Attributes: map[string]schema.Attribute{
+			"id": schema.StringAttribute{
 				MarkdownDescription: "The ID of the screen scheme.",
 				Required:            true,
-				Type:                types.StringType,
 			},
-			"name": {
+			"name": schema.StringAttribute{
 				MarkdownDescription: "The name of the screen scheme. " +
 					"The name must be unique. " +
 					"The maximum length is 255 characters.",
 				Computed: true,
-				Type:     types.StringType,
 			},
-			"description": {
+			"description": schema.StringAttribute{
 				MarkdownDescription: "The description of the screen scheme. " +
 					"The maximum length is 255 characters.",
 				Computed: true,
-				Type:     types.StringType,
 			},
-			"screens": {
+			"screens": schema.SingleNestedAttribute{
 				MarkdownDescription: "The IDs of the screens for the screen types of the screen scheme. " +
 					"Only screens used in classic projects are accepted.",
 				Computed: true,
-				Attributes: tfsdk.SingleNestedAttributes(
-					map[string]tfsdk.Attribute{
-						"create": {
-							MarkdownDescription: "The ID of the create screen.",
-							Computed:            true,
-							Type:                types.Int64Type,
-						},
-						"default": {
-							MarkdownDescription: "The ID of the default screen. Required when creating a screen scheme.",
-							Computed:            true,
-							Type:                types.Int64Type,
-						},
-						"view": {
-							MarkdownDescription: "The ID of the view screen.",
-							Computed:            true,
-							Type:                types.Int64Type,
-						},
-						"edit": {
-							MarkdownDescription: "The ID of the edit screen.",
-							Computed:            true,
-							Type:                types.Int64Type,
-						},
+				Attributes: map[string]schema.Attribute{
+					"create": schema.Int64Attribute{
+						MarkdownDescription: "The ID of the create screen.",
+						Computed:            true,
 					},
-				),
+					"default": schema.Int64Attribute{
+						MarkdownDescription: "The ID of the default screen. Required when creating a screen scheme.",
+						Computed:            true,
+					},
+					"view": schema.Int64Attribute{
+						MarkdownDescription: "The ID of the view screen.",
+						Computed:            true,
+					},
+					"edit": schema.Int64Attribute{
+						MarkdownDescription: "The ID of the edit screen.",
+						Computed:            true,
+					},
+				},
 			},
 		},
-	}, nil
+	}
 }
 
 func (d *jiraScreenSchemeDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
@@ -109,7 +98,6 @@ func (d *jiraScreenSchemeDataSource) Configure(ctx context.Context, req datasour
 			"Unexpected Data Source Configure Type",
 			fmt.Sprintf("Expected *jira.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
 		)
-
 		return
 	}
 

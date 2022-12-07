@@ -8,13 +8,14 @@ import (
 	jira "github.com/ctreminiom/go-atlassian/jira/v3"
 	"github.com/ctreminiom/go-atlassian/pkg/infra/models"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/openscientia/terraform-provider-atlassian/internal/provider/attribute_plan_modification"
+	"github.com/openscientia/terraform-provider-atlassian/internal/provider/planmodifiers/stringmodifiers"
 )
 
 type (
@@ -48,63 +49,58 @@ func (*jiraIssueTypeScreenSchemeResource) Metadata(ctx context.Context, req reso
 	resp.TypeName = req.ProviderTypeName + "_jira_issue_type_screen_scheme"
 }
 
-func (*jiraIssueTypeScreenSchemeResource) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
-	return tfsdk.Schema{
+func (*jiraIssueTypeScreenSchemeResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
+	resp.Schema = schema.Schema{
 		Version:             1,
 		MarkdownDescription: "Jira Issue Type Screen Scheme Resource",
-		Attributes: map[string]tfsdk.Attribute{
-			"id": {
+		Attributes: map[string]schema.Attribute{
+			"id": schema.StringAttribute{
 				MarkdownDescription: "The ID of the issue type screen scheme.",
 				Computed:            true,
-				Type:                types.StringType,
 			},
-			"name": {
+			"name": schema.StringAttribute{
 				MarkdownDescription: "The name of the issue type screen scheme. " +
 					"The name must be unique. " +
 					"The maximum length is 255 characters.",
 				Required: true,
-				Type:     types.StringType,
-				Validators: []tfsdk.AttributeValidator{
+				Validators: []validator.String{
 					stringvalidator.LengthAtMost(255),
 				},
 			},
-			"description": {
+			"description": schema.StringAttribute{
 				MarkdownDescription: "The description of the issue type screen scheme. " +
 					"The maximum length is 255 characters.",
 				Optional: true,
 				Computed: true,
-				Type:     types.StringType,
-				Validators: []tfsdk.AttributeValidator{
+				Validators: []validator.String{
 					stringvalidator.LengthAtMost(255),
 				},
-				PlanModifiers: tfsdk.AttributePlanModifiers{
-					attribute_plan_modification.DefaultValue(types.StringValue("")),
+				PlanModifiers: []planmodifier.String{
+					stringmodifiers.DefaultValue(""),
 				},
 			},
-			"issue_type_mappings": {
+			"issue_type_mappings": schema.ListNestedAttribute{
 				MarkdownDescription: "The IDs of the screen schemes for the issue type IDs and default. " +
 					"A default entry is required to create an issue type screen scheme, it defines the mapping for all issue types without a screen scheme.",
 				Required: true,
-				Attributes: tfsdk.ListNestedAttributes(
-					map[string]tfsdk.Attribute{
-						"issue_type_id": {
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"issue_type_id": schema.StringAttribute{
 							MarkdownDescription: "The ID of the issue type or default. " +
 								"Only issue types used in classic projects are accepted. " +
 								"An entry for default must be provided and defines the mapping for all issue types without a screen scheme.",
 							Required: true,
-							Type:     types.StringType,
 						},
-						"screen_scheme_id": {
+						"screen_scheme_id": schema.StringAttribute{
 							MarkdownDescription: "The ID of the screen scheme. " +
 								"Only screen schemes used in classic projects are accepted.",
 							Required: true,
-							Type:     types.StringType,
 						},
 					},
-				),
+				},
 			},
 		},
-	}, nil
+	}
 }
 
 func (r *jiraIssueTypeScreenSchemeResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
@@ -119,7 +115,6 @@ func (r *jiraIssueTypeScreenSchemeResource) Configure(ctx context.Context, req r
 			"Unexpected Resource Configure Type",
 			fmt.Sprintf("Expected *jira.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
 		)
-
 		return
 	}
 

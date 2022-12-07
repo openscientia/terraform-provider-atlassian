@@ -145,7 +145,7 @@ func TestAccJiraIssueFieldConfigurationItem_RendererErrors(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccIssueFieldConfigurationItemConfig_renderererrors(resourceName, randomName, "autocomplete-renderer"),
-				ExpectError: regexp.MustCompile(`Value must be one of`),
+				ExpectError: regexp.MustCompile(`value must be one of`),
 			},
 		},
 	})

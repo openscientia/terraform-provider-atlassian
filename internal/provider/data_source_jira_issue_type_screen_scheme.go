@@ -8,9 +8,8 @@ import (
 	jira "github.com/ctreminiom/go-atlassian/jira/v3"
 	"github.com/ctreminiom/go-atlassian/pkg/infra/models"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/path"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
@@ -40,53 +39,47 @@ func (*jiraIssueTypeScreenSchemeDataSource) Metadata(ctx context.Context, req da
 	resp.TypeName = req.ProviderTypeName + "_jira_issue_type_screen_scheme"
 }
 
-func (*jiraIssueTypeScreenSchemeDataSource) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
-	return tfsdk.Schema{
-		Version:             1,
+func (*jiraIssueTypeScreenSchemeDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	resp.Schema = schema.Schema{
 		MarkdownDescription: "Jira Issue Type Screen Scheme Data Source",
-		Attributes: map[string]tfsdk.Attribute{
-			"id": {
+		Attributes: map[string]schema.Attribute{
+			"id": schema.StringAttribute{
 				MarkdownDescription: "The ID of the issue type screen scheme.",
 				Required:            true,
-				Type:                types.StringType,
 			},
-			"name": {
+			"name": schema.StringAttribute{
 				MarkdownDescription: "The name of the issue type screen scheme. " +
 					"The name must be unique. " +
 					"The maximum length is 255 characters.",
 				Computed: true,
-				Type:     types.StringType,
 			},
-			"description": {
+			"description": schema.StringAttribute{
 				MarkdownDescription: "The description of the issue type screen scheme. " +
 					"The maximum length is 255 characters.",
 				Computed: true,
-				Type:     types.StringType,
 			},
-			"issue_type_mappings": {
+			"issue_type_mappings": schema.ListNestedAttribute{
 				MarkdownDescription: "The IDs of the screen schemes for the issue type IDs and default. " +
 					"A default entry is required to create an issue type screen scheme, it defines the mapping for all issue types without a screen scheme.",
 				Computed: true,
-				Attributes: tfsdk.ListNestedAttributes(
-					map[string]tfsdk.Attribute{
-						"issue_type_id": {
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"issue_type_id": schema.StringAttribute{
 							MarkdownDescription: "The ID of the issue type or default. " +
 								"Only issue types used in classic projects are accepted. " +
 								"An entry for default must be provided and defines the mapping for all issue types without a screen scheme.",
 							Computed: true,
-							Type:     types.StringType,
 						},
-						"screen_scheme_id": {
+						"screen_scheme_id": schema.StringAttribute{
 							MarkdownDescription: "The ID of the screen scheme. " +
 								"Only screen schemes used in classic projects are accepted.",
 							Computed: true,
-							Type:     types.StringType,
 						},
 					},
-				),
+				},
 			},
 		},
-	}, nil
+	}
 }
 
 func (d *jiraIssueTypeScreenSchemeDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
@@ -102,7 +95,6 @@ func (d *jiraIssueTypeScreenSchemeDataSource) Configure(ctx context.Context, req
 			"Unexpected Data Source Configure Type",
 			fmt.Sprintf("Expected *jira.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
 		)
-
 		return
 	}
 

@@ -6,8 +6,7 @@ import (
 
 	jira "github.com/ctreminiom/go-atlassian/jira/v3"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
@@ -39,43 +38,36 @@ func (*jiraIssueTypeDataSource) Metadata(ctx context.Context, req datasource.Met
 	resp.TypeName = req.ProviderTypeName + "_jira_issue_type"
 }
 
-func (*jiraIssueTypeDataSource) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostics) {
-	return tfsdk.Schema{
-		Version:             1,
+func (*jiraIssueTypeDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	resp.Schema = schema.Schema{
 		MarkdownDescription: "Jira Issue Type Data Source",
-		Attributes: map[string]tfsdk.Attribute{
-			"id": {
+		Attributes: map[string]schema.Attribute{
+			"id": schema.StringAttribute{
 				MarkdownDescription: "The ID of the issue type.",
-				Type:                types.StringType,
 				Required:            true,
 			},
-			"name": {
+			"name": schema.StringAttribute{
 				MarkdownDescription: "The name of the issue type.",
-				Type:                types.StringType,
 				Computed:            true,
 			},
-			"description": {
+			"description": schema.StringAttribute{
 				MarkdownDescription: "The description of the issue type.",
-				Type:                types.StringType,
 				Computed:            true,
 			},
-			"hierarchy_level": {
+			"hierarchy_level": schema.Int64Attribute{
 				MarkdownDescription: "The hierarchy level of the issue type.",
-				Type:                types.Int64Type,
 				Computed:            true,
 			},
-			"icon_url": {
+			"icon_url": schema.StringAttribute{
 				MarkdownDescription: "The URL of the issue type's avatar.",
-				Type:                types.StringType,
 				Computed:            true,
 			},
-			"avatar_id": {
+			"avatar_id": schema.Int64Attribute{
 				MarkdownDescription: "The ID of the issue type's avatar.",
-				Type:                types.Int64Type,
 				Computed:            true,
 			},
 		},
-	}, nil
+	}
 }
 
 func (d *jiraIssueTypeDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
@@ -91,7 +83,6 @@ func (d *jiraIssueTypeDataSource) Configure(ctx context.Context, req datasource.
 			"Unexpected Data Source Configure Type",
 			fmt.Sprintf("Expected *jira.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
 		)
-
 		return
 	}
 

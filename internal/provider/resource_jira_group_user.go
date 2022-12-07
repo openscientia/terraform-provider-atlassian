@@ -7,10 +7,12 @@ import (
 
 	jira "github.com/ctreminiom/go-atlassian/jira/v3"
 	"github.com/ctreminiom/go-atlassian/pkg/infra/models"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	common "github.com/openscientia/terraform-provider-atlassian/internal/provider/models"
@@ -48,125 +50,110 @@ func (*jiraGroupUserResource) Metadata(ctx context.Context, req resource.Metadat
 	resp.TypeName = req.ProviderTypeName + "_jira_group_user"
 }
 
-func (*jiraGroupUserResource) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
-	return tfsdk.Schema{
+func (*jiraGroupUserResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
+	resp.Schema = schema.Schema{
 		Version:             1,
 		MarkdownDescription: "Jira Group User Resource",
-		Attributes: map[string]tfsdk.Attribute{
-			"id": {
+		Attributes: map[string]schema.Attribute{
+			"id": schema.StringAttribute{
 				MarkdownDescription: "The ID of the group user. It is computed using `group_name` and `account_id` separated by a hyphen (`-`).",
 				Computed:            true,
-				Type:                types.StringType,
-				PlanModifiers: tfsdk.AttributePlanModifiers{
-					resource.UseStateForUnknown(),
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"group_name": {
+			"group_name": schema.StringAttribute{
 				MarkdownDescription: "(Forces new resource) The name of the group.",
 				Required:            true,
-				Type:                types.StringType,
-				PlanModifiers: tfsdk.AttributePlanModifiers{
-					resource.RequiresReplace(),
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"account_id": {
+			"account_id": schema.StringAttribute{
 				MarkdownDescription: "(Forces new resource) The account ID of the user, which uniquely identifies the user across all Atlassian products.",
 				Required:            true,
-				Type:                types.StringType,
-				PlanModifiers: tfsdk.AttributePlanModifiers{
-					resource.RequiresReplace(),
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"self": {
+			"self": schema.StringAttribute{
 				MarkdownDescription: "The URL of the user.",
 				Computed:            true,
-				Type:                types.StringType,
-				PlanModifiers: tfsdk.AttributePlanModifiers{
-					resource.UseStateForUnknown(),
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"email_address": {
+			"email_address": schema.StringAttribute{
 				MarkdownDescription: "The email address of the user. Depending on the user’s privacy settings, this may be returned as null.",
 				Computed:            true,
-				Type:                types.StringType,
-				PlanModifiers: tfsdk.AttributePlanModifiers{
-					resource.UseStateForUnknown(),
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"avatar_urls": {
+			"avatar_urls": schema.SingleNestedAttribute{
 				MarkdownDescription: "The avatars of the user.",
 				Computed:            true,
-				Attributes: tfsdk.SingleNestedAttributes(map[string]tfsdk.Attribute{
-					"p16x16": {
+				Attributes: map[string]schema.Attribute{
+					"p16x16": schema.StringAttribute{
 						MarkdownDescription: "The URL of the item's 16x16 pixel avatar.",
 						Computed:            true,
-						Type:                types.StringType,
-						PlanModifiers: tfsdk.AttributePlanModifiers{
-							resource.UseStateForUnknown(),
+						PlanModifiers: []planmodifier.String{
+							stringplanmodifier.UseStateForUnknown(),
 						},
 					},
-					"p24x24": {
+					"p24x24": schema.StringAttribute{
 						MarkdownDescription: "The URL of the item's 24x24 pixel avatar.",
 						Computed:            true,
-						Type:                types.StringType,
-						PlanModifiers: tfsdk.AttributePlanModifiers{
-							resource.UseStateForUnknown(),
+						PlanModifiers: []planmodifier.String{
+							stringplanmodifier.UseStateForUnknown(),
 						},
 					},
-					"p32x32": {
+					"p32x32": schema.StringAttribute{
 						MarkdownDescription: "The URL of the item's 32x32 pixel avatar.",
 						Computed:            true,
-						Type:                types.StringType,
-						PlanModifiers: tfsdk.AttributePlanModifiers{
-							resource.UseStateForUnknown(),
+						PlanModifiers: []planmodifier.String{
+							stringplanmodifier.UseStateForUnknown(),
 						},
 					},
-					"p48x48": {
+					"p48x48": schema.StringAttribute{
 						MarkdownDescription: "The URL of the item's 48x48 pixel avatar.",
 						Computed:            true,
-						Type:                types.StringType,
-						PlanModifiers: tfsdk.AttributePlanModifiers{
-							resource.UseStateForUnknown(),
+						PlanModifiers: []planmodifier.String{
+							stringplanmodifier.UseStateForUnknown(),
 						},
 					},
-				}),
-				PlanModifiers: tfsdk.AttributePlanModifiers{
-					resource.UseStateForUnknown(),
 				},
 			},
-			"display_name": {
+			"display_name": schema.StringAttribute{
 				MarkdownDescription: "The display name of the user. Depending on the user’s privacy settings, this may return an alternative value.",
 				Computed:            true,
-				Type:                types.StringType,
-				PlanModifiers: tfsdk.AttributePlanModifiers{
-					resource.UseStateForUnknown(),
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"active": {
+			"active": schema.BoolAttribute{
 				MarkdownDescription: "Whether the user is active.",
 				Computed:            true,
-				Type:                types.BoolType,
-				PlanModifiers: tfsdk.AttributePlanModifiers{
-					resource.UseStateForUnknown(),
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"timezone": {
+			"timezone": schema.StringAttribute{
 				MarkdownDescription: "The time zone specified in the user's profile. Depending on the user’s privacy settings, this may be returned as null.",
 				Computed:            true,
-				Type:                types.StringType,
-				PlanModifiers: tfsdk.AttributePlanModifiers{
-					resource.UseStateForUnknown(),
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"account_type": {
+			"account_type": schema.StringAttribute{
 				MarkdownDescription: "The type of account represented by this user. This will be one of `atlassian` (normal users), `app` (application user) or `customer` (Jira Service Desk customer user).",
 				Computed:            true,
-				Type:                types.StringType,
-				PlanModifiers: tfsdk.AttributePlanModifiers{
-					resource.UseStateForUnknown(),
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-		}}, nil
+		},
+	}
 }
 
 func (r *jiraGroupUserResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
@@ -181,7 +168,6 @@ func (r *jiraGroupUserResource) Configure(ctx context.Context, req resource.Conf
 			"Unexpected Resource Configure Type",
 			fmt.Sprintf("Expected *jira.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
 		)
-
 		return
 	}
 

@@ -7,13 +7,14 @@ import (
 
 	jira "github.com/ctreminiom/go-atlassian/jira/v3"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/openscientia/terraform-provider-atlassian/internal/provider/attribute_plan_modification"
+	"github.com/openscientia/terraform-provider-atlassian/internal/provider/planmodifiers/stringmodifiers"
 )
 
 type (
@@ -41,41 +42,38 @@ func (*jiraIssueFieldConfigurationSchemeResource) Metadata(ctx context.Context, 
 	resp.TypeName = req.ProviderTypeName + "_jira_issue_field_configuration_scheme"
 }
 
-func (*jiraIssueFieldConfigurationSchemeResource) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
-	return tfsdk.Schema{
+func (*jiraIssueFieldConfigurationSchemeResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
+	resp.Schema = schema.Schema{
 		Version:             1,
 		MarkdownDescription: "Jira Issue Field Configuration Scheme Resource",
-		Attributes: map[string]tfsdk.Attribute{
-			"id": {
+		Attributes: map[string]schema.Attribute{
+			"id": schema.StringAttribute{
 				MarkdownDescription: "The ID of the issue field configuration scheme.",
 				Computed:            true,
-				Type:                types.StringType,
 			},
-			"name": {
+			"name": schema.StringAttribute{
 				MarkdownDescription: "The name of the issue field configuration scheme. " +
 					"The name must be unique. " +
 					"The maximum length is 255 characters.",
 				Required: true,
-				Type:     types.StringType,
-				Validators: []tfsdk.AttributeValidator{
+				Validators: []validator.String{
 					stringvalidator.LengthAtMost(255),
 				},
 			},
-			"description": {
+			"description": schema.StringAttribute{
 				MarkdownDescription: "The description of the issue field configuration scheme. " +
 					"The maximum length is 1024 characters.",
 				Optional: true,
 				Computed: true,
-				Type:     types.StringType,
-				Validators: []tfsdk.AttributeValidator{
+				Validators: []validator.String{
 					stringvalidator.LengthAtMost(1024),
 				},
-				PlanModifiers: tfsdk.AttributePlanModifiers{
-					attribute_plan_modification.DefaultValue(types.StringValue("")),
+				PlanModifiers: []planmodifier.String{
+					stringmodifiers.DefaultValue(""),
 				},
 			},
 		},
-	}, nil
+	}
 }
 
 func (r *jiraIssueFieldConfigurationSchemeResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
@@ -90,7 +88,6 @@ func (r *jiraIssueFieldConfigurationSchemeResource) Configure(ctx context.Contex
 			"Unexpected Resource Configure Type",
 			fmt.Sprintf("Expected *jira.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
 		)
-
 		return
 	}
 

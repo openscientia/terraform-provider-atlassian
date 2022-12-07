@@ -9,13 +9,16 @@ import (
 	jira "github.com/ctreminiom/go-atlassian/jira/v3"
 	"github.com/ctreminiom/go-atlassian/pkg/infra/models"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/openscientia/terraform-provider-atlassian/internal/provider/attribute_plan_modification"
+	"github.com/openscientia/terraform-provider-atlassian/internal/provider/planmodifiers/stringmodifiers"
 )
 
 type (
@@ -73,71 +76,64 @@ func (*jiraPermissionGrantResource) Metadata(ctx context.Context, req resource.M
 	resp.TypeName = req.ProviderTypeName + "_jira_permission_grant"
 }
 
-func (*jiraPermissionGrantResource) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
-	return tfsdk.Schema{
+func (*jiraPermissionGrantResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
+	resp.Schema = schema.Schema{
 		Version:             1,
 		MarkdownDescription: "Jira Permission Grant Resource",
-		Attributes: map[string]tfsdk.Attribute{
-			"id": {
+		Attributes: map[string]schema.Attribute{
+			"id": schema.StringAttribute{
 				MarkdownDescription: "(Forces new) The ID of the permission grant.",
 				Computed:            true,
-				Type:                types.StringType,
-				PlanModifiers: tfsdk.AttributePlanModifiers{
-					resource.UseStateForUnknown(),
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"permission_scheme_id": {
+			"permission_scheme_id": schema.StringAttribute{
 				MarkdownDescription: "(Forces new) The ID of the permission scheme in which to create a new permission grant.",
 				Required:            true,
-				Type:                types.StringType,
-				PlanModifiers: tfsdk.AttributePlanModifiers{
-					resource.UseStateForUnknown(),
-					resource.RequiresReplace(),
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"holder": {
+			"holder": schema.SingleNestedAttribute{
 				MarkdownDescription: "(Forces new) The user, group, field or role being granted the permission.",
 				Required:            true,
-				Attributes: tfsdk.SingleNestedAttributes(
-					map[string]tfsdk.Attribute{
-						"type": {
-							MarkdownDescription: "The type of permission holder. " +
-								"Can be one of: `anyone`, `applicationRole`, `assignee`, `group`, `groupCustomField`, " +
-								"`projectLead`, `projectRole`, `reporter`, `user` or `userCustomField`.",
-							Required: true,
-							Type:     types.StringType,
-							Validators: []tfsdk.AttributeValidator{
-								stringvalidator.OneOf(holder_types...),
-							},
-						},
-						"parameter": {
-							MarkdownDescription: "The identifier associated with the `type` value that defines the holder of the permission.",
-							Optional:            true,
-							Computed:            true,
-							Type:                types.StringType,
-							PlanModifiers: tfsdk.AttributePlanModifiers{
-								attribute_plan_modification.DefaultValue(types.StringValue("")),
-							},
+				Attributes: map[string]schema.Attribute{
+					"type": schema.StringAttribute{
+						MarkdownDescription: "The type of permission holder. " +
+							"Can be one of: `anyone`, `applicationRole`, `assignee`, `group`, `groupCustomField`, " +
+							"`projectLead`, `projectRole`, `reporter`, `user` or `userCustomField`.",
+						Required: true,
+						Validators: []validator.String{
+							stringvalidator.OneOf(holder_types...),
 						},
 					},
-				),
-				PlanModifiers: tfsdk.AttributePlanModifiers{
-					resource.RequiresReplace(),
+					"parameter": schema.StringAttribute{
+						MarkdownDescription: "The identifier associated with the `type` value that defines the holder of the permission.",
+						Optional:            true,
+						Computed:            true,
+						PlanModifiers: []planmodifier.String{
+							stringmodifiers.DefaultValue(""),
+						},
+					},
+				},
+				PlanModifiers: []planmodifier.Object{
+					objectplanmodifier.RequiresReplace(),
 				},
 			},
-			"permission": {
+			"permission": schema.StringAttribute{
 				MarkdownDescription: "(Forces new) The permission to grant. Can be one of the built-in permissions or a custom permission added by an app.",
 				Required:            true,
-				Type:                types.StringType,
-				PlanModifiers: tfsdk.AttributePlanModifiers{
-					resource.RequiresReplace(),
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
 				},
-				Validators: []tfsdk.AttributeValidator{
+				Validators: []validator.String{
 					stringvalidator.OneOf(built_in_permissions...),
 				},
 			},
 		},
-	}, nil
+	}
 }
 
 func (r *jiraPermissionGrantResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
@@ -152,7 +148,6 @@ func (r *jiraPermissionGrantResource) Configure(ctx context.Context, req resourc
 			"Unexpected Resource Configure Type",
 			fmt.Sprintf("Expected *jira.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
 		)
-
 		return
 	}
 
