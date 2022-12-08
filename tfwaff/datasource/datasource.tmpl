@@ -4,10 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	jira "github.com/ctreminiom/go-atlassian/jira/v3"
+	{{ if eq .ServiceLower "jira" }}jira "github.com/ctreminiom/go-atlassian/jira/v3"{{ else if eq .ServiceLower "confluence" }}confluence "github.com/ctreminiom/go-atlassian/confluence"{{ end }}
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
@@ -18,7 +17,7 @@ type (
 	}
 
 	{{ .ServiceLower }}{{ .DataSourcePascal }}{{ .DataSourceModelSuffix }} struct {
-		ID          types.String `tfsdk:"id"`
+		ID types.String `tfsdk:"id"`
 	}
 )
 
@@ -34,18 +33,16 @@ func (*{{ .ServiceLower }}{{ .DataSourcePascal }}{{ .DataSourceSuffix }}) Metada
 	resp.TypeName = req.ProviderTypeName + "_{{ .ServiceLower }}_{{ .DataSourceSnake }}"
 }
 
-func (*{{ .ServiceLower }}{{ .DataSourcePascal }}{{ .DataSourceSuffix }}) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
-	return tfsdk.Schema{
-		Version:             1,
+func (*{{ .ServiceLower }}{{ .DataSourcePascal }}{{ .DataSourceSuffix }}) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	resp.Schema = schema.Schema{
 		MarkdownDescription: "{{ .ServiceTitle }} {{ .DataSourceTitle }} Data Source",
-		Attributes: map[string]tfsdk.Attribute{
-			"id": {
+		Attributes: map[string]schema.Attribute{
+			"id": schema.StringAttribute{
 				MarkdownDescription: "The ID of the {{ .DataSourceProse }}.",
 				Required:            true,
-				Type:                types.StringType,
 			},
 		},
-	}, nil
+	}
 }
 
 func (d *{{ .ServiceLower }}{{ .DataSourcePascal }}{{ .DataSourceSuffix }}) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
@@ -61,7 +58,6 @@ func (d *{{ .ServiceLower }}{{ .DataSourcePascal }}{{ .DataSourceSuffix }}) Conf
 			"Unexpected Data Source Configure Type",
 			fmt.Sprintf("Expected *{{ .ServiceLower }}.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
 		)
-
 		return
 	}
 
