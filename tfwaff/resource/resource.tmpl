@@ -4,11 +4,12 @@ import (
 	"context"
 	"fmt"
 
-	jira "github.com/ctreminiom/go-atlassian/jira/v3"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
+	{{ if eq .ServiceLower "jira" }}jira "github.com/ctreminiom/go-atlassian/jira/v3"{{ else if eq .ServiceLower "confluence" }}confluence "github.com/ctreminiom/go-atlassian/confluence"{{ end }}
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
@@ -36,21 +37,20 @@ func (*{{ .ServiceLower }}{{ .ResourcePascal }}{{ .ResourceSuffix }}) Metadata(c
 	resp.TypeName = req.ProviderTypeName + "_{{ .ServiceLower }}_{{ .ResourceSnake }}"
 }
 
-func (*{{ .ServiceLower }}{{ .ResourcePascal }}{{ .ResourceSuffix }}) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
-	return tfsdk.Schema{
+func (*{{ .ServiceLower }}{{ .ResourcePascal }}{{ .ResourceSuffix }}) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
+	resp.Schema = schema.Schema{
 		Version:             1,
 		MarkdownDescription: "{{ .ServiceTitle }} {{ .ResourceTitle }} Resource",
-		Attributes: map[string]tfsdk.Attribute{
-			"id": {
+		Attributes: map[string]schema.Attribute{
+			"id": schema.StringAttribute{
 				MarkdownDescription: "The ID of the {{ .ResourceProse }}.",
 				Computed:            true,
-				Type:                types.StringType,
-				PlanModifiers: tfsdk.AttributePlanModifiers{
-					resource.UseStateForUnknown(),
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 		},
-	}, nil
+	}
 }
 
 func (r *{{ .ServiceLower }}{{ .ResourcePascal }}{{ .ResourceSuffix }}) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
@@ -65,7 +65,6 @@ func (r *{{ .ServiceLower }}{{ .ResourcePascal }}{{ .ResourceSuffix }}) Configur
 			"Unexpected Resource Configure Type",
 			fmt.Sprintf("Expected *{{ .ServiceLower }}.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
 		)
-
 		return
 	}
 
