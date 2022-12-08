@@ -1,5 +1,5 @@
-name: Request New Resource, Data Source or ATLASSIAN Service
-description: Request a new resource, data source or service (ATLASSIAN product) to be added to the provider.
+name: Request New Resource, Data Source or Service
+description: Request a new resource, data source or service to be added to the provider.
 labels: ["needs-triage"]
 body:
   - type: markdown
@@ -9,9 +9,9 @@ body:
 
         Please update the issue title to indicate what you're requesting, e.g.:
 
-        'New resource: atlassian_<service>_<resource_name>' - for new resource requests
-        'New data-source: atlassian_<service>_<resource_name>' - for new data source requests
-        'New service: ...' - for new ATLASSIAN services
+        "New resource: atlassian_service_resource-name" - for new resource requests
+        "New data-source: atlassian_service_resource-name" - for new data source requests
+        "New service: ..." - for new ATLASSIAN services, i.e. products such as Confluence Cloud
 
         To report unexpected provider behaviour, please use the ['Report Bug'](https://github.com/openscientia/terraform-provider-atlassian/issues/new?assignees=&labels=bug&template=bug.yml) form.
 
