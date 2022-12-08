@@ -1,0 +1,37 @@
+name: Repository
+description: Request a repository-related change, i.e. GitHub Actions, labels, generators, etc.
+labels: ["repository", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        # Thank you for submitting a repository issue! :+1:
+
+        Please use this form to alert the maintainers about documentation issues in the [Terraform Registry](https://registry.terraform.io/providers/openscientia/atlassian/latest/docs) or the [contribution guide]().
+
+        To request new resources, data sources or services, please use the ['Request New Resource, Data Source or ATLASSIAN Service'](https://github.com/openscientia/terraform-provider-atlassian/issues/new?assignees=&labels=needs-triage&template=new_resource.yml) form.
+        
+        To request additional functionality for existing resources, data sources or the provider itself, please use the ['Request Enhancement'](https://github.com/openscientia/terraform-provider-atlassian/issues/new?assignees=&labels=enhancement,needs-triage&template=enhancement.yml) form.
+
+        To report unexpected provider behaviour, please use the ['Report Bug'](https://github.com/openscientia/terraform-provider-atlassian/issues/new?assignees=&labels=bug,needs-triage&template=bug.yml) form.
+
+        To report documentations issue, please use the ['Documentation Issue'](https://github.com/openscientia/terraform-provider-atlassian/issues/new?assignees=&labels=repository,needs-triage&template=repository.yml) form.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: description
+      description: Brief description of the repository issue or change.
+    validations:
+      required: true
+      
+  - type: textarea
+    id: references
+    attributes:
+      label: references
+      description: |
+        Additional details such as links to any other relevant documentation, other GitHub issues and/or pull requests.
+
+        [How to reference Github Issues](https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/autolinked-references-and-urls)
+    validations:
+      required: false

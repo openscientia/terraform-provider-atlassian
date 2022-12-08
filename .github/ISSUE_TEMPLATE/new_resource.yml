@@ -1,0 +1,49 @@
+name: Request New Resource, Data Source or ATLASSIAN Service
+description: Request a new resource, data source or service (ATLASSIAN product) to be added to the provider.
+labels: ["needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        # Thank you for submitting request! :+1:
+
+        Please update the issue title to indicate what you're requesting, e.g.:
+
+        'New resource: atlassian_<service>_<resource_name>' - for new resource requests
+        'New data-source: atlassian_<service>_<resource_name>' - for new data source requests
+        'New service: ...' - for new ATLASSIAN services
+
+        To report unexpected provider behaviour, please use the ['Report Bug'](https://github.com/openscientia/terraform-provider-atlassian/issues/new?assignees=&labels=bug&template=bug.yml) form.
+
+        To request additional functionality for existing resources, data sources or the provider itself, please use the ['Request Enhancement'](https://github.com/openscientia/terraform-provider-atlassian/issues/new?assignees=&labels=enhancement,needs-triage&template=enhancement.yml) form.
+        
+  - type: textarea
+    id: resources
+    attributes:
+      label: New Resource(s) and/or Data Source(s)
+      description: Please list the newly requested resource(s) and/or data source(s).
+      placeholder: |
+        - atlassian_<service>_<resource_name>
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Potential Terraform Configuration
+      description: | 
+        What would the Terraform HCL syntax look like for the new resource(s) and/or data source(s)?. This will be rendered with `terraform` syntax highlighting by default, do not use [code fences](https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/creating-and-highlighting-code-blocks).
+      render: terraform
+    validations:
+      required: false
+
+  - type: textarea
+    id: references
+    attributes:
+      label: references
+      description: |
+        Additional details such as links to any other relevant documentation, other GitHub issues and/or pull requests.
+        
+        [How to reference Github Issues](https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/autolinked-references-and-urls)
+    validations:
+      required: false
