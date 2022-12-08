@@ -20,7 +20,7 @@ body:
   - type: textarea
     id: description
     attributes:
-      label: description
+      label: Description
       description: Brief description of the repository issue or change.
     validations:
       required: true
@@ -28,7 +28,7 @@ body:
   - type: textarea
     id: references
     attributes:
-      label: references
+      label: References
       description: |
         Additional details such as links to any other relevant documentation, other GitHub issues and/or pull requests.
 
