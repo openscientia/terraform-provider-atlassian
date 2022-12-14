@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/ctreminiom/go-atlassian v1.4.4
-	github.com/hashicorp/terraform-plugin-framework v0.17.0
+	github.com/hashicorp/terraform-plugin-framework v1.0.0
 	github.com/hashicorp/terraform-plugin-go v0.14.2
 	github.com/hashicorp/terraform-plugin-log v0.7.0
 )
