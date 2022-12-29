@@ -29,8 +29,7 @@ type (
 )
 
 var (
-	_ provider.Provider             = (*atlassianProvider)(nil)
-	_ provider.ProviderWithMetadata = (*atlassianProvider)(nil)
+	_ provider.Provider = (*atlassianProvider)(nil)
 )
 
 func New(version string) func() provider.Provider {
