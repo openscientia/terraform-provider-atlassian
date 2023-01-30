@@ -41,6 +41,7 @@ FEATURES:
 * **New Resource:** `atlassian_jira_permission_scheme` ([#106](https://github.com/openscientia/terraform-provider-atlassian/issues/106))
 * **New Resource:** `atlassian_jira_project_category` ([#115](https://github.com/openscientia/terraform-provider-atlassian/issues/115))
 * **New Resource:** `atlassian_jira_screen_scheme` ([#47](https://github.com/openscientia/terraform-provider-atlassian/issues/47))
+* **New Resource:** `atlassian_jira_status` ([#113](https://github.com/openscientia/terraform-provider-atlassian/issues/113))
 
 ENHANCEMENTS:
 
