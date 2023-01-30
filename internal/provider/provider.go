@@ -181,6 +181,7 @@ func (*atlassianProvider) Resources(ctx context.Context) []func() resource.Resou
 		NewJiraPermissionSchemeResource,
 		NewJiraProjectCategoryResource,
 		NewJiraScreenSchemeResource,
+		NewJiraStatusResource,
 	}
 }
 
